@@ -23,12 +23,10 @@ const io = socketIo(server, {
 app.use(cors(corsOptions));
 app.use(express.json());
 
-// Production için static dosyaları serve et
+// Production için sadece API endpoint'leri
 if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../client/build')));
-  
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../client/build/index.html'));
+  app.get('/', (req, res) => {
+    res.json({ message: 'TK Chat Backend API', status: 'running' });
   });
 }
 
