@@ -200,6 +200,37 @@ const VolumeValue = styled.span`
   font-weight: 600;
 `;
 
+const TestSoundButton = styled.button`
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  min-width: 48px;
+  min-height: 48px;
+  
+  &:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.1);
+  }
+  
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+  
+  @media (max-width: 768px) {
+    min-width: 44px;
+    min-height: 44px;
+  }
+`;
+
 const VoiceRoom = ({ socket, currentUser, roomName }) => {
   const [isMuted, setIsMuted] = useState(false);
   const [isVolumeMuted, setIsVolumeMuted] = useState(false);
@@ -210,6 +241,7 @@ const VoiceRoom = ({ socket, currentUser, roomName }) => {
   const [peers, setPeers] = useState({});
   const [remoteStreams, setRemoteStreams] = useState({});
   const peersRef = useRef({});
+  const testAudioRef = useRef(null);
 
   useEffect(() => {
     if (!socket) return;
@@ -382,6 +414,16 @@ const VoiceRoom = ({ socket, currentUser, roomName }) => {
     });
   };
 
+  const testSound = () => {
+    if (testAudioRef.current) {
+      testAudioRef.current.currentTime = 0;
+      testAudioRef.current.volume = volumeLevel;
+      testAudioRef.current.play().catch(err => {
+        console.error('Test sesi çalınamadı:', err);
+      });
+    }
+  };
+
   const toggleVolumeSlider = () => {
     setShowVolumeSlider(!showVolumeSlider);
   };
@@ -416,11 +458,11 @@ const VoiceRoom = ({ socket, currentUser, roomName }) => {
           <VolumeSliderContainer>
             <VoiceButton
               variant="volume"
-              isMuted={isVolumeMuted}
               onClick={toggleVolumeSlider}
               title="Ses seviyesini ayarla"
+              style={{ background: '#40444b' }}
             >
-              {isVolumeMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+              <Volume2 size={20} />
             </VoiceButton>
             
             {showVolumeSlider && (
@@ -460,6 +502,13 @@ const VoiceRoom = ({ socket, currentUser, roomName }) => {
           >
             {isVolumeMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
           </VoiceButton>
+          
+          <TestSoundButton
+            onClick={testSound}
+            title="Test sesi çal"
+          >
+            🔊
+          </TestSoundButton>
           
           <VoiceButton
             variant="leave"
@@ -524,6 +573,13 @@ const VoiceRoom = ({ socket, currentUser, roomName }) => {
         )}
       </UsersList>
 
+      {/* Test sesi için gizli audio elementi */}
+      <audio
+        ref={testAudioRef}
+        src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT"
+        preload="auto"
+      />
+
       {/* Ses çalma için gizli audio elementleri */}
       {Object.keys(remoteStreams).map(userId => (
         <audio
@@ -544,24 +600,24 @@ const VoiceRoom = ({ socket, currentUser, roomName }) => {
         />
       ))}
       
-             {/* Debug bilgileri */}
-       <div style={{ 
-         position: 'fixed', 
-         bottom: '10px', 
-         right: '10px', 
-         background: 'rgba(0,0,0,0.8)', 
-         color: 'white', 
-         padding: '10px', 
-         borderRadius: '5px',
-         fontSize: '12px',
-         zIndex: 1000
-       }}>
-         <div>Remote Streams: {Object.keys(remoteStreams).length}</div>
-         <div>Peers: {Object.keys(peers).length}</div>
-         <div>Volume Muted: {isVolumeMuted ? 'Yes' : 'No'}</div>
-         <div>Volume Level: {Math.round(volumeLevel * 100)}%</div>
-         <div>Local Stream: {localStream ? 'Active' : 'None'}</div>
-       </div>
+      {/* Debug bilgileri */}
+      <div style={{ 
+        position: 'fixed', 
+        bottom: '10px', 
+        right: '10px', 
+        background: 'rgba(0,0,0,0.8)', 
+        color: 'white', 
+        padding: '10px', 
+        borderRadius: '5px',
+        fontSize: '12px',
+        zIndex: 1000
+      }}>
+        <div>Remote Streams: {Object.keys(remoteStreams).length}</div>
+        <div>Peers: {Object.keys(peers).length}</div>
+        <div>Volume Muted: {isVolumeMuted ? 'Yes' : 'No'}</div>
+        <div>Volume Level: {Math.round(volumeLevel * 100)}%</div>
+        <div>Local Stream: {localStream ? 'Active' : 'None'}</div>
+      </div>
     </VoiceRoomContainer>
   );
 };
