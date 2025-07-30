@@ -11,6 +11,11 @@ const AppContainer = styled.div`
   background: #36393f;
   display: flex;
   flex-direction: column;
+  
+  @media (max-width: 768px) {
+    height: 100vh;
+    overflow: hidden;
+  }
 `;
 
 const ChatHeader = styled.div`
@@ -22,6 +27,11 @@ const ChatHeader = styled.div`
   gap: 12px;
   color: #fff;
   font-weight: 600;
+  
+  @media (max-width: 768px) {
+    padding: 12px;
+    gap: 8px;
+  }
 `;
 
 const BackButton = styled.button`
@@ -41,6 +51,12 @@ const BackButton = styled.button`
     background: #4f545c;
     color: #fff;
   }
+  
+  @media (max-width: 768px) {
+    padding: 6px 10px;
+    font-size: 13px;
+    gap: 4px;
+  }
 `;
 
 const ChatTypeIcon = styled.div`
@@ -48,6 +64,11 @@ const ChatTypeIcon = styled.div`
   align-items: center;
   gap: 8px;
   color: #00d4ff;
+  
+  @media (max-width: 768px) {
+    gap: 6px;
+    font-size: 14px;
+  }
 `;
 
 const UserInfo = styled.div`
@@ -57,6 +78,11 @@ const UserInfo = styled.div`
   gap: 8px;
   color: #96989d;
   font-size: 14px;
+  
+  @media (max-width: 768px) {
+    gap: 6px;
+    font-size: 13px;
+  }
 `;
 
 const UserAvatar = styled.div`
@@ -70,6 +96,12 @@ const UserAvatar = styled.div`
   color: white;
   font-weight: 600;
   font-size: 12px;
+  
+  @media (max-width: 768px) {
+    width: 20px;
+    height: 20px;
+    font-size: 10px;
+  }
 `;
 
 const LogoutButton = styled.button`
@@ -88,6 +120,12 @@ const LogoutButton = styled.button`
   &:hover {
     background: #c82333;
   }
+  
+  @media (max-width: 768px) {
+    padding: 4px 8px;
+    font-size: 11px;
+    gap: 3px;
+  }
 `;
 
 const ActiveUsersBar = styled.div`
@@ -99,6 +137,12 @@ const ActiveUsersBar = styled.div`
   gap: 8px;
   color: #96989d;
   font-size: 14px;
+  
+  @media (max-width: 768px) {
+    padding: 6px 12px;
+    font-size: 12px;
+    gap: 6px;
+  }
 `;
 
 // UserDot component removed - unused
@@ -248,7 +292,7 @@ const App = () => {
       <ChatHeader>
         <BackButton onClick={handleBackToLogin}>
           <ArrowLeft size={16} />
-          Geri Dön
+          <span className="hide-on-mobile">Geri Dön</span>
         </BackButton>
         
         <ChatTypeIcon>
@@ -256,12 +300,12 @@ const App = () => {
           {user.chatType === 'text' ? (
             <>
               <Hash size={20} />
-              Yazılı Sohbet
+              <span className="hide-on-mobile">Yazılı Sohbet</span>
             </>
           ) : (
             <>
               <Mic size={20} />
-              Sesli Sohbet
+              <span className="hide-on-mobile">Sesli Sohbet</span>
             </>
           )}
         </ChatTypeIcon>
@@ -270,27 +314,29 @@ const App = () => {
           <UserAvatar>
             {user.username.charAt(0).toUpperCase()}
           </UserAvatar>
-          {user.username}
+          <span className="hide-on-mobile">{user.username}</span>
           <LogoutButton onClick={handleLogout}>
             <LogOut size={12} />
-            Çıkış
+            <span className="hide-on-mobile">Çıkış</span>
           </LogoutButton>
         </UserInfo>
       </ChatHeader>
 
       <ActiveUsersBar>
         <Users size={14} />
-        Çevrimiçi: {activeUsers.length} kullanıcı
+        <span>Çevrimiçi: {activeUsers.length} kullanıcı</span>
         {activeUsers.length > 0 && (
           <>
             <span>•</span>
-            {activeUsers.slice(0, 3).map((activeUser, index) => (
-              <span key={activeUser.id} style={{ color: '#fff' }}>
-                {activeUser.username}
-                {index < Math.min(2, activeUsers.length - 1) && ', '}
-              </span>
-            ))}
-            {activeUsers.length > 3 && ` ve ${activeUsers.length - 3} kişi daha`}
+            <span className="hide-on-mobile">
+              {activeUsers.slice(0, 3).map((activeUser, index) => (
+                <span key={activeUser.id} style={{ color: '#fff' }}>
+                  {activeUser.username}
+                  {index < Math.min(2, activeUsers.length - 1) && ', '}
+                </span>
+              ))}
+              {activeUsers.length > 3 && ` ve ${activeUsers.length - 3} kişi daha`}
+            </span>
           </>
         )}
       </ActiveUsersBar>

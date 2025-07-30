@@ -8,6 +8,11 @@ const ChatContainer = styled.div`
   display: flex;
   flex-direction: column;
   background: #36393f;
+  height: 100vh;
+  
+  @media (max-width: 768px) {
+    height: calc(100vh - 120px);
+  }
 `;
 
 const MessagesArea = styled.div`
@@ -16,7 +21,7 @@ const MessagesArea = styled.div`
   padding: 16px;
   
   @media (max-width: 768px) {
-    padding: 12px;
+    padding: 8px;
   }
 `;
 
@@ -27,6 +32,8 @@ const MessageInputContainer = styled.div`
   
   @media (max-width: 768px) {
     padding: 12px;
+    position: sticky;
+    bottom: 0;
   }
 `;
 
@@ -64,6 +71,10 @@ const MessageInput = styled.textarea`
   &::placeholder {
     color: #96989d;
   }
+  
+  @media (max-width: 768px) {
+    font-size: 16px; /* Prevent zoom on iOS */
+  }
 `;
 
 const SendButton = styled.button`
@@ -93,32 +104,32 @@ const SendButton = styled.button`
   }
   
   @media (max-width: 768px) {
-    min-width: 40px;
-    min-height: 40px;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 10px;
   }
 `;
 
 const TypingIndicator = styled.div`
-  color: #00d4ff;
-  font-size: 13px;
   padding: 8px 16px;
+  color: #96989d;
+  font-size: 12px;
   font-style: italic;
-  background: rgba(0, 212, 255, 0.1);
-  border-left: 3px solid #00d4ff;
-  margin: 0 16px;
-  border-radius: 0 4px 4px 0;
+  background: #2f3136;
+  border-top: 1px solid #202225;
   
   @media (max-width: 768px) {
-    margin: 0 12px;
-    font-size: 12px;
+    padding: 6px 12px;
+    font-size: 11px;
   }
 `;
 
 const ChatRoom = ({ socket, user, messages = [], onSendMessage }) => {
   const [newMessage, setNewMessage] = useState('');
   const [typingUsers, setTypingUsers] = useState(new Set());
-  const messagesEndRef = useRef(null);
+  const [isTyping, setIsTyping] = useState(false);
   const inputRef = useRef(null);
+  const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -131,23 +142,14 @@ const ChatRoom = ({ socket, user, messages = [], onSendMessage }) => {
   useEffect(() => {
     if (!socket) return;
 
-    // Yazıyor göstergesi
     socket.on('user_typing', (data) => {
-      if (data.userId !== user.id) {
-        setTypingUsers(prev => new Set(prev).add(data.username));
-        setTimeout(() => {
-          setTypingUsers(prev => {
-            const newSet = new Set(prev);
-            newSet.delete(data.username);
-            return newSet;
-          });
-        }, 3000);
+      if (data.userId !== user?.id) {
+        setTypingUsers(prev => new Set([...prev, data.username]));
       }
     });
 
-    // Yazıyor durdurma
     socket.on('user_stop_typing', (data) => {
-      if (data.userId !== user.id) {
+      if (data.userId !== user?.id) {
         setTypingUsers(prev => {
           const newSet = new Set(prev);
           newSet.delete(data.username);
@@ -205,8 +207,17 @@ const ChatRoom = ({ socket, user, messages = [], onSendMessage }) => {
     }
     
     // Yazıyor göstergesi
-    if (socket) {
+    if (socket && !isTyping) {
+      setIsTyping(true);
       socket.emit('typing', { userId: user.id, username: user.username });
+      
+      // 3 saniye sonra typing'i durdur
+      setTimeout(() => {
+        setIsTyping(false);
+        if (socket) {
+          socket.emit('stop_typing', { userId: user.id, username: user.username });
+        }
+      }, 3000);
     }
   };
 
@@ -246,20 +257,7 @@ const ChatRoom = ({ socket, user, messages = [], onSendMessage }) => {
             disabled={!newMessage.trim()}
             title="Mesaj Gönder (Enter)"
           >
-            <Send size={16} />
-          </SendButton>
-          
-          <SendButton 
-            onClick={() => {
-              console.log('Test mesajı gönderiliyor');
-              if (onSendMessage) {
-                onSendMessage('Test mesajı - ' + new Date().toLocaleTimeString());
-              }
-            }}
-            title="Test Mesajı"
-            style={{ background: '#28a745', marginLeft: '8px' }}
-          >
-            🧪
+            <Send size={18} />
           </SendButton>
         </InputWrapper>
       </MessageInputContainer>

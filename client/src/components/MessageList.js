@@ -5,6 +5,10 @@ const MessageContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 8px;
+  
+  @media (max-width: 768px) {
+    gap: 6px;
+  }
 `;
 
 const MessageWrapper = styled.div`
@@ -14,6 +18,11 @@ const MessageWrapper = styled.div`
   
   &:hover {
     background: rgba(255, 255, 255, 0.02);
+  }
+  
+  @media (max-width: 768px) {
+    gap: 8px;
+    padding: 2px 0;
   }
 `;
 
@@ -30,6 +39,13 @@ const Avatar = styled.div`
   font-size: 16px;
   flex-shrink: 0;
   margin-top: 4px;
+  
+  @media (max-width: 768px) {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+    margin-top: 2px;
+  }
 `;
 
 const MessageContent = styled.div`
@@ -42,6 +58,11 @@ const MessageHeader = styled.div`
   align-items: center;
   gap: 8px;
   margin-bottom: 4px;
+  
+  @media (max-width: 768px) {
+    gap: 6px;
+    margin-bottom: 2px;
+  }
 `;
 
 const Username = styled.span`
@@ -53,12 +74,20 @@ const Username = styled.span`
     text-decoration: underline;
     cursor: pointer;
   }
+  
+  @media (max-width: 768px) {
+    font-size: 14px;
+  }
 `;
 
 const Timestamp = styled.span`
   color: #96989d;
   font-size: 12px;
   font-weight: 400;
+  
+  @media (max-width: 768px) {
+    font-size: 11px;
+  }
 `;
 
 const MessageText = styled.div`
@@ -66,6 +95,11 @@ const MessageText = styled.div`
   font-size: 14px;
   line-height: 1.4;
   word-wrap: break-word;
+  
+  @media (max-width: 768px) {
+    font-size: 13px;
+    line-height: 1.3;
+  }
 `;
 
 const SystemMessage = styled.div`
@@ -77,6 +111,12 @@ const SystemMessage = styled.div`
   color: #96989d;
   font-size: 12px;
   font-style: italic;
+  
+  @media (max-width: 768px) {
+    margin: 12px 0;
+    padding: 6px 12px;
+    font-size: 11px;
+  }
 `;
 
 const formatTime = (timestamp) => {
