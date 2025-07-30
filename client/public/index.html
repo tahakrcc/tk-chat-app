@@ -4,12 +4,12 @@
     <meta charset="utf-8" />
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#36393f" />
+    <meta name="theme-color" content="#0a0a0a" />
     <meta name="color-scheme" content="dark" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="TK Chat" />
-    <meta name="msapplication-TileColor" content="#36393f" />
+    <meta name="msapplication-TileColor" content="#0a0a0a" />
     <meta name="msapplication-config" content="%PUBLIC_URL%/browserconfig.xml" />
     <meta
       name="description"
@@ -21,16 +21,37 @@
     <style>
       /* Prevent white flash on load */
       html, body {
-        background: #36393f !important;
-        color: #dcddde !important;
+        background: #0a0a0a !important;
+        color: #ffffff !important;
       }
       
       /* iOS Safari specific */
       @supports (-webkit-touch-callout: none) {
         body {
-          background: #36393f !important;
-          color: #dcddde !important;
+          background: #0a0a0a !important;
+          color: #ffffff !important;
         }
+      }
+      
+      /* Animated background */
+      body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: 
+          radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+          radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+          radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.2) 0%, transparent 50%);
+        z-index: -1;
+        animation: backgroundShift 20s ease-in-out infinite;
+      }
+      
+      @keyframes backgroundShift {
+        0%, 100% { transform: scale(1) rotate(0deg); }
+        50% { transform: scale(1.1) rotate(1deg); }
       }
     </style>
   </head>
