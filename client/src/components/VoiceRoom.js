@@ -97,6 +97,8 @@ const VoiceButton = styled.button`
         : 'linear-gradient(135deg, #2ed573, #1e90ff)';
     } else if (props.variant === 'leave') {
       return 'linear-gradient(135deg, #ff4757, #ff3742)';
+    } else if (props.variant === 'monitor') {
+      return 'linear-gradient(135deg, #5352ed, #3742fa)';
     } else {
       return 'linear-gradient(135deg, #5352ed, #3742fa)';
     }
@@ -481,8 +483,15 @@ const VoiceRoom = ({ socket, currentUser, roomName }) => {
   const [peers, setPeers] = useState({});
   const [remoteStreams, setRemoteStreams] = useState({});
   const [speakingUsers, setSpeakingUsers] = useState(new Set());
+  const [showVoiceMonitor, setShowVoiceMonitor] = useState(false);
+  const [voiceLevel, setVoiceLevel] = useState(0);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const peersRef = useRef({});
   const testAudioRef = useRef(null);
+  const voiceMonitorRef = useRef(null);
+  const audioContextRef = useRef(null);
+  const analyserRef = useRef(null);
+  const microphoneRef = useRef(null);
 
   useEffect(() => {
     if (!socket) return;
@@ -532,12 +541,26 @@ const VoiceRoom = ({ socket, currentUser, roomName }) => {
       }
     });
 
+    // Konuşma durumu
+    socket.on('user_speaking_update', (data) => {
+      if (data.isSpeaking) {
+        setSpeakingUsers(prev => new Set([...prev, data.userId]));
+      } else {
+        setSpeakingUsers(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(data.userId);
+          return newSet;
+        });
+      }
+    });
+
     return () => {
       socket.off('active_users');
       socket.off('voice_room_users');
       socket.off('user_joined_voice');
       socket.off('receiving_returned_signal');
       socket.off('user_left_voice');
+      socket.off('user_speaking_update');
     };
   }, [socket, localStream]);
 
@@ -701,14 +724,96 @@ const VoiceRoom = ({ socket, currentUser, roomName }) => {
     setShowVolumeSlider(!showVolumeSlider);
   };
 
+  // Ses seviyesi izleme
+  const startVoiceMonitoring = () => {
+    if (!localStream) return;
+    
+    try {
+      audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+      analyserRef.current = audioContextRef.current.createAnalyser();
+      microphoneRef.current = audioContextRef.current.createMediaStreamSource(localStream);
+      
+      analyserRef.current.fftSize = 256;
+      const bufferLength = analyserRef.current.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
+      
+      microphoneRef.current.connect(analyserRef.current);
+      
+      const updateVoiceLevel = () => {
+        if (!analyserRef.current) return;
+        
+        analyserRef.current.getByteFrequencyData(dataArray);
+        const average = dataArray.reduce((a, b) => a + b) / bufferLength;
+        const level = average / 255;
+        
+        setVoiceLevel(level);
+        setIsSpeaking(level > 0.1);
+        
+        if (level > 0.1 && !isSpeaking) {
+          // Konuşmaya başladı
+          if (socket) {
+            socket.emit('user_speaking', { isSpeaking: true });
+          }
+        } else if (level <= 0.1 && isSpeaking) {
+          // Konuşmayı durdurdu
+          if (socket) {
+            socket.emit('user_speaking', { isSpeaking: false });
+          }
+        }
+        
+        requestAnimationFrame(updateVoiceLevel);
+      };
+      
+      updateVoiceLevel();
+    } catch (error) {
+      console.error('Ses izleme hatası:', error);
+    }
+  };
+
+  const stopVoiceMonitoring = () => {
+    if (audioContextRef.current) {
+      audioContextRef.current.close();
+      audioContextRef.current = null;
+    }
+    analyserRef.current = null;
+    microphoneRef.current = null;
+    setVoiceLevel(0);
+    setIsSpeaking(false);
+  };
+
+  // Mikrofon izni alındıktan sonra ses izlemeyi başlat
+  useEffect(() => {
+    if (localStream) {
+      startVoiceMonitoring();
+    }
+    
+    return () => {
+      stopVoiceMonitoring();
+    };
+  }, [localStream]);
+
+  // Konuşma durumu
+  socket.on('user_speaking_update', (data) => {
+    if (data.isSpeaking) {
+      setSpeakingUsers(prev => new Set([...prev, data.userId]));
+    } else {
+      setSpeakingUsers(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(data.userId);
+        return newSet;
+      });
+    }
+  });
+
   const getVoiceStatus = (user) => {
     if (user.id === currentUser?.id) {
       if (isMuted) return 'muted';
+      if (isSpeaking) return 'speaking';
       return 'connected';
     }
     
-    // Diğer kullanıcılar için varsayılan olarak connected
-    // Gerçek uygulamada bu bilgi server'dan gelir
+    // Diğer kullanıcılar için
+    if (speakingUsers.has(user.id)) return 'speaking';
     return 'connected';
   };
 
@@ -762,6 +867,91 @@ const VoiceRoom = ({ socket, currentUser, roomName }) => {
     isMuted: isMuted
   };
 
+  // Ses monitörü modalı
+  const VoiceMonitorModal = styled.div`
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    backdrop-filter: blur(10px);
+  `;
+
+  const VoiceMonitorContent = styled.div`
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px);
+    border-radius: 20px;
+    padding: 30px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    min-width: 300px;
+    position: relative;
+    z-index: 1;
+  `;
+
+  const DecibelMeter = styled.div`
+    width: 100%;
+    height: 200px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    margin: 20px 0;
+    position: relative;
+    overflow: hidden;
+  `;
+
+  const DecibelBar = styled.div`
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: ${props => Math.max(5, props.level * 100)}%;
+    background: linear-gradient(135deg, #2ed573, #1e90ff);
+    transition: height 0.1s ease;
+    border-radius: 8px 8px 0 0;
+    box-shadow: 0 0 20px rgba(46, 213, 115, 0.5);
+  `;
+
+  const DecibelText = styled.div`
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #ffffff;
+    font-size: 24px;
+    font-weight: 700;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  `;
+
+  const CloseButton = styled.button`
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(255, 71, 87, 0.8);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    
+    &:hover {
+      background: rgba(255, 71, 87, 1);
+      transform: scale(1.1);
+    }
+  `;
+
   return (
     <VoiceRoomContainer>
       <VoiceRoomHeader>
@@ -814,6 +1004,15 @@ const VoiceRoom = ({ socket, currentUser, roomName }) => {
           </TestSoundButton>
           
           <VoiceButton
+            variant="monitor"
+            onClick={() => setShowVoiceMonitor(true)}
+            title="Ses monitörü"
+          >
+            📊
+            <span className="hide-on-mobile">Ses Monitörü</span>
+          </VoiceButton>
+          
+          <VoiceButton
             variant="leave"
             onClick={leaveVoiceRoom}
             title="Sesli odadan ayrıl"
@@ -833,6 +1032,7 @@ const VoiceRoom = ({ socket, currentUser, roomName }) => {
             <StatusIndicator isMuted={isMuted} />
             {isMuted ? 'Mikrofon kapalı' : 'Mikrofon açık'}
             {isVolumeMuted && ' • Ses kapalı'}
+            {isSpeaking && ' • Konuşuyor'}
           </UserStatus>
         </UserDetails>
       </UserInfoSection>
@@ -875,9 +1075,7 @@ const VoiceRoom = ({ socket, currentUser, roomName }) => {
           ref={node => {
             if (node) {
               node.srcObject = remoteStreams[userId];
-              // Ses seviyesini ayarla
               node.volume = volumeLevel;
-              // Hata durumunda log
               node.onerror = (e) => console.error('Audio error:', e);
               node.onloadedmetadata = () => console.log('Audio loaded for user:', userId);
               node.onplay = () => console.log('Audio playing for user:', userId);
@@ -886,6 +1084,33 @@ const VoiceRoom = ({ socket, currentUser, roomName }) => {
           }}
         />
       ))}
+      
+      {/* Ses Monitörü Modal */}
+      {showVoiceMonitor && (
+        <VoiceMonitorModal onClick={() => setShowVoiceMonitor(false)}>
+          <VoiceMonitorContent onClick={(e) => e.stopPropagation()}>
+            <CloseButton onClick={() => setShowVoiceMonitor(false)}>×</CloseButton>
+            <h3 style={{ color: '#ffffff', marginBottom: '20px', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
+              Ses Monitörü
+            </h3>
+            
+            <DecibelMeter>
+              <DecibelBar level={voiceLevel} />
+              <DecibelText>
+                {Math.round(voiceLevel * 100)} dB
+              </DecibelText>
+            </DecibelMeter>
+            
+            <div style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: '14px', marginTop: '10px' }}>
+              {isSpeaking ? '🎤 Konuşuyorsunuz' : '🔇 Sessiz'}
+            </div>
+            
+            <div style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '12px', marginTop: '8px' }}>
+              Mikrofonunuzun çalışıp çalışmadığını kontrol edin
+            </div>
+          </VoiceMonitorContent>
+        </VoiceMonitorModal>
+      )}
       
       {/* Debug bilgileri */}
       <div style={{ 
@@ -911,6 +1136,8 @@ const VoiceRoom = ({ socket, currentUser, roomName }) => {
         <div>Volume: {debugInfo.volumeLevel}%</div>
         <div>Muted: {debugInfo.isMuted ? 'Yes' : 'No'}</div>
         <div>Volume Muted: {debugInfo.volumeMuted ? 'Yes' : 'No'}</div>
+        <div>Voice Level: {Math.round(voiceLevel * 100)}%</div>
+        <div>Speaking: {isSpeaking ? 'Yes' : 'No'}</div>
       </div>
     </VoiceRoomContainer>
   );

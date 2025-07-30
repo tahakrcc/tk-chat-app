@@ -119,6 +119,19 @@ io.on('connection', (socket) => {
     io.to(payload.id).emit('receiving_returned_signal', { id: socket.id, signal: payload.signal });
   });
 
+  // Konuşma durumu
+  socket.on('user_speaking', (data) => {
+    console.log('Kullanıcı konuşma durumu:', socket.id, data.isSpeaking);
+    const user = users.get(socket.id);
+    if (user) {
+      socket.broadcast.emit('user_speaking_update', {
+        userId: socket.id,
+        username: user.username,
+        isSpeaking: data.isSpeaking
+      });
+    }
+  });
+
   // Bağlantı koptuğunda
   socket.on('disconnect', () => {
     console.log('Kullanıcı ayrıldı:', socket.id);

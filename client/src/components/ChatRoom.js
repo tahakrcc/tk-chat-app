@@ -16,11 +16,26 @@ const pulse = keyframes`
 
 const ChatContainer = styled.div`
   flex: 1;
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
   display: flex;
   flex-direction: column;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   height: 100vh;
   animation: ${fadeIn} 0.6s ease-out;
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+      radial-gradient(circle at 30% 70%, rgba(120, 119, 198, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 70% 30%, rgba(255, 119, 198, 0.1) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
   
   @media (max-width: 768px) {
     height: calc(100vh - 120px);
@@ -30,23 +45,25 @@ const ChatContainer = styled.div`
 const MessagesArea = styled.div`
   flex: 1;
   overflow-y: auto;
-  padding: 16px;
+  padding: 20px;
+  position: relative;
+  z-index: 1;
   
   @media (max-width: 768px) {
-    padding: 8px;
+    padding: 16px;
   }
 `;
 
 const MessageInputContainer = styled.div`
-  padding: 16px;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 20px;
+  position: relative;
+  z-index: 1;
   
   @media (max-width: 768px) {
-    padding: 12px;
-    position: sticky;
-    bottom: 0;
+    padding: 16px;
   }
 `;
 
@@ -54,16 +71,16 @@ const InputWrapper = styled.div`
   display: flex;
   gap: 12px;
   align-items: flex-end;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(10px);
   border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   padding: 12px;
   transition: all 0.3s ease;
   
   &:focus-within {
-    border-color: #667eea;
-    box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+    border-color: rgba(83, 82, 237, 0.5);
+    box-shadow: 0 0 0 3px rgba(83, 82, 237, 0.1);
   }
   
   @media (max-width: 768px) {
@@ -74,10 +91,10 @@ const InputWrapper = styled.div`
 
 const MessageInput = styled.textarea`
   flex: 1;
-  background: transparent;
   border: none;
-  color: #fff;
-  font-size: 14px;
+  background: transparent;
+  color: #ffffff;
+  font-size: 16px;
   resize: none;
   outline: none;
   min-height: 20px;
@@ -85,30 +102,27 @@ const MessageInput = styled.textarea`
   font-family: inherit;
   
   &::placeholder {
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 0.5);
   }
   
   @media (max-width: 768px) {
-    font-size: 16px; /* Prevent zoom on iOS */
+    font-size: 16px;
   }
 `;
 
 const SendButton = styled.button`
-  background: linear-gradient(135deg, #4ecdc4, #44a08d);
+  background: linear-gradient(135deg, #2ed573, #1e90ff);
   color: white;
   border: none;
-  padding: 8px 12px;
   border-radius: 12px;
+  padding: 12px 16px;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   transition: all 0.3s ease;
-  min-width: 36px;
-  min-height: 36px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
   position: relative;
   overflow: hidden;
+  min-width: 48px;
+  min-height: 48px;
   
   &::before {
     content: '';
@@ -127,37 +141,40 @@ const SendButton = styled.button`
   
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-    animation: ${pulse} 0.5s ease;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  }
+  
+  &:active {
+    transform: translateY(0);
   }
   
   &:disabled {
-    background: rgba(255, 255, 255, 0.2);
-    color: rgba(255, 255, 255, 0.5);
+    opacity: 0.6;
     cursor: not-allowed;
     transform: none;
-    box-shadow: none;
   }
   
   @media (max-width: 768px) {
     min-width: 44px;
     min-height: 44px;
-    padding: 10px;
+    padding: 10px 12px;
   }
 `;
 
 const TypingIndicator = styled.div`
-  padding: 8px 16px;
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
   font-style: italic;
-  background: rgba(255, 255, 255, 0.1);
+  padding: 8px 20px;
+  background: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(10px);
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+  z-index: 1;
   
   @media (max-width: 768px) {
-    padding: 6px 12px;
-    font-size: 11px;
+    padding: 6px 16px;
+    font-size: 13px;
   }
 `;
 

@@ -219,7 +219,7 @@ const App = () => {
       setMessages(prev => [...prev, {
         id: Date.now(),
         type: 'system',
-        content: `${data.user.username} sohbete katıldı`,
+        content: `${data?.user?.username || data?.username || 'Bir kullanıcı'} sohbete katıldı`,
         timestamp: new Date().toISOString()
       }]);
     });
@@ -230,7 +230,7 @@ const App = () => {
       setMessages(prev => [...prev, {
         id: Date.now(),
         type: 'system',
-        content: `${data.user.username} sohbetten ayrıldı`,
+        content: `${data?.user?.username || 'Bir kullanıcı'} sohbetten ayrıldı`,
         timestamp: new Date().toISOString()
       }]);
     });
