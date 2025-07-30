@@ -559,173 +559,265 @@ const VoiceRoom = ({ socket, user, activeUsers }) => {
   useEffect(() => {
     if (!socket) return;
 
-    socket.on('user_joined_voice', (userId) => {
-      console.log('Kullanıcı sesli odaya katıldı:', userId);
-      if (stream && userId !== socket.id) {
-        console.log('Yeni peer oluşturuluyor:', userId);
-        const peer = createPeer(userId, socket.id, stream);
-        peersRef.current[userId] = peer;
-        setPeers(prev => ({ ...prev, [userId]: peer }));
+    const handleUserJoined = (userId) => {
+      try {
+        console.log('Kullanıcı sesli odaya katıldı:', userId);
+        if (stream && userId !== socket.id) {
+          console.log('Yeni peer oluşturuluyor:', userId);
+          const peer = createPeer(userId, socket.id, stream);
+          if (peer) {
+            peersRef.current[userId] = peer;
+            setPeers(prev => ({ ...prev, [userId]: peer }));
+          } else {
+            console.error('Peer oluşturulamadı:', userId);
+          }
+        }
+      } catch (error) {
+        console.error('User joined error:', error);
       }
-    });
+    };
 
-    socket.on('receiving_returned_signal', (payload) => {
-      console.log('Sinyal alındı:', payload);
-      const peer = peersRef.current[payload.id];
-      if (peer) {
-        console.log('Mevcut peer\'e sinyal gönderiliyor:', payload.id);
-        peer.signal(payload.signal);
-      } else if (stream && payload.id !== socket.id) {
-        // Eğer peer yoksa yeni peer oluştur
-        console.log('Yeni peer oluşturuluyor (sinyal ile):', payload.id);
-        const newPeer = addPeer(payload.signal, payload.id, stream);
-        peersRef.current[payload.id] = newPeer;
-        setPeers(prev => ({ ...prev, [payload.id]: newPeer }));
+    const handleSignal = (payload) => {
+      try {
+        console.log('Sinyal alındı:', payload);
+        const peer = peersRef.current[payload.id];
+        if (peer) {
+          console.log('Mevcut peer\'e sinyal gönderiliyor:', payload.id);
+          try {
+            peer.signal(payload.signal);
+          } catch (error) {
+            console.error('Sinyal gönderme hatası:', error);
+          }
+        } else if (stream && payload.id !== socket.id) {
+          console.log('Yeni peer oluşturuluyor (sinyal ile):', payload.id);
+          const newPeer = addPeer(payload.signal, payload.id, stream);
+          if (newPeer) {
+            peersRef.current[payload.id] = newPeer;
+            setPeers(prev => ({ ...prev, [payload.id]: newPeer }));
+          } else {
+            console.error('Peer oluşturulamadı (sinyal ile):', payload.id);
+          }
+        }
+      } catch (error) {
+        console.error('Signal handling error:', error);
       }
-    });
+    };
 
-    socket.on('user_left_voice', (userId) => {
-      console.log('Kullanıcı sesli odadan ayrıldı:', userId);
-      if (peersRef.current[userId]) {
-        peersRef.current[userId].destroy();
-        delete peersRef.current[userId];
-        setPeers(prev => {
-          const newPeers = { ...prev };
-          delete newPeers[userId];
-          return newPeers;
-        });
+    const handleUserLeft = (userId) => {
+      try {
+        console.log('Kullanıcı sesli odadan ayrıldı:', userId);
+        if (peersRef.current[userId]) {
+          peersRef.current[userId].destroy();
+          delete peersRef.current[userId];
+          setPeers(prev => {
+            const newPeers = { ...prev };
+            delete newPeers[userId];
+            return newPeers;
+          });
+        }
+      } catch (error) {
+        console.error('User left error:', error);
       }
-    });
+    };
 
-    socket.on('voice_room_users', (data) => {
-      console.log('Sesli oda kullanıcıları:', data.users);
-      console.log('Mevcut voiceRoomUsers state:', voiceRoomUsers);
-      setVoiceRoomUsers(data.users);
-      console.log('Yeni voiceRoomUsers state:', data.users);
-    });
+    const handleVoiceRoomUsers = (data) => {
+      try {
+        console.log('Sesli oda kullanıcıları:', data.users);
+        setVoiceRoomUsers(data.users || []);
+      } catch (error) {
+        console.error('Voice room users error:', error);
+      }
+    };
 
-    socket.on('user_speaking_update', (data) => {
-      console.log('Kullanıcı konuşma durumu:', data);
-      setVoiceRoomUsers(prev => 
-        prev.map(user => 
-          user.id === data.userId 
-            ? { ...user, isSpeaking: data.isSpeaking, voiceLevel: data.voiceLevel || 0 }
-            : user
-        )
-      );
-    });
+    const handleUserSpeaking = (data) => {
+      try {
+        console.log('Kullanıcı konuşma durumu:', data);
+        setVoiceRoomUsers(prev => 
+          prev.map(user => 
+            user.id === data.userId 
+              ? { ...user, isSpeaking: data.isSpeaking, voiceLevel: data.voiceLevel || 0 }
+              : user
+          )
+        );
+      } catch (error) {
+        console.error('User speaking error:', error);
+      }
+    };
 
-    socket.on('user_voice_status_update', (data) => {
-      console.log('Kullanıcı ses durumu:', data);
-      setVoiceRoomUsers(prev => 
-        prev.map(user => 
-          user.id === data.userId 
-            ? { ...user, isMuted: data.isMuted, isVolumeMuted: data.isVolumeMuted }
-            : user
-        )
-      );
-    });
+    const handleUserVoiceStatus = (data) => {
+      try {
+        console.log('Kullanıcı ses durumu:', data);
+        setVoiceRoomUsers(prev => 
+          prev.map(user => 
+            user.id === data.userId 
+              ? { ...user, isMuted: data.isMuted, isVolumeMuted: data.isVolumeMuted }
+              : user
+          )
+        );
+      } catch (error) {
+        console.error('User voice status error:', error);
+      }
+    };
+
+    socket.on('user_joined_voice', handleUserJoined);
+    socket.on('receiving_returned_signal', handleSignal);
+    socket.on('user_left_voice', handleUserLeft);
+    socket.on('voice_room_users', handleVoiceRoomUsers);
+    socket.on('user_speaking_update', handleUserSpeaking);
+    socket.on('user_voice_status_update', handleUserVoiceStatus);
 
     return () => {
-      socket.off('user_joined_voice');
-      socket.off('receiving_returned_signal');
-      socket.off('user_left_voice');
-      socket.off('voice_room_users');
-      socket.off('user_speaking_update');
-      socket.off('user_voice_status_update');
+      socket.off('user_joined_voice', handleUserJoined);
+      socket.off('receiving_returned_signal', handleSignal);
+      socket.off('user_left_voice', handleUserLeft);
+      socket.off('voice_room_users', handleVoiceRoomUsers);
+      socket.off('user_speaking_update', handleUserSpeaking);
+      socket.off('user_voice_status_update', handleUserVoiceStatus);
     };
   }, [socket, stream]);
 
   const createPeer = (userToSignal, callerId, stream) => {
-    const peer = new Peer({
-      initiator: true,
-      trickle: false,
-      stream,
-      config: {
-        iceServers: [
-          { urls: 'stun:stun.l.google.com:19302' },
-          { urls: 'stun:stun1.l.google.com:19302' },
-          { urls: 'stun:stun2.l.google.com:19302' }
-        ]
-      }
-    });
+    console.log('createPeer çağrıldı:', { userToSignal, callerId, hasStream: !!stream });
+    
+    try {
+      const peer = new Peer({
+        initiator: true,
+        trickle: false,
+        stream,
+        config: {
+          iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' },
+            { urls: 'stun:stun2.l.google.com:19302' }
+          ]
+        }
+      });
 
-    peer.on('signal', signal => {
-      console.log('Sinyal gönderiliyor:', userToSignal);
-      socket.emit('sending_signal', { userToSignal, callerId, signal });
-    });
+      peer.on('signal', signal => {
+        console.log('Sinyal gönderiliyor:', userToSignal, 'Signal:', signal);
+        if (socket && socket.connected) {
+          socket.emit('sending_signal', { userToSignal, callerId, signal });
+        }
+      });
 
-    peer.on('stream', (remoteStream) => {
-      console.log('Uzak ses akışı alındı (createPeer):', userToSignal);
-      // Uzak ses akışını oynat
-      const audio = new Audio();
-      audio.srcObject = remoteStream;
-      audio.autoplay = true;
-      audio.volume = volume;
-      audio.play().catch(e => console.error('Ses oynatma hatası:', e));
-      
-      // Audio element'i sakla
-      peer.audioElement = audio;
-    });
+      peer.on('stream', (remoteStream) => {
+        console.log('Uzak ses akışı alındı (createPeer):', userToSignal);
+        console.log('Remote stream:', remoteStream);
+        
+        try {
+          // Uzak ses akışını oynat
+          const audio = new Audio();
+          audio.srcObject = remoteStream;
+          audio.autoplay = true;
+          audio.volume = volume;
+          
+          // Audio element'i sakla
+          peer.audioElement = audio;
+          
+          // Ses oynatmayı başlat
+          audio.play().catch(e => {
+            console.error('Ses oynatma hatası:', e);
+            // Kullanıcı etkileşimi gerekebilir
+            console.log('Ses oynatma için kullanıcı etkileşimi gerekebilir');
+          });
+        } catch (error) {
+          console.error('Audio oluşturma hatası:', error);
+        }
+      });
 
-    peer.on('error', (err) => {
-      console.error('Peer hatası (createPeer):', err);
-    });
+      peer.on('error', (err) => {
+        console.error('Peer hatası (createPeer):', err);
+      });
 
-    peer.on('close', () => {
-      console.log('Peer bağlantısı kapandı (createPeer):', userToSignal);
-    });
+      peer.on('close', () => {
+        console.log('Peer bağlantısı kapandı (createPeer):', userToSignal);
+      });
 
-    return peer;
+      peer.on('connect', () => {
+        console.log('Peer bağlantısı kuruldu (createPeer):', userToSignal);
+      });
+
+      return peer;
+    } catch (error) {
+      console.error('Peer oluşturma hatası:', error);
+      return null;
+    }
   };
 
   const addPeer = (incomingSignal, callerId, stream) => {
-    const peer = new Peer({
-      initiator: false,
-      trickle: false,
-      stream,
-      config: {
-        iceServers: [
-          { urls: 'stun:stun.l.google.com:19302' },
-          { urls: 'stun:stun1.l.google.com:19302' },
-          { urls: 'stun:stun2.l.google.com:19302' }
-        ]
-      }
-    });
+    console.log('addPeer çağrıldı:', { callerId, hasStream: !!stream, signal: incomingSignal });
+    
+    try {
+      const peer = new Peer({
+        initiator: false,
+        trickle: false,
+        stream,
+        config: {
+          iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' },
+            { urls: 'stun:stun2.l.google.com:19302' }
+          ]
+        }
+      });
 
-    peer.on('signal', signal => {
-      console.log('Sinyal döndürülüyor:', callerId);
-      socket.emit('returning_signal', { signal, callerId });
-    });
+      peer.on('signal', signal => {
+        console.log('Sinyal döndürülüyor:', callerId, 'Signal:', signal);
+        if (socket && socket.connected) {
+          socket.emit('returning_signal', { signal, callerId });
+        }
+      });
 
-    peer.on('stream', (remoteStream) => {
-      console.log('Uzak ses akışı alındı (addPeer):', callerId);
-      // Uzak ses akışını oynat
-      const audio = new Audio();
-      audio.srcObject = remoteStream;
-      audio.autoplay = true;
-      audio.volume = volume;
-      audio.play().catch(e => console.error('Ses oynatma hatası:', e));
-      
-      // Audio element'i sakla
-      peer.audioElement = audio;
-    });
+      peer.on('stream', (remoteStream) => {
+        console.log('Uzak ses akışı alındı (addPeer):', callerId);
+        console.log('Remote stream:', remoteStream);
+        
+        try {
+          // Uzak ses akışını oynat
+          const audio = new Audio();
+          audio.srcObject = remoteStream;
+          audio.autoplay = true;
+          audio.volume = volume;
+          
+          // Audio element'i sakla
+          peer.audioElement = audio;
+          
+          // Ses oynatmayı başlat
+          audio.play().catch(e => {
+            console.error('Ses oynatma hatası:', e);
+            // Kullanıcı etkileşimi gerekebilir
+            console.log('Ses oynatma için kullanıcı etkileşimi gerekebilir');
+          });
+        } catch (error) {
+          console.error('Audio oluşturma hatası:', error);
+        }
+      });
 
-    peer.on('error', (err) => {
-      console.error('Peer hatası (addPeer):', err);
-    });
+      peer.on('error', (err) => {
+        console.error('Peer hatası (addPeer):', err);
+      });
 
-    peer.on('close', () => {
-      console.log('Peer bağlantısı kapandı (addPeer):', callerId);
-    });
+      peer.on('close', () => {
+        console.log('Peer bağlantısı kapandı (addPeer):', callerId);
+      });
 
-    peer.signal(incomingSignal);
-    return peer;
+      peer.on('connect', () => {
+        console.log('Peer bağlantısı kuruldu (addPeer):', callerId);
+      });
+
+      peer.signal(incomingSignal);
+      return peer;
+    } catch (error) {
+      console.error('Peer oluşturma hatası (addPeer):', error);
+      return null;
+    }
   };
 
   const joinVoiceRoom = async () => {
     try {
       console.log('Sesli odaya katılmaya çalışılıyor...');
+      console.log('Socket durumu:', socket?.connected);
+      console.log('Kullanıcı:', user);
       
       const mediaStream = await navigator.mediaDevices.getUserMedia({ 
         video: false, 
@@ -751,13 +843,15 @@ const VoiceRoom = ({ socket, user, activeUsers }) => {
       }
 
       // Kullanıcı bilgilerini de gönder
-      socket.emit('join_voice_room', { 
+      const joinData = { 
         room: 'voice',
         user: {
           id: socket.id,
           username: user.username
         }
-      });
+      };
+      console.log('join_voice_room gönderiliyor:', joinData);
+      socket.emit('join_voice_room', joinData);
       
       // Ses seviyesi izlemeyi başlat
       startVoiceMonitoring(mediaStream);
@@ -884,46 +978,59 @@ const VoiceRoom = ({ socket, user, activeUsers }) => {
       setAnalyser(analyserNode);
       setDataArray(dataArray);
       
+      let isRunning = true;
+      
       const updateVoiceLevel = () => {
-        if (analyserNode && !isMuted) {
-          analyserNode.getByteFrequencyData(dataArray);
-          
-          let sum = 0;
-          for (let i = 0; i < dataArray.length; i++) {
-            sum += dataArray[i];
+        if (!isRunning) return;
+        
+        try {
+          if (analyserNode && !isMuted) {
+            analyserNode.getByteFrequencyData(dataArray);
+            
+            let sum = 0;
+            for (let i = 0; i < dataArray.length; i++) {
+              sum += dataArray[i];
+            }
+            const average = sum / dataArray.length;
+            const level = Math.min(100, (average / 128) * 100);
+            
+            setVoiceLevel(level);
+            
+            // Konuşma durumunu güncelle
+            const speaking = level > 5;
+            if (speaking !== isSpeaking) {
+              setIsSpeaking(speaking);
+              if (socket && socket.connected) {
+                socket.emit('user_speaking', { isSpeaking: speaking, voiceLevel: level });
+              }
+            }
+          } else {
+            setVoiceLevel(0);
+            if (isSpeaking) {
+              setIsSpeaking(false);
+              if (socket && socket.connected) {
+                socket.emit('user_speaking', { isSpeaking: false, voiceLevel: 0 });
+              }
+            }
           }
-          const average = sum / dataArray.length;
-          const level = Math.min(100, (average / 128) * 100);
           
-          console.log('Ses seviyesi:', level); // Debug için
-          setVoiceLevel(level);
-          
-          // Konuşma durumunu güncelle (daha hassas eşik)
-          const speaking = level > 3; // Eşiği düşürdük
-          if (speaking !== isSpeaking) {
-            setIsSpeaking(speaking);
-            socket.emit('user_speaking', { isSpeaking: speaking, voiceLevel: level });
-            console.log('Konuşma durumu değişti:', speaking, 'Seviye:', level);
-          } else if (speaking && level > 10) {
-            // Konuşma devam ediyorsa ses seviyesini güncelle
-            socket.emit('user_speaking', { isSpeaking: speaking, voiceLevel: level });
+          if (isRunning) {
+            const animationId = requestAnimationFrame(updateVoiceLevel);
+            setAnimationId(animationId);
           }
-          
-          const animationId = requestAnimationFrame(updateVoiceLevel);
-          setAnimationId(animationId);
-        } else {
-          setVoiceLevel(0);
-          if (isSpeaking) {
-            setIsSpeaking(false);
-            socket.emit('user_speaking', { isSpeaking: false, voiceLevel: 0 });
-          }
-          const animationId = requestAnimationFrame(updateVoiceLevel);
-          setAnimationId(animationId);
+        } catch (error) {
+          console.error('Ses seviyesi güncelleme hatası:', error);
+          isRunning = false;
         }
       };
       
       updateVoiceLevel();
       console.log('Ses izleme başlatıldı');
+      
+      // Cleanup function
+      return () => {
+        isRunning = false;
+      };
     } catch (error) {
       console.error('Ses izleme hatası:', error);
     }
@@ -935,8 +1042,12 @@ const VoiceRoom = ({ socket, user, activeUsers }) => {
       setAnimationId(null);
     }
     
-    if (audioContext) {
-      audioContext.close();
+    if (audioContext && audioContext.state !== 'closed') {
+      try {
+        audioContext.close();
+      } catch (error) {
+        console.log('AudioContext zaten kapalı');
+      }
       setAudioContext(null);
     }
     
@@ -951,8 +1062,12 @@ const VoiceRoom = ({ socket, user, activeUsers }) => {
       if (animationId) {
         cancelAnimationFrame(animationId);
       }
-      if (audioContext) {
-        audioContext.close();
+      if (audioContext && audioContext.state !== 'closed') {
+        try {
+          audioContext.close();
+        } catch (error) {
+          console.log('AudioContext zaten kapalı (cleanup)');
+        }
       }
     };
   }, [animationId, audioContext]);
