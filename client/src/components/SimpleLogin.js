@@ -1,16 +1,9 @@
 import React, { useState } from 'react';
 import styled, { keyframes } from 'styled-components';
-import { Hash, Mic } from 'lucide-react';
 
 const fadeIn = keyframes`
   from { opacity: 0; transform: translateY(30px); }
   to { opacity: 1; transform: translateY(0); }
-`;
-
-const pulse = keyframes`
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
 `;
 
 const LoginContainer = styled.div`
@@ -110,57 +103,7 @@ const Input = styled.input`
   }
 `;
 
-const ChatTypeContainer = styled.div`
-  display: flex;
-  gap: 12px;
-  margin-bottom: 30px;
-  
-  @media (max-width: 768px) {
-    gap: 8px;
-    margin-bottom: 25px;
-  }
-`;
-
-const ChatTypeButton = styled.button`
-  flex: 1;
-  background: ${props => props.active 
-    ? 'linear-gradient(135deg, #5352ed, #3742fa)' 
-    : 'rgba(255, 255, 255, 0.1)'};
-  backdrop-filter: blur(20px);
-  border: 2px solid ${props => props.active 
-    ? 'rgba(255, 255, 255, 0.3)' 
-    : 'rgba(255, 255, 255, 0.2)'};
-  border-radius: 12px;
-  padding: 16px 12px;
-  color: ${props => props.active ? '#ffffff' : '#ffffff'};
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  box-shadow: ${props => props.active 
-    ? '0 8px 25px rgba(83, 82, 237, 0.4)' 
-    : '0 4px 15px rgba(0, 0, 0, 0.3)'};
-  
-  &:hover {
-    background: ${props => props.active 
-      ? 'linear-gradient(135deg, #3742fa, #5352ed)' 
-      : 'rgba(255, 255, 255, 0.15)'};
-    transform: translateY(-2px);
-    box-shadow: ${props => props.active 
-      ? '0 12px 35px rgba(83, 82, 237, 0.5)' 
-      : '0 6px 20px rgba(0, 0, 0, 0.4)'};
-  }
-  
-  @media (max-width: 768px) {
-    padding: 12px 8px;
-    gap: 6px;
-  }
-`;
-
-const JoinButton = styled.button`
+const LoginButton = styled.button`
   width: 100%;
   background: linear-gradient(135deg, #2ed573, #1e90ff);
   color: white;
@@ -229,7 +172,6 @@ const ErrorMessage = styled.div`
 const SimpleLogin = ({ onLogin }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [chatType, setChatType] = useState('text');
   const [error, setError] = useState('');
 
   const handleSubmit = (e) => {
@@ -247,8 +189,7 @@ const SimpleLogin = ({ onLogin }) => {
     
     setError('');
     onLogin({
-      username: username.trim(),
-      chatType: chatType
+      username: username.trim()
     });
   };
 
@@ -278,29 +219,9 @@ const SimpleLogin = ({ onLogin }) => {
             />
           </InputWrapper>
           
-          <ChatTypeContainer>
-            <ChatTypeButton
-              type="button"
-              active={chatType === 'text'}
-              onClick={() => setChatType('text')}
-            >
-              <Hash size={20} />
-              <span>Yazılı</span>
-            </ChatTypeButton>
-            
-            <ChatTypeButton
-              type="button"
-              active={chatType === 'voice'}
-              onClick={() => setChatType('voice')}
-            >
-              <Mic size={20} />
-              <span>Sesli</span>
-            </ChatTypeButton>
-          </ChatTypeContainer>
-          
-          <JoinButton type="submit">
-            Sohbete Katıl
-          </JoinButton>
+          <LoginButton type="submit">
+            Giriş Yap
+          </LoginButton>
         </form>
         
         {error && <ErrorMessage>{error}</ErrorMessage>}

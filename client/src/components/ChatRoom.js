@@ -38,6 +38,9 @@ const ChatContainer = styled.div`
   
   @media (max-width: 768px) {
     height: calc(100vh - 120px);
+    /* iOS kayma sorunu için */
+    -webkit-overflow-scrolling: touch;
+    overflow-scrolling: touch;
   }
 `;
 
@@ -50,6 +53,9 @@ const MessagesArea = styled.div`
   
   @media (max-width: 768px) {
     padding: 16px;
+    /* iOS smooth scrolling */
+    -webkit-overflow-scrolling: touch;
+    overflow-scrolling: touch;
   }
 `;
 
@@ -114,6 +120,12 @@ const MessageInput = styled.textarea`
   
   @media (max-width: 768px) {
     font-size: 16px;
+    /* iOS kayma sorunu için */
+    -webkit-appearance: none;
+    -webkit-border-radius: 0;
+    border-radius: 0;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
   }
 `;
 

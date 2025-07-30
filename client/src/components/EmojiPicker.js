@@ -82,9 +82,9 @@ const EmojiPickerContainer = styled.div`
   
   @media (max-width: 768px) {
     position: fixed;
-    top: 50%;
+    top: 20%;
     left: 50%;
-    transform: translate(-50%, -50%);
+    transform: translateX(-50%);
     width: 90vw;
     max-width: 350px;
     bottom: auto;
@@ -102,6 +102,7 @@ const EmojiPickerContainer = styled.div`
   @media (max-width: 480px) {
     width: 95vw;
     max-width: 320px;
+    top: 15%;
     
     .EmojiPickerReact {
       --epr-emoji-size: 20px;
@@ -154,14 +155,14 @@ const EmojiPicker = ({ onEmojiClick, isOpen, onToggle }) => {
             />
           )}
           <EmojiPickerContainer>
-            <EmojiPickerReact
-              onEmojiClick={onEmojiClick}
-              autoFocusSearch={false}
-              searchPlaceholder="Emoji ara..."
-              width="100%"
-              height={window.innerWidth <= 768 ? 350 : 400}
-              lazyLoadEmojis={true}
-            />
+                      <EmojiPickerReact
+            onEmojiClick={onEmojiClick}
+            autoFocusSearch={false}
+            searchPlaceholder="Emoji ara..."
+            width="100%"
+            height={window.innerWidth <= 768 ? 300 : 400}
+            lazyLoadEmojis={true}
+          />
           </EmojiPickerContainer>
         </>
       )}

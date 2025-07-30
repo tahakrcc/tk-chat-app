@@ -42,21 +42,22 @@ const GifPickerContainer = styled.div`
   
   @media (max-width: 768px) {
     position: fixed;
-    top: 50%;
+    top: 20%;
     left: 50%;
-    transform: translate(-50%, -50%);
+    transform: translateX(-50%);
     width: 90vw;
     max-width: 350px;
     bottom: auto;
     margin-bottom: 0;
-    max-height: 70vh;
+    max-height: 60vh;
     z-index: 9999;
   }
   
   @media (max-width: 480px) {
     width: 95vw;
     max-width: 320px;
-    max-height: 65vh;
+    max-height: 55vh;
+    top: 15%;
   }
 `;
 

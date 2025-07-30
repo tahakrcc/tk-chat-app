@@ -1144,14 +1144,7 @@ const VoiceRoom = ({ socket, currentUser, roomName }) => {
             <span className="hide-on-mobile">Ses Testi</span>
           </TestSoundButton>
           
-          <VoiceButton
-            variant="monitor"
-            onClick={() => setShowVoiceMonitor(true)}
-            title="Ses monitörü"
-          >
-            📊
-            <span className="hide-on-mobile">Ses Monitörü</span>
-          </VoiceButton>
+
           
           <VoiceButton
             variant="leave"

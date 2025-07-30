@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import io from 'socket.io-client';
 import SimpleLogin from './components/SimpleLogin';
+import RoomSelection from './components/RoomSelection';
 import ChatRoom from './components/ChatRoom';
 import VoiceRoom from './components/VoiceRoom';
 import { ArrowLeft, Users, Hash, Mic, LogOut } from 'lucide-react';
@@ -202,6 +203,15 @@ const App = () => {
     const savedUser = localStorage.getItem('chatUser');
     return savedUser ? JSON.parse(savedUser) : null;
   });
+  const [showRoomSelection, setShowRoomSelection] = useState(() => {
+    // Eğer kullanıcı varsa ama chatType yoksa oda seçimi göster
+    const savedUser = localStorage.getItem('chatUser');
+    if (savedUser) {
+      const userData = JSON.parse(savedUser);
+      return !userData.chatType;
+    }
+    return false;
+  });
   const [activeUsers, setActiveUsers] = useState([]);
   const [messages, setMessages] = useState([]);
 
@@ -274,7 +284,7 @@ const App = () => {
 
   // Kullanıcı varsa socket'e bağlan
   useEffect(() => {
-    if (user && socket && socket.connected) {
+    if (user && socket && socket.connected && user.chatType) {
       console.log('✅ Kullanıcı zaten giriş yapmış, socket\'e bağlanıyor:', user);
       socket.emit('user_join', { ...user, room: 'general' });
     }
@@ -283,21 +293,31 @@ const App = () => {
   const handleLogin = (userData) => {
     console.log('🔐 Kullanıcı giriş yapıyor:', userData);
     setUser(userData);
+    setShowRoomSelection(true);
     
-    // Kullanıcı bilgisini localStorage'a kaydet
+    // Kullanıcı bilgisini localStorage'a kaydet (chatType olmadan)
     localStorage.setItem('chatUser', JSON.stringify(userData));
+  };
+
+  const handleRoomSelect = (userWithChatType) => {
+    console.log('🏠 Oda seçildi:', userWithChatType);
+    setUser(userWithChatType);
+    setShowRoomSelection(false);
+    
+    // Kullanıcı bilgisini localStorage'a kaydet (chatType ile)
+    localStorage.setItem('chatUser', JSON.stringify(userWithChatType));
     
     // Socket bağlantısını bekle ve kullanıcıyı ekle
     if (socket && socket.connected) {
       console.log('✅ Socket bağlı, kullanıcı ekleniyor');
-      socket.emit('user_join', { ...userData, room: 'general' });
+      socket.emit('user_join', { ...userWithChatType, room: 'general' });
     } else {
       console.log('⏳ Socket bağlantısı bekleniyor...');
       // Socket bağlantısını bekle
       const checkConnection = setInterval(() => {
         if (socket && socket.connected) {
           console.log('✅ Socket bağlandı, kullanıcı ekleniyor');
-          socket.emit('user_join', { ...userData, room: 'general' });
+          socket.emit('user_join', { ...userWithChatType, room: 'general' });
           clearInterval(checkConnection);
         }
       }, 100);
@@ -310,21 +330,31 @@ const App = () => {
     }
   };
 
-  const handleLogout = () => {
-    if (socket) {
-      socket.emit('user_logout');
-    }
-    setUser(null);
-    setMessages([]);
-    // localStorage'dan kullanıcı bilgisini sil
-    localStorage.removeItem('chatUser');
-  };
-
   const handleBackToLogin = () => {
     if (socket) {
       socket.emit('user_logout');
     }
     setUser(null);
+    setShowRoomSelection(false);
+    setMessages([]);
+    // localStorage'dan kullanıcı bilgisini sil
+    localStorage.removeItem('chatUser');
+  };
+
+  const handleBackToRoomSelection = () => {
+    if (socket) {
+      socket.emit('user_logout');
+    }
+    setShowRoomSelection(true);
+    setMessages([]);
+  };
+
+  const handleLogout = () => {
+    if (socket) {
+      socket.emit('user_logout');
+    }
+    setUser(null);
+    setShowRoomSelection(false);
     setMessages([]);
     // localStorage'dan kullanıcı bilgisini sil
     localStorage.removeItem('chatUser');
@@ -350,16 +380,29 @@ const App = () => {
     }
   };
 
+  // Login sayfası
   if (!user) {
     return <SimpleLogin onLogin={handleLogin} />;
   }
 
+  // Oda seçimi sayfası
+  if (showRoomSelection) {
+    return (
+      <RoomSelection 
+        user={user} 
+        onRoomSelect={handleRoomSelect}
+        onBackToLogin={handleBackToLogin}
+      />
+    );
+  }
+
+  // Chat odası
   return (
     <AppContainer>
       <ChatHeader>
-        <BackButton onClick={handleBackToLogin}>
+        <BackButton onClick={handleBackToRoomSelection}>
           <ArrowLeft size={16} />
-          <span className="hide-on-mobile">Geri Dön</span>
+          <span className="hide-on-mobile">Oda Seçimi</span>
         </BackButton>
         
         <ChatTypeIcon>
