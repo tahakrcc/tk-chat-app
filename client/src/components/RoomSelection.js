@@ -15,7 +15,7 @@ const pulse = keyframes`
 
 const RoomSelectionContainer = styled.div`
   min-height: 100vh;
-  background: linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #000000 100%);
+  background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 25%, #16213e 50%, #0f3460 75%, #533483 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -30,9 +30,10 @@ const RoomSelectionContainer = styled.div`
     right: 0;
     bottom: 0;
     background: 
-      radial-gradient(circle at 20% 80%, rgba(83, 82, 237, 0.1) 0%, transparent 50%),
-      radial-gradient(circle at 80% 20%, rgba(46, 213, 115, 0.1) 0%, transparent 50%),
-      radial-gradient(circle at 40% 40%, rgba(255, 71, 87, 0.1) 0%, transparent 50%);
+      radial-gradient(circle at 20% 80%, rgba(138, 43, 226, 0.15) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, rgba(64, 224, 208, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 40% 40%, rgba(255, 105, 180, 0.08) 0%, transparent 50%),
+      radial-gradient(circle at 90% 90%, rgba(255, 215, 0, 0.05) 0%, transparent 50%);
     pointer-events: none;
     z-index: 0;
   }
@@ -43,12 +44,12 @@ const RoomSelectionContainer = styled.div`
 `;
 
 const RoomSelectionCard = styled.div`
-  background: rgba(0, 0, 0, 0.9);
+  background: rgba(15, 15, 35, 0.95);
   backdrop-filter: blur(30px);
-  border-radius: 20px;
+  border-radius: 24px;
   padding: 40px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
-  border: 2px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.8);
+  border: 2px solid rgba(138, 43, 226, 0.3);
   width: 100%;
   max-width: 500px;
   position: relative;
@@ -73,12 +74,12 @@ const Header = styled.div`
 `;
 
 const BackButton = styled.button`
-  background: linear-gradient(135deg, #5352ed, #3742fa);
+  background: linear-gradient(135deg, #8a2be2, #9370db);
   backdrop-filter: blur(15px);
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.1);
   color: #ffffff;
   padding: 10px 14px;
-  border-radius: 12px;
+  border-radius: 16px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -86,13 +87,33 @@ const BackButton = styled.button`
   font-size: 14px;
   font-weight: 700;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 6px 20px rgba(138, 43, 226, 0.3);
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+  }
+  
+  &:hover::before {
+    left: 100%;
+  }
   
   &:hover {
-    background: linear-gradient(135deg, #3742fa, #5352ed);
-    color: #ffffff;
+    background: linear-gradient(135deg, #9370db, #8a2be2);
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 8px 25px rgba(138, 43, 226, 0.4);
+  }
+  
+  &:active {
+    transform: translateY(0);
   }
   
   @media (max-width: 768px) {
@@ -104,10 +125,15 @@ const BackButton = styled.button`
 
 const Title = styled.h1`
   color: #ffffff;
-  margin: 0;
   font-size: 24px;
   font-weight: 800;
-  text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+  margin: 0;
+  flex: 1;
+  text-align: center;
+  background: linear-gradient(135deg, #8a2be2, #40e0d0);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
   
   @media (max-width: 768px) {
     font-size: 20px;
@@ -117,128 +143,89 @@ const Title = styled.h1`
 const UserInfo = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-left: auto;
-  color: #2ed573;
-  font-weight: 600;
+  gap: 12px;
+  margin-bottom: 30px;
+  padding: 16px;
+  background: rgba(138, 43, 226, 0.1);
+  border-radius: 16px;
+  border: 1px solid rgba(138, 43, 226, 0.2);
   
   @media (max-width: 768px) {
-    gap: 6px;
-    font-size: 14px;
+    margin-bottom: 25px;
+    padding: 12px;
   }
 `;
 
 const UserAvatar = styled.div`
-  width: 24px;
-  height: 24px;
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #8a2be2, #40e0d0);
   border-radius: 50%;
-  background: linear-gradient(135deg, #5352ed, #3742fa);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  color: #ffffff;
   font-weight: 700;
-  font-size: 10px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+  font-size: 16px;
+  box-shadow: 0 4px 15px rgba(138, 43, 226, 0.3);
   animation: ${pulse} 2s infinite;
-  border: 2px solid rgba(255, 255, 255, 0.2);
-`;
-
-const RoomTypeContainer = styled.div`
-  display: flex;
-  gap: 16px;
-  margin-bottom: 30px;
   
   @media (max-width: 768px) {
-    gap: 12px;
-    margin-bottom: 25px;
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
   }
 `;
 
-const RoomTypeButton = styled.button`
+const UserDetails = styled.div`
   flex: 1;
-  background: ${props => props.active 
-    ? 'linear-gradient(135deg, #5352ed, #3742fa)' 
-    : 'rgba(255, 255, 255, 0.1)'};
-  backdrop-filter: blur(20px);
-  border: 2px solid ${props => props.active 
-    ? 'rgba(255, 255, 255, 0.3)' 
-    : 'rgba(255, 255, 255, 0.2)'};
-  border-radius: 16px;
-  padding: 24px 16px;
-  color: ${props => props.active ? '#ffffff' : '#ffffff'};
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  box-shadow: ${props => props.active 
-    ? '0 8px 25px rgba(83, 82, 237, 0.4)' 
-    : '0 4px 15px rgba(0, 0, 0, 0.3)'};
-  
-  &:hover {
-    background: ${props => props.active 
-      ? 'linear-gradient(135deg, #3742fa, #5352ed)' 
-      : 'rgba(255, 255, 255, 0.15)'};
-    transform: translateY(-2px);
-    box-shadow: ${props => props.active 
-      ? '0 12px 35px rgba(83, 82, 237, 0.5)' 
-      : '0 6px 20px rgba(0, 0, 0, 0.4)'};
-  }
-  
-  @media (max-width: 768px) {
-    padding: 20px 12px;
-    gap: 8px;
-  }
 `;
 
-const RoomIcon = styled.div`
-  font-size: 32px;
-  margin-bottom: 8px;
-  
-  @media (max-width: 768px) {
-    font-size: 28px;
-    margin-bottom: 6px;
-  }
-`;
-
-const RoomTitle = styled.div`
+const Username = styled.div`
+  color: #40e0d0;
   font-size: 16px;
   font-weight: 700;
+  margin-bottom: 4px;
   
   @media (max-width: 768px) {
     font-size: 14px;
   }
 `;
 
-const RoomDescription = styled.div`
+const UserStatus = styled.div`
+  color: rgba(255, 255, 255, 0.7);
   font-size: 12px;
-  opacity: 0.8;
-  text-align: center;
-  line-height: 1.4;
+  font-weight: 600;
   
   @media (max-width: 768px) {
     font-size: 11px;
   }
 `;
 
-const JoinButton = styled.button`
-  width: 100%;
-  background: linear-gradient(135deg, #2ed573, #1e90ff);
-  color: white;
-  border: none;
-  border-radius: 12px;
-  padding: 18px;
-  font-size: 18px;
-  font-weight: 800;
+const RoomOptions = styled.div`
+  display: grid;
+  gap: 20px;
+  margin-bottom: 30px;
+  
+  @media (max-width: 768px) {
+    gap: 16px;
+    margin-bottom: 25px;
+  }
+`;
+
+const RoomOption = styled.button`
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  padding: 24px;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  gap: 16px;
   position: relative;
   overflow: hidden;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
   
   &::before {
     content: '';
@@ -247,7 +234,7 @@ const JoinButton = styled.button`
     left: -100%;
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
     transition: left 0.5s;
   }
   
@@ -256,35 +243,80 @@ const JoinButton = styled.button`
   }
   
   &:hover {
-    background: linear-gradient(135deg, #1e90ff, #2ed573);
-    transform: translateY(-3px);
-    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.5);
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(64, 224, 208, 0.5);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
   }
   
   &:active {
-    transform: translateY(-1px);
-  }
-  
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    transform: none;
+    transform: translateY(0);
   }
   
   @media (max-width: 768px) {
-    padding: 16px;
+    padding: 20px;
+    gap: 12px;
+  }
+`;
+
+const RoomIcon = styled.div`
+  width: 50px;
+  height: 50px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: #ffffff;
+  flex-shrink: 0;
+  
+  @media (max-width: 768px) {
+    width: 44px;
+    height: 44px;
+    font-size: 20px;
+  }
+`;
+
+const TextRoomIcon = styled(RoomIcon)`
+  background: linear-gradient(135deg, #8a2be2, #9370db);
+  box-shadow: 0 4px 15px rgba(138, 43, 226, 0.3);
+`;
+
+const VoiceRoomIcon = styled(RoomIcon)`
+  background: linear-gradient(135deg, #40e0d0, #20b2aa);
+  box-shadow: 0 4px 15px rgba(64, 224, 208, 0.3);
+`;
+
+const RoomInfo = styled.div`
+  flex: 1;
+  text-align: left;
+`;
+
+const RoomTitle = styled.div`
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  
+  @media (max-width: 768px) {
     font-size: 16px;
   }
 `;
 
-const RoomSelection = ({ user, onRoomSelect, onBackToLogin }) => {
-  const [selectedRoomType, setSelectedRoomType] = useState('text');
+const RoomDescription = styled.div`
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+  
+  @media (max-width: 768px) {
+    font-size: 13px;
+  }
+`;
 
+const RoomSelection = ({ user, onRoomSelect, onBackToLogin }) => {
   const handleJoinRoom = () => {
-    onRoomSelect({
-      ...user,
-      chatType: selectedRoomType
-    });
+    // This will be handled by the parent component
   };
 
   return (
@@ -295,50 +327,46 @@ const RoomSelection = ({ user, onRoomSelect, onBackToLogin }) => {
             <ArrowLeft size={16} />
             <span className="hide-on-mobile">Geri</span>
           </BackButton>
-          
           <Title>Oda Seçimi</Title>
-          
-          <UserInfo>
-            <UserAvatar>
-              {user.username.charAt(0).toUpperCase()}
-            </UserAvatar>
-            <span className="hide-on-mobile">{user.username}</span>
-          </UserInfo>
         </Header>
-        
-        <RoomTypeContainer>
-          <RoomTypeButton
-            active={selectedRoomType === 'text'}
-            onClick={() => setSelectedRoomType('text')}
-          >
-            <RoomIcon>
-              <Hash size={32} />
-            </RoomIcon>
-            <RoomTitle>Yazılı Sohbet</RoomTitle>
-            <RoomDescription>
-              Emoji ve GIF desteği ile<br />
-              yazılı mesajlaşma
-            </RoomDescription>
-          </RoomTypeButton>
-          
-          <RoomTypeButton
-            active={selectedRoomType === 'voice'}
-            onClick={() => setSelectedRoomType('voice')}
-          >
-            <RoomIcon>
-              <Mic size={32} />
-            </RoomIcon>
-            <RoomTitle>Sesli Sohbet</RoomTitle>
-            <RoomDescription>
-              Gerçek zamanlı<br />
-              sesli iletişim
-            </RoomDescription>
-          </RoomTypeButton>
-        </RoomTypeContainer>
-        
-        <JoinButton onClick={handleJoinRoom}>
-          {selectedRoomType === 'text' ? 'Yazılı Sohbete Katıl' : 'Sesli Sohbete Katıl'}
-        </JoinButton>
+
+        <UserInfo>
+          <UserAvatar>
+            {user.username.charAt(0).toUpperCase()}
+          </UserAvatar>
+          <UserDetails>
+            <Username>{user.username}</Username>
+            <UserStatus>Çevrimiçi</UserStatus>
+          </UserDetails>
+        </UserInfo>
+
+        <RoomOptions>
+          <RoomOption onClick={() => onRoomSelect({ chatType: 'text' })}>
+            <TextRoomIcon>
+              <Hash size={24} />
+            </TextRoomIcon>
+            <RoomInfo>
+              <RoomTitle>Yazılı Sohbet</RoomTitle>
+              <RoomDescription>
+                Metin mesajları, emoji ve GIF'ler ile sohbet edin. 
+                Gerçek zamanlı mesajlaşma deneyimi.
+              </RoomDescription>
+            </RoomInfo>
+          </RoomOption>
+
+          <RoomOption onClick={() => onRoomSelect({ chatType: 'voice' })}>
+            <VoiceRoomIcon>
+              <Mic size={24} />
+            </VoiceRoomIcon>
+            <RoomInfo>
+              <RoomTitle>Sesli Sohbet</RoomTitle>
+              <RoomDescription>
+                Sesli görüşme yapın. Mikrofon ve ses kontrolleri ile 
+                kaliteli ses deneyimi.
+              </RoomDescription>
+            </RoomInfo>
+          </RoomOption>
+        </RoomOptions>
       </RoomSelectionCard>
     </RoomSelectionContainer>
   );

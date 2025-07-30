@@ -10,11 +10,9 @@ const fadeIn = keyframes`
   to { opacity: 1; transform: translateY(0); }
 `;
 
-
-
 const ChatContainer = styled.div`
   flex: 1;
-  background: linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #000000 100%);
+  background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 25%, #16213e 50%, #0f3460 75%, #533483 100%);
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -29,16 +27,15 @@ const ChatContainer = styled.div`
     right: 0;
     bottom: 0;
     background: 
-      radial-gradient(circle at 20% 80%, rgba(83, 82, 237, 0.1) 0%, transparent 50%),
-      radial-gradient(circle at 80% 20%, rgba(46, 213, 115, 0.1) 0%, transparent 50%),
-      radial-gradient(circle at 40% 40%, rgba(255, 71, 87, 0.1) 0%, transparent 50%);
+      radial-gradient(circle at 20% 80%, rgba(138, 43, 226, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, rgba(64, 224, 208, 0.08) 0%, transparent 50%),
+      radial-gradient(circle at 40% 40%, rgba(255, 105, 180, 0.06) 0%, transparent 50%);
     pointer-events: none;
     z-index: 0;
   }
   
   @media (max-width: 768px) {
     height: calc(100vh - 120px);
-    /* iOS kayma sorunu için */
     -webkit-overflow-scrolling: touch;
     overflow-scrolling: touch;
   }
@@ -53,19 +50,19 @@ const MessagesArea = styled.div`
   
   @media (max-width: 768px) {
     padding: 16px;
-    /* iOS smooth scrolling */
     -webkit-overflow-scrolling: touch;
     overflow-scrolling: touch;
   }
 `;
 
 const MessageInputContainer = styled.div`
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(15, 15, 35, 0.95);
   backdrop-filter: blur(30px);
-  border-top: 2px solid rgba(255, 255, 255, 0.1);
+  border-top: 2px solid rgba(138, 43, 226, 0.3);
   padding: 20px;
   position: relative;
   z-index: 1;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
   
   @media (max-width: 768px) {
     padding: 16px;
@@ -76,29 +73,29 @@ const InputWrapper = styled.div`
   display: flex;
   gap: 12px;
   align-items: flex-end;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(15, 15, 35, 0.8);
   backdrop-filter: blur(20px);
-  border-radius: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  padding: 12px;
+  border-radius: 20px;
+  border: 2px solid rgba(138, 43, 226, 0.3);
+  padding: 16px;
   transition: all 0.3s ease;
   position: relative;
   z-index: 1000;
   
   &:focus-within {
-    border-color: rgba(83, 82, 237, 0.8);
-    box-shadow: 0 0 0 4px rgba(83, 82, 237, 0.3);
-    background: rgba(0, 0, 0, 0.8);
+    border-color: rgba(64, 224, 208, 0.8);
+    box-shadow: 0 0 0 4px rgba(64, 224, 208, 0.2);
+    background: rgba(15, 15, 35, 0.9);
   }
   
   @media (max-width: 768px) {
-    gap: 6px;
-    padding: 8px;
+    gap: 8px;
+    padding: 12px;
   }
   
   @media (max-width: 480px) {
-    gap: 4px;
-    padding: 6px;
+    gap: 6px;
+    padding: 10px;
   }
 `;
 
@@ -116,13 +113,12 @@ const MessageInput = styled.textarea`
   font-family: inherit;
   
   &::placeholder {
-    color: rgba(255, 255, 255, 0.8);
+    color: rgba(255, 255, 255, 0.6);
     font-weight: 500;
   }
   
   @media (max-width: 768px) {
     font-size: 16px;
-    /* iOS kayma sorunu için */
     -webkit-appearance: none;
     -webkit-border-radius: 0;
     border-radius: 0;
@@ -137,14 +133,14 @@ const EmojiButton = styled.button`
   color: #ffffff;
   cursor: pointer;
   padding: 8px;
-  border-radius: 8px;
+  border-radius: 12px;
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
   justify-content: center;
   
   &:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(138, 43, 226, 0.2);
     transform: scale(1.1);
   }
   
@@ -171,14 +167,14 @@ const GifButton = styled.button`
   color: #ffffff;
   cursor: pointer;
   padding: 8px;
-  border-radius: 8px;
+  border-radius: 12px;
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
   justify-content: center;
   
   &:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(64, 224, 208, 0.2);
     transform: scale(1.1);
   }
   
@@ -200,14 +196,14 @@ const GifButton = styled.button`
 `;
 
 const SendButton = styled.button`
-  background: linear-gradient(135deg, #2ed573, #1e90ff);
+  background: linear-gradient(135deg, #8a2be2, #40e0d0);
   color: white;
   border: none;
-  border-radius: 12px;
+  border-radius: 16px;
   padding: 12px 16px;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 6px 20px rgba(138, 43, 226, 0.3);
   position: relative;
   overflow: hidden;
   min-width: 48px;
@@ -230,9 +226,9 @@ const SendButton = styled.button`
   }
   
   &:hover {
-    background: linear-gradient(135deg, #1e90ff, #2ed573);
+    background: linear-gradient(135deg, #40e0d0, #8a2be2);
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 8px 25px rgba(138, 43, 226, 0.4);
   }
   
   &:active {
@@ -253,19 +249,19 @@ const SendButton = styled.button`
 `;
 
 const TypingIndicator = styled.div`
-  color: #ffffff;
+  color: #40e0d0;
   font-size: 14px;
   font-weight: 700;
-  padding: 8px 20px;
-  background: rgba(0, 0, 0, 0.8);
+  padding: 12px 20px;
+  background: rgba(15, 15, 35, 0.95);
   backdrop-filter: blur(20px);
-  border-top: 2px solid rgba(255, 255, 255, 0.1);
+  border-top: 2px solid rgba(138, 43, 226, 0.2);
   position: relative;
   z-index: 1;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
   
   @media (max-width: 768px) {
-    padding: 6px 16px;
+    padding: 10px 16px;
     font-size: 13px;
   }
 `;

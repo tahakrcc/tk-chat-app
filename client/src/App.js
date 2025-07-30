@@ -18,9 +18,14 @@ const pulse = keyframes`
   100% { transform: scale(1); }
 `;
 
+const shimmer = keyframes`
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+`;
+
 const AppContainer = styled.div`
   min-height: 100vh;
-  background: linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #000000 100%);
+  background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 25%, #16213e 50%, #0f3460 75%, #533483 100%);
   display: flex;
   flex-direction: column;
   animation: ${fadeIn} 0.6s ease-out;
@@ -34,9 +39,10 @@ const AppContainer = styled.div`
     right: 0;
     bottom: 0;
     background: 
-      radial-gradient(circle at 20% 80%, rgba(83, 82, 237, 0.1) 0%, transparent 50%),
-      radial-gradient(circle at 80% 20%, rgba(46, 213, 115, 0.1) 0%, transparent 50%),
-      radial-gradient(circle at 40% 40%, rgba(255, 71, 87, 0.1) 0%, transparent 50%);
+      radial-gradient(circle at 20% 80%, rgba(138, 43, 226, 0.15) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, rgba(64, 224, 208, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 40% 40%, rgba(255, 105, 180, 0.08) 0%, transparent 50%),
+      radial-gradient(circle at 90% 90%, rgba(255, 215, 0, 0.05) 0%, transparent 50%);
     pointer-events: none;
     z-index: 0;
   }
@@ -48,51 +54,72 @@ const AppContainer = styled.div`
 `;
 
 const ChatHeader = styled.div`
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(20px);
-  padding: 16px;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  background: rgba(15, 15, 35, 0.95);
+  backdrop-filter: blur(25px);
+  padding: 20px;
+  border-bottom: 2px solid rgba(138, 43, 226, 0.3);
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
   color: #ffffff;
   font-weight: 700;
   position: relative;
   z-index: 1;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   
   @media (max-width: 768px) {
-    padding: 12px;
-    gap: 8px;
+    padding: 16px;
+    gap: 12px;
   }
 `;
 
 const BackButton = styled.button`
-  background: linear-gradient(135deg, #5352ed, #3742fa);
+  background: linear-gradient(135deg, #8a2be2, #9370db);
   backdrop-filter: blur(15px);
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.1);
   color: #ffffff;
-  padding: 10px 14px;
-  border-radius: 12px;
+  padding: 12px 18px;
+  border-radius: 16px;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   font-size: 14px;
   font-weight: 700;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 6px 20px rgba(138, 43, 226, 0.3);
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+  }
+  
+  &:hover::before {
+    left: 100%;
+  }
   
   &:hover {
-    background: linear-gradient(135deg, #3742fa, #5352ed);
-    color: #ffffff;
+    background: linear-gradient(135deg, #9370db, #8a2be2);
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 8px 25px rgba(138, 43, 226, 0.4);
+  }
+  
+  &:active {
+    transform: translateY(0);
   }
   
   @media (max-width: 768px) {
-    padding: 8px 12px;
+    padding: 10px 14px;
     font-size: 13px;
-    gap: 4px;
+    gap: 6px;
   }
 `;
 
@@ -100,98 +127,101 @@ const ChatTypeIcon = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #2ed573;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-  font-weight: 700;
+  flex: 1;
+  font-size: 16px;
   
   @media (max-width: 768px) {
-    gap: 6px;
     font-size: 14px;
+    gap: 6px;
   }
 `;
 
 const UserInfo = styled.div`
-  margin-left: auto;
   display: flex;
   align-items: center;
-  gap: 8px;
-  color: #ffffff;
-  font-size: 14px;
-  font-weight: 600;
+  gap: 12px;
+  margin-left: auto;
   
   @media (max-width: 768px) {
-    gap: 6px;
-    font-size: 13px;
+    gap: 8px;
   }
 `;
 
 const UserAvatar = styled.div`
-  width: 28px;
-  height: 28px;
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #8a2be2, #40e0d0);
   border-radius: 50%;
-  background: linear-gradient(135deg, #5352ed, #3742fa);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
   font-weight: 700;
-  font-size: 12px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+  font-size: 16px;
+  color: #ffffff;
+  box-shadow: 0 4px 15px rgba(138, 43, 226, 0.3);
   animation: ${pulse} 2s infinite;
-  border: 2px solid rgba(255, 255, 255, 0.2);
   
   @media (max-width: 768px) {
-    width: 24px;
-    height: 24px;
-    font-size: 10px;
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
   }
 `;
 
 const LogoutButton = styled.button`
-  background: linear-gradient(135deg, #ff4757, #ff3742);
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  color: white;
+  background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+  border: none;
+  color: #ffffff;
   padding: 8px 12px;
-  border-radius: 10px;
+  border-radius: 12px;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   font-size: 12px;
   font-weight: 700;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
   
   &:hover {
-    background: linear-gradient(135deg, #ff3742, #ff4757);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+    background: linear-gradient(135deg, #ee5a24, #ff6b6b);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+  }
+  
+  &:active {
+    transform: translateY(0);
   }
   
   @media (max-width: 768px) {
     padding: 6px 10px;
     font-size: 11px;
-    gap: 3px;
+    gap: 4px;
   }
 `;
 
 const ActiveUsersBar = styled.div`
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(15, 15, 35, 0.8);
   backdrop-filter: blur(20px);
-  padding: 10px 16px;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  padding: 12px 20px;
+  border-bottom: 1px solid rgba(138, 43, 226, 0.2);
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #ffffff;
+  color: #b8b8b8;
   font-size: 14px;
   font-weight: 600;
   position: relative;
   z-index: 1;
   
+  span {
+    color: #40e0d0;
+    font-weight: 700;
+  }
+  
   @media (max-width: 768px) {
-    padding: 8px 12px;
-    font-size: 12px;
+    padding: 10px 16px;
+    font-size: 13px;
     gap: 6px;
   }
 `;
@@ -218,7 +248,7 @@ const App = () => {
   useEffect(() => {
     const socketUrl = process.env.NODE_ENV === 'production' 
       ? (window.ENV?.REACT_APP_BACKEND_URL || 'https://tk-chat-app.onrender.com')
-      : 'http://localhost:5000';
+      : 'http://localhost:5001';
     
     console.log('Socket URL:', socketUrl);
     
@@ -301,62 +331,44 @@ const App = () => {
 
   const handleRoomSelect = (userWithChatType) => {
     console.log('🏠 Oda seçildi:', userWithChatType);
-    setUser(userWithChatType);
+    const updatedUser = { ...user, ...userWithChatType };
+    setUser(updatedUser);
     setShowRoomSelection(false);
     
     // Kullanıcı bilgisini localStorage'a kaydet (chatType ile)
-    localStorage.setItem('chatUser', JSON.stringify(userWithChatType));
+    localStorage.setItem('chatUser', JSON.stringify(updatedUser));
     
-    // Socket bağlantısını bekle ve kullanıcıyı ekle
+    // Socket'e bağlan ve odaya katıl
     if (socket && socket.connected) {
-      console.log('✅ Socket bağlı, kullanıcı ekleniyor');
-      socket.emit('user_join', { ...userWithChatType, room: 'general' });
-    } else {
-      console.log('⏳ Socket bağlantısı bekleniyor...');
-      // Socket bağlantısını bekle
-      const checkConnection = setInterval(() => {
-        if (socket && socket.connected) {
-          console.log('✅ Socket bağlandı, kullanıcı ekleniyor');
-          socket.emit('user_join', { ...userWithChatType, room: 'general' });
-          clearInterval(checkConnection);
-        }
-      }, 100);
-      
-      // 10 saniye sonra timeout
-      setTimeout(() => {
-        clearInterval(checkConnection);
-        console.log('❌ Socket bağlantısı timeout');
-      }, 10000);
+      socket.emit('user_join', { ...updatedUser, room: 'general' });
     }
   };
 
   const handleBackToLogin = () => {
-    if (socket) {
-      socket.emit('user_logout');
-    }
+    console.log('🔙 Giriş sayfasına dönülüyor');
     setUser(null);
     setShowRoomSelection(false);
     setMessages([]);
-    // localStorage'dan kullanıcı bilgisini sil
+    setActiveUsers([]);
     localStorage.removeItem('chatUser');
   };
 
   const handleBackToRoomSelection = () => {
-    if (socket) {
-      socket.emit('user_logout');
-    }
+    console.log('🔙 Oda seçimi sayfasına dönülüyor');
+    const userWithoutChatType = { username: user.username, password: user.password };
+    setUser(userWithoutChatType);
     setShowRoomSelection(true);
     setMessages([]);
+    setActiveUsers([]);
+    localStorage.setItem('chatUser', JSON.stringify(userWithoutChatType));
   };
 
   const handleLogout = () => {
-    if (socket) {
-      socket.emit('user_logout');
-    }
+    console.log('🚪 Çıkış yapılıyor');
     setUser(null);
     setShowRoomSelection(false);
     setMessages([]);
-    // localStorage'dan kullanıcı bilgisini sil
+    setActiveUsers([]);
     localStorage.removeItem('chatUser');
   };
 
@@ -406,15 +418,24 @@ const App = () => {
         </BackButton>
         
         <ChatTypeIcon>
-          <span style={{ fontWeight: 'bold', color: '#2ed573' }}>TK Chat</span>
+          <span style={{ 
+            fontWeight: 'bold', 
+            background: 'linear-gradient(135deg, #8a2be2, #40e0d0)',
+            backgroundClip: 'text',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            fontSize: '18px'
+          }}>
+            TK Chat
+          </span>
           {user.chatType === 'text' ? (
             <>
-              <Hash size={20} />
+              <Hash size={20} style={{ color: '#40e0d0' }} />
               <span className="hide-on-mobile">Yazılı Sohbet</span>
             </>
           ) : (
             <>
-              <Mic size={20} />
+              <Mic size={20} style={{ color: '#40e0d0' }} />
               <span className="hide-on-mobile">Sesli Sohbet</span>
             </>
           )}
@@ -433,7 +454,7 @@ const App = () => {
       </ChatHeader>
 
       <ActiveUsersBar>
-        <Users size={14} />
+        <Users size={14} style={{ color: '#40e0d0' }} />
         <span>Çevrimiçi: {activeUsers.length} kullanıcı</span>
         {activeUsers.length > 0 && (
           <>
@@ -461,8 +482,8 @@ const App = () => {
       ) : (
         <VoiceRoom 
           socket={socket} 
-          currentUser={user}
-          roomName="Genel Sesli Oda"
+          user={user} 
+          activeUsers={activeUsers}
         />
       )}
     </AppContainer>

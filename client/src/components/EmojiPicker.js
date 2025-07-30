@@ -50,14 +50,14 @@ const EmojiPickerContainer = styled.div`
   z-index: 10000;
   overflow: hidden;
   width: 90vw;
-  max-width: 350px;
-  max-height: 60vh;
+  max-width: 450px;
+  max-height: 70vh;
   
   .EmojiPickerReact {
-    --epr-emoji-size: 24px;
-    --epr-category-icon-size: 20px;
-    --epr-horizontal-padding: 12px;
-    --epr-vertical-padding: 8px;
+    --epr-emoji-size: 28px;
+    --epr-category-icon-size: 22px;
+    --epr-horizontal-padding: 16px;
+    --epr-vertical-padding: 12px;
     --epr-search-input-border-color: rgba(255, 255, 255, 0.3);
     --epr-search-input-bg-color: rgba(255, 255, 255, 0.1);
     --epr-search-input-text-color: #ffffff;
@@ -88,27 +88,27 @@ const EmojiPickerContainer = styled.div`
   
   @media (max-width: 768px) {
     width: 95vw;
-    max-width: 320px;
-    max-height: 55vh;
+    max-width: 400px;
+    max-height: 65vh;
     
     .EmojiPickerReact {
-      --epr-emoji-size: 22px;
-      --epr-category-icon-size: 18px;
-      --epr-horizontal-padding: 8px;
-      --epr-vertical-padding: 6px;
+      --epr-emoji-size: 26px;
+      --epr-category-icon-size: 20px;
+      --epr-horizontal-padding: 12px;
+      --epr-vertical-padding: 8px;
     }
   }
   
   @media (max-width: 480px) {
     width: 98vw;
-    max-width: 300px;
-    max-height: 50vh;
+    max-width: 350px;
+    max-height: 60vh;
     
     .EmojiPickerReact {
-      --epr-emoji-size: 20px;
-      --epr-category-icon-size: 16px;
-      --epr-horizontal-padding: 6px;
-      --epr-vertical-padding: 4px;
+      --epr-emoji-size: 24px;
+      --epr-category-icon-size: 18px;
+      --epr-horizontal-padding: 8px;
+      --epr-vertical-padding: 6px;
     }
   }
 `;
@@ -167,7 +167,7 @@ const EmojiPicker = ({ onEmojiClick, isOpen, onToggle }) => {
           autoFocusSearch={false}
           searchPlaceholder="Emoji ara..."
           width="100%"
-          height={window.innerWidth <= 768 ? 300 : 350}
+          height={window.innerWidth <= 768 ? 400 : 450}
           lazyLoadEmojis={true}
         />
       </EmojiPickerContainer>

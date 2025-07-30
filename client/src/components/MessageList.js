@@ -18,12 +18,12 @@ const MessageContainer = styled.div`
   margin-bottom: 16px;
   animation: ${fadeIn} 0.5s ease-out;
   padding: 8px;
-  border-radius: 12px;
+  border-radius: 16px;
   transition: all 0.3s ease;
   
   &:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
+    background: rgba(138, 43, 226, 0.1);
+    border-radius: 16px;
     padding: 8px;
     margin: 8px -8px;
   }
@@ -38,7 +38,7 @@ const UserAvatar = styled.div`
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #5352ed, #3742fa);
+  background: linear-gradient(135deg, #8a2be2, #40e0d0);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -46,10 +46,10 @@ const UserAvatar = styled.div`
   font-weight: 700;
   font-size: 14px;
   text-transform: uppercase;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 15px rgba(138, 43, 226, 0.3);
   animation: ${pulse} 2s infinite;
   flex-shrink: 0;
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.1);
   
   @media (max-width: 768px) {
     width: 32px;
@@ -75,7 +75,7 @@ const MessageHeader = styled.div`
 `;
 
 const Username = styled.span`
-  color: #ffffff;
+  color: #40e0d0;
   font-weight: 800;
   font-size: 14px;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
@@ -86,7 +86,7 @@ const Username = styled.span`
 `;
 
 const Timestamp = styled.span`
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(255, 255, 255, 0.7);
   font-size: 12px;
   font-weight: 600;
   
@@ -98,9 +98,9 @@ const Timestamp = styled.span`
 const MessageText = styled.div`
   color: #ffffff;
   font-size: 14px;
-  line-height: 1.6;
+  font-weight: 500;
+  line-height: 1.5;
   word-wrap: break-word;
-  font-weight: 600;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   
   @media (max-width: 768px) {
@@ -111,37 +111,67 @@ const MessageText = styled.div`
 const MessageImage = styled.img`
   max-width: 100%;
   max-height: 300px;
-  border-radius: 8px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
   margin-top: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   cursor: pointer;
   transition: all 0.3s ease;
   
   &:hover {
     transform: scale(1.02);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  }
+  
+  @media (max-width: 768px) {
+    max-height: 200px;
   }
 `;
 
 const SystemMessage = styled.div`
   text-align: center;
-  padding: 12px 16px;
   margin: 16px 0;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(20px);
-  border-radius: 12px;
-  color: #ffffff;
-  font-size: 13px;
-  font-weight: 700;
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  animation: ${fadeIn} 0.5s ease-out;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+  padding: 8px 16px;
+  background: rgba(138, 43, 226, 0.2);
+  border-radius: 20px;
+  color: #40e0d0;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid rgba(138, 43, 226, 0.3);
   
   @media (max-width: 768px) {
-    padding: 10px 12px;
     margin: 12px 0;
-    font-size: 12px;
+    padding: 6px 12px;
+    font-size: 11px;
   }
+`;
+
+const CurrentUserMessage = styled(MessageContainer)`
+  flex-direction: row-reverse;
+  
+  &:hover {
+    background: rgba(64, 224, 208, 0.1);
+  }
+`;
+
+const CurrentUserAvatar = styled(UserAvatar)`
+  background: linear-gradient(135deg, #40e0d0, #8a2be2);
+  box-shadow: 0 4px 15px rgba(64, 224, 208, 0.3);
+`;
+
+const CurrentUserContent = styled(MessageContent)`
+  text-align: right;
+`;
+
+const CurrentUserHeader = styled(MessageHeader)`
+  justify-content: flex-end;
+`;
+
+const CurrentUserUsername = styled(Username)`
+  color: #8a2be2;
+`;
+
+const CurrentUserText = styled(MessageText)`
+  text-align: right;
 `;
 
 const formatTime = (timestamp) => {
@@ -164,41 +194,82 @@ const formatTime = (timestamp) => {
   }
 };
 
-const MessageList = ({ messages }) => {
+const MessageList = ({ messages, currentUser }) => {
+  if (!messages || messages.length === 0) {
+    return (
+      <div style={{ 
+        textAlign: 'center', 
+        padding: '40px 20px',
+        color: 'rgba(255, 255, 255, 0.6)',
+        fontSize: '16px',
+        fontWeight: '600'
+      }}>
+        Henüz mesaj yok. İlk mesajı siz gönderin! 💬
+      </div>
+    );
+  }
+
   return (
     <div>
       {messages.map((message, index) => {
-        // System message handling
-        if (message.type === 'system') {
+        const isCurrentUser = currentUser && message.user && message.user.id === currentUser.id;
+        const isSystemMessage = message.type === 'system';
+        
+        if (isSystemMessage) {
           return (
-            <SystemMessage key={index}>
+            <SystemMessage key={message.id || index}>
               {message.content}
             </SystemMessage>
           );
         }
 
-        // Regular message handling
-        const isImage = message.content.startsWith('http') && 
-          (message.content.includes('.gif') || 
-           message.content.includes('.jpg') || 
-           message.content.includes('.jpeg') || 
-           message.content.includes('.png') || 
-           message.content.includes('.webp'));
+        if (isCurrentUser) {
+          return (
+            <CurrentUserMessage key={message.id || index}>
+              <CurrentUserAvatar>
+                {message.user?.username?.charAt(0).toUpperCase() || 'U'}
+              </CurrentUserAvatar>
+              <CurrentUserContent>
+                <CurrentUserHeader>
+                  <CurrentUserUsername>
+                    {message.user?.username || 'Bilinmeyen Kullanıcı'}
+                  </CurrentUserUsername>
+                  <Timestamp>
+                    {formatTime(message.timestamp)}
+                  </Timestamp>
+                </CurrentUserHeader>
+                <CurrentUserText>
+                  {message.content && message.content.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
+                    <MessageImage 
+                      src={message.content} 
+                      alt="Gönderilen resim"
+                      onClick={() => window.open(message.content, '_blank')}
+                    />
+                  ) : (
+                    message.content
+                  )}
+                </CurrentUserText>
+              </CurrentUserContent>
+            </CurrentUserMessage>
+          );
+        }
 
         return (
-          <MessageContainer key={index}>
+          <MessageContainer key={message.id || index}>
             <UserAvatar>
-              {message.user?.username?.charAt(0) || 'U'}
+              {message.user?.username?.charAt(0).toUpperCase() || 'U'}
             </UserAvatar>
             <MessageContent>
               <MessageHeader>
-                <Username>{message.user?.username || 'Anonim'}</Username>
+                <Username>
+                  {message.user?.username || 'Bilinmeyen Kullanıcı'}
+                </Username>
                 <Timestamp>
                   {formatTime(message.timestamp)}
                 </Timestamp>
               </MessageHeader>
               <MessageText>
-                {isImage ? (
+                {message.content && message.content.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
                   <MessageImage 
                     src={message.content} 
                     alt="Gönderilen resim"
