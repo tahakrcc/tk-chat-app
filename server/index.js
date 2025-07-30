@@ -2,18 +2,25 @@ const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
 const cors = require('cors');
+const helmet = require('helmet');
 
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: ["https://tk-chat-app.netlify.app", "https://tk-chat-app.onrender.com", "http://localhost:3000"],
+    origin: ["https://tk-chat-app.netlify.app", "https://tk-chat-app.onrender.com", "http://localhost:3000", "http://localhost:3001"],
     methods: ["GET", "POST"],
-    allowedHeaders: ["Content-Type"]
-  }
+    allowedHeaders: ["Content-Type"],
+    credentials: true
+  },
+  transports: ['websocket', 'polling']
 });
 
-app.use(cors());
+app.use(helmet());
+app.use(cors({
+  origin: ["https://tk-chat-app.netlify.app", "https://tk-chat-app.onrender.com", "http://localhost:3000", "http://localhost:3001"],
+  credentials: true
+}));
 app.use(express.json());
 
 // Kullanıcıları saklamak için
@@ -153,7 +160,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('returning_signal', (payload) => {
-    console.log('Sinyal döndürülüyor:', payload.callerId, 'TargetId:', payload.id);
+    console.log('Sinyal döndürülüyor:', payload.callerId, 'TargetId:', socket.id);
     io.to(payload.callerId).emit('receiving_returned_signal', { id: socket.id, signal: payload.signal });
   });
 

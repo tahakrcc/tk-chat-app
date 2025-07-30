@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { Mic, MicOff, Volume2, VolumeX, Users, LogOut } from 'lucide-react';
 import Peer from 'simple-peer';
+import 'webrtc-adapter';
 
 const fadeIn = keyframes`
   from { opacity: 0; transform: translateY(20px); }
@@ -640,6 +641,13 @@ const VoiceRoom = ({ socket, user, activeUsers }) => {
       initiator: true,
       trickle: false,
       stream,
+      config: {
+        iceServers: [
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:stun1.l.google.com:19302' },
+          { urls: 'stun:stun2.l.google.com:19302' }
+        ]
+      }
     });
 
     peer.on('signal', signal => {
@@ -655,6 +663,9 @@ const VoiceRoom = ({ socket, user, activeUsers }) => {
       audio.autoplay = true;
       audio.volume = volume;
       audio.play().catch(e => console.error('Ses oynatma hatası:', e));
+      
+      // Audio element'i sakla
+      peer.audioElement = audio;
     });
 
     peer.on('error', (err) => {
@@ -673,6 +684,13 @@ const VoiceRoom = ({ socket, user, activeUsers }) => {
       initiator: false,
       trickle: false,
       stream,
+      config: {
+        iceServers: [
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:stun1.l.google.com:19302' },
+          { urls: 'stun:stun2.l.google.com:19302' }
+        ]
+      }
     });
 
     peer.on('signal', signal => {
@@ -688,6 +706,9 @@ const VoiceRoom = ({ socket, user, activeUsers }) => {
       audio.autoplay = true;
       audio.volume = volume;
       audio.play().catch(e => console.error('Ses oynatma hatası:', e));
+      
+      // Audio element'i sakla
+      peer.audioElement = audio;
     });
 
     peer.on('error', (err) => {
@@ -712,8 +733,13 @@ const VoiceRoom = ({ socket, user, activeUsers }) => {
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
-          sampleRate: 44100,
-          channelCount: 1
+          sampleRate: 48000,
+          channelCount: 1,
+          latency: 0.01,
+          googEchoCancellation: true,
+          googAutoGainControl: true,
+          googNoiseSuppression: true,
+          googHighpassFilter: true
         }
       });
       
@@ -802,6 +828,13 @@ const VoiceRoom = ({ socket, user, activeUsers }) => {
     const newVolume = parseFloat(e.target.value);
     setVolume(newVolume);
     setIsVolumeMuted(newVolume === 0);
+    
+    // Tüm peer'ların ses seviyesini güncelle
+    Object.values(peersRef.current).forEach(peer => {
+      if (peer.audioElement) {
+        peer.audioElement.volume = newVolume;
+      }
+    });
   };
 
   const testSound = () => {
