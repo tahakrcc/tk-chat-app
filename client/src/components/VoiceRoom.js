@@ -266,7 +266,7 @@ const VoiceRoom = ({ socket, currentUser, roomName }) => {
       socket.off('receiving_returned_signal');
       socket.off('user_left_voice');
     };
-  }, [socket, localStream]);
+  }, [socket, localStream, createPeer]);
 
   const createPeer = (userToSignal, callerId, stream) => {
     console.log('Creating peer for:', userToSignal);
@@ -427,7 +427,7 @@ const VoiceRoom = ({ socket, currentUser, roomName }) => {
     return () => {
       leaveVoiceRoom();
     };
-  }, []);
+  }, [joinVoiceRoom, leaveVoiceRoom]);
 
   return (
     <VoiceRoomContainer>

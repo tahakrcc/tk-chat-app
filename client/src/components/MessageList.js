@@ -1,6 +1,5 @@
 import React from 'react';
 import styled from 'styled-components';
-import { User } from 'lucide-react';
 
 const MessageContainer = styled.div`
   display: flex;

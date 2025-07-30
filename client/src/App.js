@@ -101,17 +101,11 @@ const ActiveUsersBar = styled.div`
   font-size: 14px;
 `;
 
-const UserDot = styled.div`
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #43b581;
-`;
+// UserDot component removed - unused
 
 const App = () => {
   const [socket, setSocket] = useState(null);
   const [user, setUser] = useState(null);
-  const [isConnected, setIsConnected] = useState(false);
   const [activeUsers, setActiveUsers] = useState([]);
   const [messages, setMessages] = useState([]);
 
@@ -131,17 +125,14 @@ const App = () => {
     setSocket(newSocket);
 
     newSocket.on('connect', () => {
-      setIsConnected(true);
       console.log('✅ Sunucuya bağlandı, Socket ID:', newSocket.id);
     });
 
     newSocket.on('connect_error', (error) => {
       console.error('❌ Bağlantı hatası:', error);
-      setIsConnected(false);
     });
 
     newSocket.on('disconnect', (reason) => {
-      setIsConnected(false);
       console.log('❌ Sunucu bağlantısı kesildi:', reason);
     });
 
