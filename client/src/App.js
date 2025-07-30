@@ -252,11 +252,20 @@ const App = () => {
     
     console.log('Socket URL:', socketUrl);
     
+    // Eğer zaten bir socket bağlantısı varsa, önce onu kapat
+    if (socket) {
+      console.log('🔌 Mevcut socket bağlantısı kapatılıyor');
+      socket.disconnect();
+    }
+    
     const newSocket = io(socketUrl, {
       transports: ['websocket', 'polling'],
       upgrade: true,
       timeout: 20000,
-      forceNew: true
+      forceNew: true,
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000
     });
     setSocket(newSocket);
 
@@ -270,6 +279,10 @@ const App = () => {
 
     newSocket.on('disconnect', (reason) => {
       console.log('❌ Sunucu bağlantısı kesildi:', reason);
+    });
+
+    newSocket.on('reconnect', (attemptNumber) => {
+      console.log('🔄 Yeniden bağlandı, deneme:', attemptNumber);
     });
 
     // Aktif kullanıcıları al
@@ -308,7 +321,9 @@ const App = () => {
 
     return () => {
       console.log('🔌 Socket bağlantısı kapatılıyor');
-      newSocket.close();
+      if (newSocket) {
+        newSocket.disconnect();
+      }
     };
   }, []);
 
@@ -331,6 +346,17 @@ const App = () => {
 
   const handleRoomSelect = (userWithChatType) => {
     console.log('🏠 Oda seçildi:', userWithChatType);
+    
+    // Önce mevcut odadan çık
+    if (socket && socket.connected && user && user.chatType) {
+      console.log('🚪 Mevcut odadan çıkılıyor');
+      if (user.chatType === 'voice') {
+        socket.emit('leave_voice_room', { room: 'voice' });
+      } else {
+        socket.emit('user_leave', { ...user, room: 'general' });
+      }
+    }
+    
     const updatedUser = { ...user, ...userWithChatType };
     setUser(updatedUser);
     setShowRoomSelection(false);
@@ -338,9 +364,14 @@ const App = () => {
     // Kullanıcı bilgisini localStorage'a kaydet (chatType ile)
     localStorage.setItem('chatUser', JSON.stringify(updatedUser));
     
-    // Socket'e bağlan ve odaya katıl
+    // Yeni odaya katıl
     if (socket && socket.connected) {
-      socket.emit('user_join', { ...updatedUser, room: 'general' });
+      console.log('🚪 Yeni odaya katılıyor:', updatedUser.chatType);
+      if (updatedUser.chatType === 'voice') {
+        // Sesli oda için özel işlem yok, VoiceRoom component'i kendi hallediyor
+      } else {
+        socket.emit('user_join', { ...updatedUser, room: 'general' });
+      }
     }
   };
 
@@ -355,6 +386,18 @@ const App = () => {
 
   const handleBackToRoomSelection = () => {
     console.log('🔙 Oda seçimi sayfasına dönülüyor');
+    
+    // Önce mevcut odadan çık
+    if (socket && socket.connected && user && user.chatType) {
+      console.log('🚪 Mevcut odadan çıkılıyor');
+      if (user.chatType === 'voice') {
+        socket.emit('leave_voice_room', { room: 'voice' });
+      } else {
+        socket.emit('user_leave', { ...user, room: 'general' });
+      }
+    }
+    
+    // Kullanıcı bilgisini güncelle (chatType'ı kaldır)
     const userWithoutChatType = { username: user.username, password: user.password };
     setUser(userWithoutChatType);
     setShowRoomSelection(true);
@@ -365,6 +408,17 @@ const App = () => {
 
   const handleLogout = () => {
     console.log('🚪 Çıkış yapılıyor');
+    
+    // Önce mevcut odadan çık
+    if (socket && socket.connected && user && user.chatType) {
+      console.log('🚪 Mevcut odadan çıkılıyor');
+      if (user.chatType === 'voice') {
+        socket.emit('leave_voice_room', { room: 'voice' });
+      } else {
+        socket.emit('user_leave', { ...user, room: 'general' });
+      }
+    }
+    
     setUser(null);
     setShowRoomSelection(false);
     setMessages([]);

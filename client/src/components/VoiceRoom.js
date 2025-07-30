@@ -838,21 +838,28 @@ const VoiceRoom = ({ socket, user, activeUsers }) => {
   };
 
   const testSound = () => {
-    if (stream) {
+    try {
+      // Bip sesi oluştur
       const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      const source = audioContext.createMediaStreamSource(stream);
+      const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
       
-      source.connect(gainNode);
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(800, audioContext.currentTime); // 800Hz bip sesi
+      oscillator.connect(gainNode);
       gainNode.connect(audioContext.destination);
       
-      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+      // Ses seviyesini ayarla
+      gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+      gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.1);
+      gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.5);
       
-      setTimeout(() => {
-        source.disconnect();
-        gainNode.disconnect();
-        audioContext.close();
-      }, 1000);
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.5);
+      
+      console.log('Test sesi çalındı');
+    } catch (error) {
+      console.error('Test sesi hatası:', error);
     }
   };
 
@@ -888,15 +895,16 @@ const VoiceRoom = ({ socket, user, activeUsers }) => {
           const average = sum / dataArray.length;
           const level = Math.min(100, (average / 128) * 100);
           
+          console.log('Ses seviyesi:', level); // Debug için
           setVoiceLevel(level);
           
           // Konuşma durumunu güncelle (daha hassas eşik)
-          const speaking = level > 5;
+          const speaking = level > 3; // Eşiği düşürdük
           if (speaking !== isSpeaking) {
             setIsSpeaking(speaking);
             socket.emit('user_speaking', { isSpeaking: speaking, voiceLevel: level });
             console.log('Konuşma durumu değişti:', speaking, 'Seviye:', level);
-          } else if (speaking && level > 15) {
+          } else if (speaking && level > 10) {
             // Konuşma devam ediyorsa ses seviyesini güncelle
             socket.emit('user_speaking', { isSpeaking: speaking, voiceLevel: level });
           }
@@ -1072,6 +1080,11 @@ const VoiceRoom = ({ socket, user, activeUsers }) => {
             <VoiceButton onClick={() => setShowVoiceMonitor(true)}>
               <Mic size={18} />
               <span className="hide-on-mobile">Ses Monitörü</span>
+            </VoiceButton>
+
+            <VoiceButton onClick={testSound}>
+              🔊
+              <span className="hide-on-mobile">Test Sesi</span>
             </VoiceButton>
 
             <VoiceButton variant="leave" onClick={leaveVoiceRoom}>
