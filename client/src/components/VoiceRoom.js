@@ -402,8 +402,8 @@ const UserItem = styled.div`
 `;
 
 const UserDot = styled.div`
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
   background: ${props => {
     if (props.status === 'speaking') {
@@ -416,53 +416,70 @@ const UserDot = styled.div`
       return 'linear-gradient(135deg, #5352ed, #3742fa)';
     }
   }};
-  box-shadow: 0 0 8px ${props => {
+  box-shadow: 0 0 12px ${props => {
     if (props.status === 'speaking') {
-      return 'rgba(46, 213, 115, 0.5)';
+      return 'rgba(46, 213, 115, 0.7)';
     } else if (props.status === 'muted') {
-      return 'rgba(255, 71, 87, 0.5)';
+      return 'rgba(255, 71, 87, 0.7)';
     } else if (props.status === 'deafened') {
-      return 'rgba(116, 125, 140, 0.5)';
+      return 'rgba(116, 125, 140, 0.7)';
     } else {
-      return 'rgba(83, 82, 237, 0.5)';
+      return 'rgba(83, 82, 237, 0.7)';
     }
   }};
   animation: ${props => props.status === 'speaking' ? pulse : 'none'} 1s infinite;
   position: relative;
+  border: 2px solid rgba(255, 255, 255, 0.3);
   
   &::after {
     content: '';
     position: absolute;
-    top: -2px;
-    left: -2px;
-    right: -2px;
-    bottom: -2px;
+    top: -3px;
+    left: -3px;
+    right: -3px;
+    bottom: -3px;
     border-radius: 50%;
     border: 2px solid ${props => {
       if (props.status === 'speaking') {
-        return 'rgba(46, 213, 115, 0.3)';
+        return 'rgba(46, 213, 115, 0.5)';
       } else if (props.status === 'muted') {
-        return 'rgba(255, 71, 87, 0.3)';
+        return 'rgba(255, 71, 87, 0.5)';
       } else if (props.status === 'deafened') {
-        return 'rgba(116, 125, 140, 0.3)';
+        return 'rgba(116, 125, 140, 0.5)';
       } else {
-        return 'rgba(83, 82, 237, 0.3)';
+        return 'rgba(83, 82, 237, 0.5)';
       }
     }};
     animation: ${props => props.status === 'speaking' ? pulse : 'none'} 1.5s infinite;
+  }
+  
+  @media (max-width: 768px) {
+    width: 14px;
+    height: 14px;
+    border-width: 3px;
+    
+    &::after {
+      top: -4px;
+      left: -4px;
+      right: -4px;
+      bottom: -4px;
+      border-width: 3px;
+    }
   }
 `;
 
 const UserStatusIcon = styled.div`
   display: flex;
   align-items: center;
-  gap: 4px;
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.8);
+  gap: 6px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.95);
+  font-weight: 500;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
   
   @media (max-width: 768px) {
-    font-size: 11px;
-    gap: 3px;
+    font-size: 12px;
+    gap: 4px;
   }
 `;
 
@@ -883,27 +900,33 @@ const VoiceRoom = ({ socket, currentUser, roomName }) => {
   `;
 
   const VoiceMonitorContent = styled.div`
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(20px);
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(25px);
     border-radius: 20px;
-    padding: 30px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    padding: 40px 30px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
     text-align: center;
-    min-width: 300px;
+    min-width: 320px;
     position: relative;
     z-index: 1;
+    
+    @media (max-width: 768px) {
+      min-width: 280px;
+      padding: 30px 20px;
+    }
   `;
 
   const DecibelMeter = styled.div`
     width: 100%;
     height: 200px;
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.1);
     border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.2);
     margin: 20px 0;
     position: relative;
     overflow: hidden;
+    box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.3);
   `;
 
   const DecibelBar = styled.div`
@@ -915,7 +938,7 @@ const VoiceRoom = ({ socket, currentUser, roomName }) => {
     background: linear-gradient(135deg, #2ed573, #1e90ff);
     transition: height 0.1s ease;
     border-radius: 8px 8px 0 0;
-    box-shadow: 0 0 20px rgba(46, 213, 115, 0.5);
+    box-shadow: 0 0 25px rgba(46, 213, 115, 0.7);
   `;
 
   const DecibelText = styled.div`
@@ -924,31 +947,49 @@ const VoiceRoom = ({ socket, currentUser, roomName }) => {
     left: 50%;
     transform: translate(-50%, -50%);
     color: #ffffff;
-    font-size: 24px;
+    font-size: 28px;
     font-weight: 700;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    text-shadow: 0 3px 6px rgba(0, 0, 0, 0.7);
+    
+    @media (max-width: 768px) {
+      font-size: 24px;
+    }
   `;
 
   const CloseButton = styled.button`
     position: absolute;
     top: 15px;
     right: 15px;
-    background: rgba(255, 71, 87, 0.8);
+    background: linear-gradient(135deg, #ff4757, #ff3742);
     color: white;
     border: none;
     border-radius: 50%;
-    width: 30px;
-    height: 30px;
+    width: 40px;
+    height: 40px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 16px;
+    font-size: 20px;
+    font-weight: bold;
     transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4);
+    z-index: 10;
     
     &:hover {
-      background: rgba(255, 71, 87, 1);
+      background: linear-gradient(135deg, #ff3742, #ff4757);
       transform: scale(1.1);
+      box-shadow: 0 6px 20px rgba(255, 71, 87, 0.6);
+    }
+    
+    &:active {
+      transform: scale(0.95);
+    }
+    
+    @media (max-width: 768px) {
+      width: 44px;
+      height: 44px;
+      font-size: 18px;
     }
   `;
 
@@ -1090,7 +1131,13 @@ const VoiceRoom = ({ socket, currentUser, roomName }) => {
         <VoiceMonitorModal onClick={() => setShowVoiceMonitor(false)}>
           <VoiceMonitorContent onClick={(e) => e.stopPropagation()}>
             <CloseButton onClick={() => setShowVoiceMonitor(false)}>×</CloseButton>
-            <h3 style={{ color: '#ffffff', marginBottom: '20px', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
+            <h3 style={{ 
+              color: '#ffffff', 
+              marginBottom: '20px', 
+              textShadow: '0 3px 6px rgba(0,0,0,0.7)',
+              fontSize: '24px',
+              fontWeight: '700'
+            }}>
               Ses Monitörü
             </h3>
             
@@ -1101,11 +1148,22 @@ const VoiceRoom = ({ socket, currentUser, roomName }) => {
               </DecibelText>
             </DecibelMeter>
             
-            <div style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: '14px', marginTop: '10px' }}>
+            <div style={{ 
+              color: '#ffffff', 
+              fontSize: '16px', 
+              marginTop: '15px',
+              fontWeight: '600',
+              textShadow: '0 2px 4px rgba(0,0,0,0.5)'
+            }}>
               {isSpeaking ? '🎤 Konuşuyorsunuz' : '🔇 Sessiz'}
             </div>
             
-            <div style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '12px', marginTop: '8px' }}>
+            <div style={{ 
+              color: 'rgba(255, 255, 255, 0.9)', 
+              fontSize: '14px', 
+              marginTop: '10px',
+              textShadow: '0 1px 2px rgba(0,0,0,0.3)'
+            }}>
               Mikrofonunuzun çalışıp çalışmadığını kontrol edin
             </div>
           </VoiceMonitorContent>

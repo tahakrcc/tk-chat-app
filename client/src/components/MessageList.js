@@ -22,7 +22,7 @@ const MessageContainer = styled.div`
   transition: all 0.3s ease;
   
   &:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.08);
     border-radius: 12px;
     padding: 8px;
     margin: 8px -8px;
@@ -75,9 +75,9 @@ const MessageHeader = styled.div`
 
 const Username = styled.span`
   color: #ffffff;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 14px;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
   
   @media (max-width: 768px) {
     font-size: 13px;
@@ -85,8 +85,9 @@ const Username = styled.span`
 `;
 
 const Timestamp = styled.span`
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.8);
   font-size: 12px;
+  font-weight: 500;
   
   @media (max-width: 768px) {
     font-size: 11px;
@@ -94,10 +95,12 @@ const Timestamp = styled.span`
 `;
 
 const MessageText = styled.div`
-  color: rgba(255, 255, 255, 0.9);
+  color: #ffffff;
   font-size: 14px;
-  line-height: 1.5;
+  line-height: 1.6;
   word-wrap: break-word;
+  font-weight: 500;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   
   @media (max-width: 768px) {
     font-size: 13px;
@@ -108,14 +111,15 @@ const SystemMessage = styled.div`
   text-align: center;
   padding: 12px 16px;
   margin: 16px 0;
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(15px);
   border-radius: 12px;
-  color: rgba(255, 255, 255, 0.8);
+  color: #ffffff;
   font-size: 13px;
-  font-style: italic;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-weight: 600;
+  border: 2px solid rgba(255, 255, 255, 0.2);
   animation: ${fadeIn} 0.5s ease-out;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
   
   @media (max-width: 768px) {
     padding: 10px 12px;
@@ -147,25 +151,34 @@ const formatTime = (timestamp) => {
 const MessageList = ({ messages }) => {
   return (
     <div>
-      {messages.map((message, index) => (
-        <MessageContainer key={index}>
-          <UserAvatar>
-            {message.user?.username?.charAt(0) || 'U'}
-          </UserAvatar>
-          <MessageContent>
-            <MessageHeader>
-              <Username>{message.user?.username || 'Anonim'}</Username>
-              <Timestamp>
-                {new Date(message.timestamp).toLocaleTimeString('tr-TR', {
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}
-              </Timestamp>
-            </MessageHeader>
-            <MessageText>{message.content}</MessageText>
-          </MessageContent>
-        </MessageContainer>
-      ))}
+      {messages.map((message, index) => {
+        // System message handling
+        if (message.type === 'system') {
+          return (
+            <SystemMessage key={index}>
+              {message.content}
+            </SystemMessage>
+          );
+        }
+
+        // Regular message handling
+        return (
+          <MessageContainer key={index}>
+            <UserAvatar>
+              {message.user?.username?.charAt(0) || 'U'}
+            </UserAvatar>
+            <MessageContent>
+              <MessageHeader>
+                <Username>{message.user?.username || 'Anonim'}</Username>
+                <Timestamp>
+                  {formatTime(message.timestamp)}
+                </Timestamp>
+              </MessageHeader>
+              <MessageText>{message.content}</MessageText>
+            </MessageContent>
+          </MessageContainer>
+        );
+      })}
     </div>
   );
 };

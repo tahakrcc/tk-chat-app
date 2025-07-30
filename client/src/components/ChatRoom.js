@@ -55,9 +55,9 @@ const MessagesArea = styled.div`
 `;
 
 const MessageInputContainer = styled.div`
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(20px);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(25px);
+  border-top: 2px solid rgba(255, 255, 255, 0.2);
   padding: 20px;
   position: relative;
   z-index: 1;
@@ -71,16 +71,16 @@ const InputWrapper = styled.div`
   display: flex;
   gap: 12px;
   align-items: flex-end;
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(15px);
   border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.2);
   padding: 12px;
   transition: all 0.3s ease;
   
   &:focus-within {
-    border-color: rgba(83, 82, 237, 0.5);
-    box-shadow: 0 0 0 3px rgba(83, 82, 237, 0.1);
+    border-color: rgba(83, 82, 237, 0.7);
+    box-shadow: 0 0 0 4px rgba(83, 82, 237, 0.2);
   }
   
   @media (max-width: 768px) {
@@ -95,6 +95,7 @@ const MessageInput = styled.textarea`
   background: transparent;
   color: #ffffff;
   font-size: 16px;
+  font-weight: 500;
   resize: none;
   outline: none;
   min-height: 20px;
@@ -102,7 +103,8 @@ const MessageInput = styled.textarea`
   font-family: inherit;
   
   &::placeholder {
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 500;
   }
   
   @media (max-width: 768px) {
@@ -123,6 +125,7 @@ const SendButton = styled.button`
   overflow: hidden;
   min-width: 48px;
   min-height: 48px;
+  font-weight: 600;
   
   &::before {
     content: '';
@@ -131,7 +134,7 @@ const SendButton = styled.button`
     left: -100%;
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
     transition: left 0.5s;
   }
   
@@ -162,15 +165,16 @@ const SendButton = styled.button`
 `;
 
 const TypingIndicator = styled.div`
-  color: rgba(255, 255, 255, 0.7);
+  color: #ffffff;
   font-size: 14px;
-  font-style: italic;
+  font-weight: 600;
   padding: 8px 20px;
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(10px);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(15px);
+  border-top: 2px solid rgba(255, 255, 255, 0.2);
   position: relative;
   z-index: 1;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   
   @media (max-width: 768px) {
     padding: 6px 16px;
@@ -229,7 +233,11 @@ const ChatRoom = ({ socket, user, messages = [], onSendMessage }) => {
       
       // Yazıyor durumunu durdur
       if (socket) {
-        socket.emit('stop_typing', { userId: user.id, username: user.username });
+        socket.emit('stop_typing', { 
+          userId: user.id, 
+          username: user.username,
+          room: 'general'
+        });
       }
       
       // Input'u sıfırla
@@ -263,13 +271,21 @@ const ChatRoom = ({ socket, user, messages = [], onSendMessage }) => {
     // Yazıyor göstergesi
     if (socket && !isTyping) {
       setIsTyping(true);
-      socket.emit('typing', { userId: user.id, username: user.username });
+      socket.emit('typing', { 
+        userId: user.id, 
+        username: user.username,
+        room: 'general'
+      });
       
       // 3 saniye sonra typing'i durdur
       setTimeout(() => {
         setIsTyping(false);
         if (socket) {
-          socket.emit('stop_typing', { userId: user.id, username: user.username });
+          socket.emit('stop_typing', { 
+            userId: user.id, 
+            username: user.username,
+            room: 'general'
+          });
         }
       }, 3000);
     }

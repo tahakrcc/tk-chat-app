@@ -34,15 +34,22 @@ io.on('connection', (socket) => {
     users.set(socket.id, {
       id: socket.id,
       username: userData.username,
-      room: userData.room
+      room: userData.room || 'general'
     });
     
-    socket.join(userData.room);
-    socket.to(userData.room).emit('user_joined', userData);
+    socket.join(userData.room || 'general');
+    
+    // Diğer kullanıcılara yeni kullanıcı katıldığını bildir
+    socket.to(userData.room || 'general').emit('user_joined', {
+      user: {
+        id: socket.id,
+        username: userData.username
+      }
+    });
     
     // Aktif kullanıcıları gönder
-    const roomUsers = Array.from(users.values()).filter(user => user.room === userData.room);
-    io.to(userData.room).emit('active_users', roomUsers);
+    const roomUsers = Array.from(users.values()).filter(user => user.room === (userData.room || 'general'));
+    io.to(userData.room || 'general').emit('active_users', roomUsers);
   });
 
   // Mesaj gönderme
@@ -58,7 +65,9 @@ io.on('connection', (socket) => {
         },
         timestamp: new Date().toISOString()
       };
-      socket.to(messageData.room).emit('receive_message', messageWithUser);
+      
+      // Mesajı odadaki tüm kullanıcılara gönder (gönderen dahil)
+      io.to(messageData.room || 'general').emit('new_message', messageWithUser);
     }
   });
 
@@ -66,9 +75,20 @@ io.on('connection', (socket) => {
   socket.on('typing', (data) => {
     const user = users.get(socket.id);
     if (user) {
-      socket.to(data.room).emit('user_typing', {
-        username: user.username,
-        isTyping: data.isTyping
+      socket.to(data.room || 'general').emit('user_typing', {
+        userId: socket.id,
+        username: user.username
+      });
+    }
+  });
+
+  // Yazıyor durumunu durdur
+  socket.on('stop_typing', (data) => {
+    const user = users.get(socket.id);
+    if (user) {
+      socket.to(data.room || 'general').emit('user_stop_typing', {
+        userId: socket.id,
+        username: user.username
       });
     }
   });
@@ -138,7 +158,14 @@ io.on('connection', (socket) => {
     const user = users.get(socket.id);
     
     if (user) {
-      socket.to(user.room).emit('user_left', user);
+      // Diğer kullanıcılara kullanıcı ayrıldığını bildir
+      socket.to(user.room).emit('user_left', {
+        user: {
+          id: user.id,
+          username: user.username
+        }
+      });
+      
       users.delete(socket.id);
       
       // Aktif kullanıcıları güncelle

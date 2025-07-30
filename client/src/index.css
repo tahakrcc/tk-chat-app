@@ -64,12 +64,36 @@ code {
   /* Fix input background on iOS */
   input, textarea, select {
     background-color: rgba(255, 255, 255, 0.1) !important;
-    color: #fff !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
   }
   
   /* Fix button backgrounds on iOS */
   button {
     background-color: inherit !important;
+    color: #ffffff !important;
+  }
+  
+  /* Ensure all text is visible on iOS */
+  * {
+    color: #ffffff !important;
+  }
+  
+  /* Force white text for all elements */
+  h1, h2, h3, h4, h5, h6, p, span, div, label {
+    color: #ffffff !important;
+  }
+  
+  /* Ensure buttons have proper contrast */
+  button, input[type="button"], input[type="submit"] {
+    background: linear-gradient(135deg, #5352ed, #3742fa) !important;
+    color: #ffffff !important;
+    border: none !important;
+  }
+  
+  /* Fix styled-components visibility on iOS */
+  [class*="styled"] {
+    color: #ffffff !important;
   }
 }
 

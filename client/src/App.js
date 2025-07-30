@@ -248,14 +248,14 @@ const App = () => {
     // Socket bağlantısını bekle ve kullanıcıyı ekle
     if (socket && socket.connected) {
       console.log('✅ Socket bağlı, kullanıcı ekleniyor');
-      socket.emit('user_join', userData);
+      socket.emit('user_join', { ...userData, room: 'general' });
     } else {
       console.log('⏳ Socket bağlantısı bekleniyor...');
       // Socket bağlantısını bekle
       const checkConnection = setInterval(() => {
         if (socket && socket.connected) {
           console.log('✅ Socket bağlandı, kullanıcı ekleniyor');
-          socket.emit('user_join', userData);
+          socket.emit('user_join', { ...userData, room: 'general' });
           clearInterval(checkConnection);
         }
       }, 100);
@@ -291,7 +291,7 @@ const App = () => {
     if (socket && messageContent.trim()) {
       const messageData = {
         content: messageContent.trim(),
-        channel: 'general'
+        room: 'general'
       };
       console.log('Socket.emit çağrılıyor:', messageData);
       socket.emit('send_message', messageData);
