@@ -21,15 +21,15 @@ const glow = keyframes`
 `;
 
 const speakingPulse = keyframes`
-  0% { opacity: 0.3; transform: scale(0.8); }
-  50% { opacity: 1; transform: scale(1.2); }
-  100% { opacity: 0.3; transform: scale(0.8); }
+  0% { opacity: 0.4; transform: scale(0.9); }
+  50% { opacity: 1; transform: scale(1.3); }
+  100% { opacity: 0.4; transform: scale(0.9); }
 `;
 
 const echoLines = keyframes`
-  0% { transform: scale(0.8); opacity: 0.8; }
-  50% { transform: scale(1.2); opacity: 0.4; }
-  100% { transform: scale(1.6); opacity: 0; }
+  0% { transform: scale(0.8); opacity: 0.9; }
+  50% { transform: scale(1.3); opacity: 0.5; }
+  100% { transform: scale(1.8); opacity: 0; }
 `;
 
 const VoiceRoomContainer = styled.div`
@@ -338,11 +338,12 @@ const EchoLines = styled.div`
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: ${60 + (props.voiceLevel * 0.4)}px;
-      height: ${60 + (props.voiceLevel * 0.4)}px;
-      border: 2px solid rgba(64, 224, 208, ${0.3 + (props.voiceLevel * 0.007)});
+      width: ${60 + (props.voiceLevel * 0.6)}px;
+      height: ${60 + (props.voiceLevel * 0.6)}px;
+      border: 3px solid rgba(64, 224, 208, ${0.4 + (props.voiceLevel * 0.01)});
       border-radius: 50%;
-      animation: ${echoLines} 1s infinite;
+      animation: ${echoLines} 1.2s infinite;
+      box-shadow: 0 0 10px rgba(64, 224, 208, ${0.3 + (props.voiceLevel * 0.01)});
     }
     
     &::after {
@@ -351,11 +352,12 @@ const EchoLines = styled.div`
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: ${80 + (props.voiceLevel * 0.6)}px;
-      height: ${80 + (props.voiceLevel * 0.6)}px;
-      border: 1px solid rgba(64, 224, 208, ${0.2 + (props.voiceLevel * 0.005)});
+      width: ${80 + (props.voiceLevel * 0.8)}px;
+      height: ${80 + (props.voiceLevel * 0.8)}px;
+      border: 2px solid rgba(64, 224, 208, ${0.3 + (props.voiceLevel * 0.008)});
       border-radius: 50%;
-      animation: ${echoLines} 1s infinite 0.3s;
+      animation: ${echoLines} 1.2s infinite 0.4s;
+      box-shadow: 0 0 15px rgba(64, 224, 208, ${0.2 + (props.voiceLevel * 0.008)});
     }
   `}
 `;
@@ -396,6 +398,11 @@ const SpeakingIndicator = styled.div`
   align-items: center;
   gap: 4px;
   animation: ${speakingPulse} 1s infinite;
+  text-shadow: 0 0 8px rgba(64, 224, 208, 0.6);
+  background: rgba(64, 224, 208, 0.1);
+  padding: 2px 6px;
+  border-radius: 8px;
+  border: 1px solid rgba(64, 224, 208, 0.3);
   
   @media (max-width: 768px) {
     font-size: 11px;
@@ -561,6 +568,19 @@ const VoiceRoom = ({ socket, user, activeUsers }) => {
     });
 
     socket.on('receiving_returned_signal', (payload) => {
+      console.log('Sinyal alındı:', payload);
+      const peer = peersRef.current[payload.id];
+      if (peer) {
+        peer.signal(payload.signal);
+      } else if (stream) {
+        // Eğer peer yoksa yeni peer oluştur
+        const newPeer = addPeer(payload.signal, payload.id, stream);
+        peersRef.current[payload.id] = newPeer;
+        setPeers(prev => ({ ...prev, [payload.id]: newPeer }));
+      }
+    });
+
+    socket.on('receiving_returned_signal', (payload) => {
       const peer = peersRef.current[payload.id];
       if (peer) {
         peer.signal(payload.signal);
@@ -628,6 +648,14 @@ const VoiceRoom = ({ socket, user, activeUsers }) => {
       socket.emit('sending_signal', { userToSignal, callerId, signal });
     });
 
+    peer.on('stream', (remoteStream) => {
+      console.log('Uzak ses akışı alındı:', userToSignal);
+      // Uzak ses akışını oynat
+      const audio = new Audio();
+      audio.srcObject = remoteStream;
+      audio.play().catch(e => console.error('Ses oynatma hatası:', e));
+    });
+
     return peer;
   };
 
@@ -642,6 +670,14 @@ const VoiceRoom = ({ socket, user, activeUsers }) => {
       socket.emit('returning_signal', { signal, callerId });
     });
 
+    peer.on('stream', (remoteStream) => {
+      console.log('Uzak ses akışı alındı:', callerId);
+      // Uzak ses akışını oynat
+      const audio = new Audio();
+      audio.srcObject = remoteStream;
+      audio.play().catch(e => console.error('Ses oynatma hatası:', e));
+    });
+
     peer.signal(incomingSignal);
     return peer;
   };
@@ -650,7 +686,11 @@ const VoiceRoom = ({ socket, user, activeUsers }) => {
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({ 
         video: false, 
-        audio: true 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        }
       });
       
       setStream(mediaStream);
@@ -669,6 +709,8 @@ const VoiceRoom = ({ socket, user, activeUsers }) => {
         isMuted: isMuted,
         isVolumeMuted: isVolumeMuted
       });
+      
+      console.log('Sesli odaya başarıyla katıldı!');
       
     } catch (error) {
       console.error('Mikrofon erişimi hatası:', error);
@@ -760,6 +802,7 @@ const VoiceRoom = ({ socket, user, activeUsers }) => {
       const source = audioCtx.createMediaStreamSource(mediaStream);
       
       analyserNode.fftSize = 256;
+      analyserNode.smoothingTimeConstant = 0.8;
       const bufferLength = analyserNode.frequencyBinCount;
       const dataArray = new Uint8Array(bufferLength);
       
@@ -782,12 +825,13 @@ const VoiceRoom = ({ socket, user, activeUsers }) => {
           
           setVoiceLevel(level);
           
-          // Konuşma durumunu güncelle
-          const speaking = level > 10;
+          // Konuşma durumunu güncelle (daha hassas eşik)
+          const speaking = level > 5;
           if (speaking !== isSpeaking) {
             setIsSpeaking(speaking);
             socket.emit('user_speaking', { isSpeaking: speaking, voiceLevel: level });
-          } else if (speaking) {
+            console.log('Konuşma durumu değişti:', speaking, 'Seviye:', level);
+          } else if (speaking && level > 15) {
             // Konuşma devam ediyorsa ses seviyesini güncelle
             socket.emit('user_speaking', { isSpeaking: speaking, voiceLevel: level });
           }
@@ -806,6 +850,7 @@ const VoiceRoom = ({ socket, user, activeUsers }) => {
       };
       
       updateVoiceLevel();
+      console.log('Ses izleme başlatıldı');
     } catch (error) {
       console.error('Ses izleme hatası:', error);
     }
@@ -867,7 +912,7 @@ const VoiceRoom = ({ socket, user, activeUsers }) => {
   const allUsers = [
     { id: socket?.id, username: user?.username, isMuted, isVolumeMuted, isSpeaking, voiceLevel },
     ...voiceRoomUsers.filter(u => u.id !== socket?.id)
-  ];
+  ].filter(Boolean);
 
   return (
     <VoiceRoomContainer>
@@ -884,10 +929,31 @@ const VoiceRoom = ({ socket, user, activeUsers }) => {
 
       <VoiceControls>
         {!stream ? (
-          <VoiceButton onClick={joinVoiceRoom}>
-            <Mic size={18} />
-            <span className="hide-on-mobile">Odaya Katıl</span>
-          </VoiceButton>
+          <>
+            <VoiceButton onClick={joinVoiceRoom}>
+              <Mic size={18} />
+              <span className="hide-on-mobile">Sesli Odaya Katıl</span>
+            </VoiceButton>
+            <div style={{ 
+              background: 'rgba(64, 224, 208, 0.1)', 
+              padding: '16px', 
+              borderRadius: '12px', 
+              border: '1px solid rgba(64, 224, 208, 0.3)',
+              marginTop: '16px',
+              textAlign: 'center'
+            }}>
+              <div style={{ color: '#40e0d0', fontWeight: '700', marginBottom: '8px' }}>
+                🎤 Sesli Sohbet Özellikleri
+              </div>
+              <div style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: '14px', lineHeight: '1.5' }}>
+                • Gerçek zamanlı ses iletimi<br/>
+                • Konuşma göstergeleri<br/>
+                • Ses seviyesi takibi<br/>
+                • Mikrofon ve ses kontrolleri<br/>
+                • Animasyonlu konuşma göstergeleri
+              </div>
+            </div>
+          </>
         ) : (
           <>
             <VoiceButton 
@@ -934,6 +1000,11 @@ const VoiceRoom = ({ socket, user, activeUsers }) => {
               <span className="hide-on-mobile">Ses Seviyesi</span>
             </VoiceButton>
 
+            <VoiceButton onClick={() => setShowVoiceMonitor(true)}>
+              <Mic size={18} />
+              <span className="hide-on-mobile">Ses Monitörü</span>
+            </VoiceButton>
+
             <VoiceButton variant="leave" onClick={leaveVoiceRoom}>
               <LogOut size={18} />
               <span className="hide-on-mobile">Odadan Ayrıl</span>
@@ -943,13 +1014,23 @@ const VoiceRoom = ({ socket, user, activeUsers }) => {
       </VoiceControls>
 
       <UsersContainer>
-        {allUsers.map((user) => {
-          const status = getVoiceStatus(user);
-          return (
-            <UserCard 
-              key={user.id} 
-              isSpeaking={status === 'speaking'}
-            >
+        {allUsers.length === 0 ? (
+          <div style={{ 
+            textAlign: 'center', 
+            padding: '40px', 
+            color: 'rgba(255, 255, 255, 0.6)',
+            fontSize: '16px'
+          }}>
+            Henüz kimse sesli odaya katılmadı. İlk siz katılın! 🎤
+          </div>
+        ) : (
+          allUsers.map((user) => {
+            const status = getVoiceStatus(user);
+            return (
+              <UserCard 
+                key={user.id} 
+                isSpeaking={status === 'speaking'}
+              >
               <UserHeader>
                 <UserAvatar isSpeaking={status === 'speaking'}>
                   {user.username?.charAt(0).toUpperCase() || 'U'}
@@ -975,8 +1056,9 @@ const VoiceRoom = ({ socket, user, activeUsers }) => {
                 </div>
               </UserHeader>
             </UserCard>
-          );
-        })}
+            );
+          })
+        )}
       </UsersContainer>
 
       {showVoiceMonitor && (

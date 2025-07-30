@@ -108,6 +108,8 @@ io.on('connection', (socket) => {
     
     // Diğer kullanıcılara yeni kullanıcı katıldığını bildir
     socket.broadcast.emit('user_joined_voice', socket.id);
+    
+    console.log('Sesli oda kullanıcıları güncellendi:', voiceUsers.length);
   });
 
   // Sesli odadan ayrılma

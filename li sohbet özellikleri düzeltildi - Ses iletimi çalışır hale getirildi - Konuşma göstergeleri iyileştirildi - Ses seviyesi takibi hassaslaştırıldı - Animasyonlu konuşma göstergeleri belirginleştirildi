@@ -1,0 +1,10 @@
+[33mf851abe[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m 🎤 Sesli sohbet konuşma göstergesi eklendi - Konuşurken 'Konuşuyor' yazısı - Ses seviyesine göre ekolozyer çizgileri - Gerçek zamanlı ses seviyesi takibi - Animasyonlu konuşma göstergeleri - Server tarafında ses seviyesi iletimi
+[33ma44591c[m 🎨 Yeni modern tema uygulandı - Port sorunu düzeltildi - Tüm bileşenler yeniden tasarlandı - Responsive tasarım iyileştirildi - Mor ve turkuaz renk paleti - Glassmorphism efektleri - Hover animasyonları - iOS uyumluluğu
+[33m80bc930[m Emoji ve GIF picker'ları düzeltildi - sayfa kayması engellendi ve boyutlar optimize edildi
+[33mbd42bd4[m Emoji ve GIF picker'ları mobile uyumlu hale getirildi - ekran ortalandı ve görünürlük iyileştirildi
+[33m55cb877[m Yeni login akışı: kullanıcı adı/şifre -> oda seçimi -> chat odası
+[33m0586011[m Mobil uyumluluk ve login iyileştirmeleri - Emoji/GIF picker'lar mobilde modal olarak açılıyor, login durumu localStorage'da saklanıyor
+[33me6f8e44[m Mobil uyumluluk iyileştirmeleri - Emoji ve GIF picker'lar mobil cihazlarda daha iyi çalışacak şekilde optimize edildi
+[33m0a9d5c6[m Emoji ve GIF özellikleri eklendi - Yazılı sohbete emoji seçici ve GIF arama özelliği eklendi
+[33m8c47909[m Node.js polyfill sorununu çözdü - process is not defined hatası düzeltildi
+[33m5dde2ec[m 🚀 Deployment hazırlıkları tamamlandı - CORS düzeltmeleri ve deployment rehberi eklendi
