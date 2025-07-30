@@ -141,13 +141,14 @@ io.on('connection', (socket) => {
 
   // Konuşma durumu
   socket.on('user_speaking', (data) => {
-    console.log('Kullanıcı konuşma durumu:', socket.id, data.isSpeaking);
+    console.log('Kullanıcı konuşma durumu:', socket.id, data.isSpeaking, 'Ses seviyesi:', data.voiceLevel);
     const user = users.get(socket.id);
     if (user) {
       socket.broadcast.emit('user_speaking_update', {
         userId: socket.id,
         username: user.username,
-        isSpeaking: data.isSpeaking
+        isSpeaking: data.isSpeaking,
+        voiceLevel: data.voiceLevel || 0
       });
     }
   });

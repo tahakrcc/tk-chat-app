@@ -20,6 +20,18 @@ const glow = keyframes`
   100% { box-shadow: 0 0 5px rgba(64, 224, 208, 0.5); }
 `;
 
+const speakingPulse = keyframes`
+  0% { opacity: 0.3; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.2); }
+  100% { opacity: 0.3; transform: scale(0.8); }
+`;
+
+const echoLines = keyframes`
+  0% { transform: scale(0.8); opacity: 0.8; }
+  50% { transform: scale(1.2); opacity: 0.4; }
+  100% { transform: scale(1.6); opacity: 0; }
+`;
+
 const VoiceRoomContainer = styled.div`
   flex: 1;
   background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 25%, #16213e 50%, #0f3460 75%, #533483 100%);
@@ -276,6 +288,7 @@ const UserHeader = styled.div`
   align-items: center;
   gap: 12px;
   margin-bottom: 16px;
+  position: relative;
   
   @media (max-width: 768px) {
     gap: 10px;
@@ -296,12 +309,55 @@ const UserAvatar = styled.div`
   font-size: 18px;
   box-shadow: 0 4px 15px rgba(138, 43, 226, 0.3);
   animation: ${pulse} 2s infinite;
+  position: relative;
+  
+  ${props => props.isSpeaking && `
+    animation: ${speakingPulse} 1s infinite;
+  `}
   
   @media (max-width: 768px) {
     width: 44px;
     height: 44px;
     font-size: 16px;
   }
+`;
+
+const EchoLines = styled.div`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  
+  ${props => props.isSpeaking && props.voiceLevel > 0 && `
+    &::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: ${60 + (props.voiceLevel * 0.4)}px;
+      height: ${60 + (props.voiceLevel * 0.4)}px;
+      border: 2px solid rgba(64, 224, 208, ${0.3 + (props.voiceLevel * 0.007)});
+      border-radius: 50%;
+      animation: ${echoLines} 1s infinite;
+    }
+    
+    &::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: ${80 + (props.voiceLevel * 0.6)}px;
+      height: ${80 + (props.voiceLevel * 0.6)}px;
+      border: 1px solid rgba(64, 224, 208, ${0.2 + (props.voiceLevel * 0.005)});
+      border-radius: 50%;
+      animation: ${echoLines} 1s infinite 0.3s;
+    }
+  `}
 `;
 
 const UserInfo = styled.div`
@@ -326,6 +382,20 @@ const UserStatus = styled.div`
   display: flex;
   align-items: center;
   gap: 6px;
+  
+  @media (max-width: 768px) {
+    font-size: 11px;
+  }
+`;
+
+const SpeakingIndicator = styled.div`
+  color: #40e0d0;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  animation: ${speakingPulse} 1s infinite;
   
   @media (max-width: 768px) {
     font-size: 11px;
@@ -520,7 +590,7 @@ const VoiceRoom = ({ socket, user, activeUsers }) => {
       setVoiceRoomUsers(prev => 
         prev.map(user => 
           user.id === data.userId 
-            ? { ...user, isSpeaking: data.isSpeaking }
+            ? { ...user, isSpeaking: data.isSpeaking, voiceLevel: data.voiceLevel || 0 }
             : user
         )
       );
@@ -632,7 +702,7 @@ const VoiceRoom = ({ socket, user, activeUsers }) => {
         
         // Konuşma durumunu sıfırla
         setIsSpeaking(false);
-        socket.emit('user_speaking', { isSpeaking: false });
+        socket.emit('user_speaking', { isSpeaking: false, voiceLevel: 0 });
         
         // Ses durumunu diğer kullanıcılara bildir
         socket.emit('user_voice_status', {
@@ -716,7 +786,10 @@ const VoiceRoom = ({ socket, user, activeUsers }) => {
           const speaking = level > 10;
           if (speaking !== isSpeaking) {
             setIsSpeaking(speaking);
-            socket.emit('user_speaking', { isSpeaking: speaking });
+            socket.emit('user_speaking', { isSpeaking: speaking, voiceLevel: level });
+          } else if (speaking) {
+            // Konuşma devam ediyorsa ses seviyesini güncelle
+            socket.emit('user_speaking', { isSpeaking: speaking, voiceLevel: level });
           }
           
           const animationId = requestAnimationFrame(updateVoiceLevel);
@@ -725,7 +798,7 @@ const VoiceRoom = ({ socket, user, activeUsers }) => {
           setVoiceLevel(0);
           if (isSpeaking) {
             setIsSpeaking(false);
-            socket.emit('user_speaking', { isSpeaking: false });
+            socket.emit('user_speaking', { isSpeaking: false, voiceLevel: 0 });
           }
           const animationId = requestAnimationFrame(updateVoiceLevel);
           setAnimationId(animationId);
@@ -792,7 +865,7 @@ const VoiceRoom = ({ socket, user, activeUsers }) => {
   };
 
   const allUsers = [
-    { id: socket?.id, username: user?.username, isMuted, isVolumeMuted, isSpeaking },
+    { id: socket?.id, username: user?.username, isMuted, isVolumeMuted, isSpeaking, voiceLevel },
     ...voiceRoomUsers.filter(u => u.id !== socket?.id)
   ];
 
@@ -878,14 +951,23 @@ const VoiceRoom = ({ socket, user, activeUsers }) => {
               isSpeaking={status === 'speaking'}
             >
               <UserHeader>
-                <UserAvatar>
+                <UserAvatar isSpeaking={status === 'speaking'}>
                   {user.username?.charAt(0).toUpperCase() || 'U'}
+                  <EchoLines 
+                    isSpeaking={status === 'speaking'} 
+                    voiceLevel={user.voiceLevel || 0}
+                  />
                 </UserAvatar>
                 <UserInfo>
                   <Username>{user.username || 'Bilinmeyen Kullanıcı'}</Username>
                   <UserStatus>
                     <StatusIcon status={status} />
                     {getStatusText(status)}
+                    {status === 'speaking' && (
+                      <SpeakingIndicator>
+                        🎤 Konuşuyor
+                      </SpeakingIndicator>
+                    )}
                   </UserStatus>
                 </UserInfo>
                 <div style={{ color: '#40e0d0' }}>
