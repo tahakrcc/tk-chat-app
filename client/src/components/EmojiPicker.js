@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import styled from 'styled-components';
 import EmojiPickerReact from 'emoji-picker-react';
 import { Smile } from 'lucide-react';
@@ -38,17 +38,20 @@ const EmojiButton = styled.button`
 `;
 
 const EmojiPickerContainer = styled.div`
-  position: absolute;
-  bottom: 100%;
-  left: 0;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   background: rgba(0, 0, 0, 0.95);
   backdrop-filter: blur(20px);
   border: 2px solid rgba(255, 255, 255, 0.2);
-  border-radius: 16px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
-  margin-bottom: 8px;
-  z-index: 1000;
+  border-radius: 20px;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.9);
+  z-index: 10000;
   overflow: hidden;
+  width: 90vw;
+  max-width: 350px;
+  max-height: 60vh;
   
   .EmojiPickerReact {
     --epr-emoji-size: 24px;
@@ -63,6 +66,8 @@ const EmojiPickerContainer = styled.div`
     --epr-category-label-text-color: #ffffff;
     --epr-skin-tone-picker-menu-bg-color: rgba(0, 0, 0, 0.9);
     --epr-skin-tone-picker-menu-border-color: rgba(255, 255, 255, 0.2);
+    --epr-bg-color: transparent;
+    --epr-category-label-color: #ffffff;
   }
   
   .EmojiPickerReact .epr-emoji {
@@ -74,17 +79,17 @@ const EmojiPickerContainer = styled.div`
     }
   }
   
+  .EmojiPickerReact .epr-category-label {
+    font-weight: 700;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  
   @media (max-width: 768px) {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 90vw;
-    max-width: 350px;
-    max-height: 70vh;
-    bottom: auto;
-    margin-bottom: 0;
-    z-index: 10000;
+    width: 95vw;
+    max-width: 320px;
+    max-height: 55vh;
     
     .EmojiPickerReact {
       --epr-emoji-size: 22px;
@@ -95,9 +100,9 @@ const EmojiPickerContainer = styled.div`
   }
   
   @media (max-width: 480px) {
-    width: 95vw;
-    max-width: 320px;
-    max-height: 65vh;
+    width: 98vw;
+    max-width: 300px;
+    max-height: 50vh;
     
     .EmojiPickerReact {
       --epr-emoji-size: 20px;
@@ -106,6 +111,17 @@ const EmojiPickerContainer = styled.div`
       --epr-vertical-padding: 4px;
     }
   }
+`;
+
+const Overlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 9999;
+  cursor: pointer;
 `;
 
 const EmojiPicker = ({ onEmojiClick, isOpen, onToggle }) => {
@@ -121,46 +137,40 @@ const EmojiPicker = ({ onEmojiClick, isOpen, onToggle }) => {
     }
   };
 
+  // Prevent body scroll when picker is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+    } else {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+    }
+
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+    };
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
   return (
     <>
-      <EmojiButton 
-        onClick={handleToggle} 
-        onTouchEnd={handleToggle}
-        title="Emoji Ekle"
-      >
-        <Smile size={20} />
-      </EmojiButton>
-      
-      {isOpen && (
-        <>
-          {/* Mobilde overlay */}
-          {window.innerWidth <= 768 && (
-            <div
-              style={{
-                position: 'fixed',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                background: 'rgba(0, 0, 0, 0.5)',
-                zIndex: 9999,
-                cursor: 'pointer'
-              }}
-              onClick={handleOverlayClick}
-            />
-          )}
-          <EmojiPickerContainer>
-                      <EmojiPickerReact
-            onEmojiClick={onEmojiClick}
-            autoFocusSearch={false}
-            searchPlaceholder="Emoji ara..."
-            width="100%"
-            height={window.innerWidth <= 768 ? 350 : 400}
-            lazyLoadEmojis={true}
-          />
-          </EmojiPickerContainer>
-        </>
-      )}
+      <Overlay onClick={handleOverlayClick} />
+      <EmojiPickerContainer>
+        <EmojiPickerReact
+          onEmojiClick={onEmojiClick}
+          autoFocusSearch={false}
+          searchPlaceholder="Emoji ara..."
+          width="100%"
+          height={window.innerWidth <= 768 ? 300 : 350}
+          lazyLoadEmojis={true}
+        />
+      </EmojiPickerContainer>
     </>
   );
 };

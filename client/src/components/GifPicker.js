@@ -3,8 +3,65 @@ import styled from 'styled-components';
 import { X } from 'lucide-react';
 import { GiphyFetch } from '@giphy/js-fetch-api';
 
-const GifButton = styled.button`
-  background: transparent;
+const GifPickerContainer = styled.div`
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.95);
+  backdrop-filter: blur(20px);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.9);
+  z-index: 10000;
+  overflow: hidden;
+  width: 90vw;
+  max-width: 350px;
+  max-height: 60vh;
+  
+  @media (max-width: 768px) {
+    width: 95vw;
+    max-width: 320px;
+    max-height: 55vh;
+  }
+  
+  @media (max-width: 480px) {
+    width: 98vw;
+    max-width: 300px;
+    max-height: 50vh;
+  }
+`;
+
+const Overlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 9999;
+  cursor: pointer;
+`;
+
+const GifHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+`;
+
+const GifTitle = styled.h3`
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+`;
+
+const CloseButton = styled.button`
+  background: rgba(255, 255, 255, 0.1);
   border: none;
   color: #ffffff;
   cursor: pointer;
@@ -16,7 +73,7 @@ const GifButton = styled.button`
   justify-content: center;
   
   &:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.2);
     transform: scale(1.1);
   }
   
@@ -25,72 +82,8 @@ const GifButton = styled.button`
   }
 `;
 
-const GifPickerContainer = styled.div`
-  position: absolute;
-  bottom: 100%;
-  left: 0;
-  background: rgba(0, 0, 0, 0.95);
-  backdrop-filter: blur(20px);
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  border-radius: 16px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
-  margin-bottom: 8px;
-  z-index: 1000;
-  overflow: hidden;
-  width: 350px;
-  max-height: 500px;
-  
-  @media (max-width: 768px) {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 90vw;
-    max-width: 350px;
-    max-height: 70vh;
-    bottom: auto;
-    margin-bottom: 0;
-    z-index: 10000;
-  }
-  
-  @media (max-width: 480px) {
-    width: 95vw;
-    max-width: 320px;
-    max-height: 65vh;
-  }
-`;
-
-const GifHeader = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-`;
-
-const GifTitle = styled.h3`
-  color: #ffffff;
-  font-size: 14px;
-  font-weight: 700;
-  margin: 0;
-`;
-
-const CloseButton = styled.button`
-  background: transparent;
-  border: none;
-  color: #ffffff;
-  cursor: pointer;
-  padding: 4px;
-  border-radius: 4px;
-  transition: all 0.3s ease;
-  
-  &:hover {
-    background: rgba(255, 255, 255, 0.1);
-  }
-`;
-
 const SearchContainer = styled.div`
-  padding: 12px 16px;
+  padding: 16px 20px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 `;
 
@@ -98,8 +91,8 @@ const SearchInput = styled.input`
   width: 100%;
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 8px;
-  padding: 8px 12px;
+  border-radius: 12px;
+  padding: 12px 16px;
   color: #ffffff;
   font-size: 14px;
   outline: none;
@@ -111,30 +104,31 @@ const SearchInput = styled.input`
   
   &:focus {
     border-color: rgba(83, 82, 237, 0.8);
-    box-shadow: 0 0 0 2px rgba(83, 82, 237, 0.3);
+    box-shadow: 0 0 0 3px rgba(83, 82, 237, 0.3);
+    background: rgba(255, 255, 255, 0.15);
   }
 `;
 
 const GifGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
-  padding: 12px 16px;
-  max-height: 350px;
+  gap: 12px;
+  padding: 16px 20px;
+  max-height: 300px;
   overflow-y: auto;
   
   &::-webkit-scrollbar {
-    width: 6px;
+    width: 8px;
   }
   
   &::-webkit-scrollbar-track {
     background: rgba(255, 255, 255, 0.1);
-    border-radius: 3px;
+    border-radius: 4px;
   }
   
   &::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.3);
-    border-radius: 3px;
+    border-radius: 4px;
   }
   
   &::-webkit-scrollbar-thumb:hover {
@@ -142,28 +136,30 @@ const GifGrid = styled.div`
   }
   
   @media (max-width: 768px) {
-    gap: 6px;
-    padding: 10px 12px;
-    max-height: 300px;
+    gap: 8px;
+    padding: 12px 16px;
+    max-height: 250px;
   }
   
   @media (max-width: 480px) {
-    gap: 4px;
-    padding: 8px 10px;
-    max-height: 280px;
+    gap: 6px;
+    padding: 10px 12px;
+    max-height: 200px;
   }
 `;
 
 const GifItem = styled.div`
   position: relative;
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
   cursor: pointer;
   transition: all 0.3s ease;
+  border: 2px solid transparent;
   
   &:hover {
     transform: scale(1.05);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+    border-color: rgba(83, 82, 237, 0.5);
   }
   
   &:active {
@@ -188,32 +184,22 @@ const GifItem = styled.div`
       height: 80px;
     }
   }
-  
-  @media (max-width: 768px) {
-    img {
-      height: 100px;
-    }
-  }
-  
-  @media (max-width: 480px) {
-    img {
-      height: 80px;
-    }
-  }
 `;
 
 const LoadingText = styled.div`
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.8);
   text-align: center;
-  padding: 20px;
+  padding: 30px 20px;
   font-size: 14px;
+  font-weight: 600;
 `;
 
 const NoResultsText = styled.div`
   color: rgba(255, 255, 255, 0.7);
   text-align: center;
-  padding: 20px;
+  padding: 30px 20px;
   font-size: 14px;
+  font-weight: 600;
 `;
 
 const GifPicker = ({ onGifSelect, isOpen, onToggle }) => {
@@ -266,6 +252,25 @@ const GifPicker = ({ onGifSelect, isOpen, onToggle }) => {
     };
   }, [searchTerm]);
 
+  // Prevent body scroll when picker is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+    } else {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+    }
+
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+    };
+  }, [isOpen]);
+
   const handleGifClick = (gif) => {
     onGifSelect(gif.images.original.url);
     onToggle();
@@ -287,34 +292,19 @@ const GifPicker = ({ onGifSelect, isOpen, onToggle }) => {
 
   return (
     <>
-              {/* Mobilde overlay */}
-        {window.innerWidth <= 768 && (
-          <div
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background: 'rgba(0, 0, 0, 0.5)',
-              zIndex: 9999,
-              cursor: 'pointer'
-            }}
-            onClick={handleOverlayClick}
-          />
-        )}
+      <Overlay onClick={handleOverlayClick} />
       <GifPickerContainer>
         <GifHeader>
-          <GifTitle>GIF Ara</GifTitle>
+          <GifTitle>🎬 GIF Ara</GifTitle>
           <CloseButton onClick={handleClose} title="Kapat">
-            <X size={16} />
+            <X size={18} />
           </CloseButton>
         </GifHeader>
         
         <SearchContainer>
           <SearchInput
             type="text"
-            placeholder="GIF ara..."
+            placeholder="GIF ara... (örn: kedi, gülme, dans)"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             autoFocus
@@ -323,9 +313,9 @@ const GifPicker = ({ onGifSelect, isOpen, onToggle }) => {
         
         <GifGrid>
           {loading ? (
-            <LoadingText>Aranıyor...</LoadingText>
+            <LoadingText>🔍 Aranıyor...</LoadingText>
           ) : gifs.length === 0 && searchTerm ? (
-            <NoResultsText>Sonuç bulunamadı</NoResultsText>
+            <NoResultsText>❌ Sonuç bulunamadı</NoResultsText>
           ) : (
             gifs.map((gif) => (
               <GifItem key={gif.id} onClick={() => handleGifClick(gif)}>

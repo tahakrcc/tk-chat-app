@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styled, { keyframes } from 'styled-components';
-import { Send, Image } from 'lucide-react';
+import { Send, Image, Smile } from 'lucide-react';
 import MessageList from './MessageList';
 import EmojiPicker from './EmojiPicker';
 import GifPicker from './GifPicker';
@@ -128,6 +128,40 @@ const MessageInput = styled.textarea`
     border-radius: 0;
     -webkit-transform: translateZ(0);
     transform: translateZ(0);
+  }
+`;
+
+const EmojiButton = styled.button`
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: scale(1.1);
+  }
+  
+  &:active {
+    transform: scale(0.95);
+  }
+  
+  @media (max-width: 768px) {
+    padding: 10px;
+    min-width: 44px;
+    min-height: 44px;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 12px;
+    min-width: 48px;
+    min-height: 48px;
   }
 `;
 
@@ -392,25 +426,26 @@ const ChatRoom = ({ socket, user, messages = [], onSendMessage }) => {
         </TypingIndicator>
       )}
       
+      <EmojiPicker
+        onEmojiClick={handleEmojiClick}
+        isOpen={showEmojiPicker}
+        onToggle={toggleEmojiPicker}
+      />
+      
+      <GifPicker
+        onGifSelect={handleGifSelect}
+        isOpen={showGifPicker}
+        onToggle={toggleGifPicker}
+      />
+      
       <MessageInputContainer>
         <InputWrapper>
-          <div style={{ position: 'relative', zIndex: 1001 }}>
-            <EmojiPicker
-              onEmojiClick={handleEmojiClick}
-              isOpen={showEmojiPicker}
-              onToggle={toggleEmojiPicker}
-            />
-          </div>
-          <div style={{ position: 'relative', zIndex: 1001 }}>
-            <GifButton onClick={toggleGifPicker} title="GIF Ekle">
-              <Image size={20} />
-            </GifButton>
-            <GifPicker
-              onGifSelect={handleGifSelect}
-              isOpen={showGifPicker}
-              onToggle={toggleGifPicker}
-            />
-          </div>
+          <EmojiButton onClick={toggleEmojiPicker} title="Emoji Ekle">
+            <Smile size={20} />
+          </EmojiButton>
+          <GifButton onClick={toggleGifPicker} title="GIF Ekle">
+            <Image size={20} />
+          </GifButton>
           <MessageInput
             ref={inputRef}
             value={newMessage}
