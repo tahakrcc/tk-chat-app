@@ -1,16 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import io from 'socket.io-client';
 import SimpleLogin from './components/SimpleLogin';
 import ChatRoom from './components/ChatRoom';
 import VoiceRoom from './components/VoiceRoom';
 import { ArrowLeft, Users, Hash, Mic, LogOut } from 'lucide-react';
 
+const fadeIn = keyframes`
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+`;
+
+const pulse = keyframes`
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+`;
+
 const AppContainer = styled.div`
   min-height: 100vh;
-  background: #36393f;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   display: flex;
   flex-direction: column;
+  animation: ${fadeIn} 0.6s ease-out;
   
   @media (max-width: 768px) {
     height: 100vh;
@@ -19,9 +31,10 @@ const AppContainer = styled.div`
 `;
 
 const ChatHeader = styled.div`
-  background: #36393f;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
   padding: 16px;
-  border-bottom: 1px solid #40444b;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   display: flex;
   align-items: center;
   gap: 12px;
@@ -35,21 +48,25 @@ const ChatHeader = styled.div`
 `;
 
 const BackButton = styled.button`
-  background: #40444b;
-  border: none;
-  color: #dcddde;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.9);
   padding: 8px 12px;
-  border-radius: 6px;
+  border-radius: 12px;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 6px;
   font-size: 14px;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
   
   &:hover {
-    background: #4f545c;
+    background: rgba(255, 255, 255, 0.2);
     color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
   }
   
   @media (max-width: 768px) {
@@ -63,7 +80,8 @@ const ChatTypeIcon = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #00d4ff;
+  color: #4ecdc4;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
   
   @media (max-width: 768px) {
     gap: 6px;
@@ -76,7 +94,7 @@ const UserInfo = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #96989d;
+  color: rgba(255, 255, 255, 0.8);
   font-size: 14px;
   
   @media (max-width: 768px) {
@@ -89,13 +107,15 @@ const UserAvatar = styled.div`
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #00d4ff, #0099cc);
+  background: linear-gradient(135deg, #667eea, #764ba2);
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
   font-weight: 600;
   font-size: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  animation: ${pulse} 2s infinite;
   
   @media (max-width: 768px) {
     width: 20px;
@@ -105,20 +125,22 @@ const UserAvatar = styled.div`
 `;
 
 const LogoutButton = styled.button`
-  background: #dc3545;
+  background: linear-gradient(135deg, #ff6b6b, #ee5a52);
   border: none;
   color: white;
   padding: 6px 10px;
-  border-radius: 4px;
+  border-radius: 8px;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 4px;
   font-size: 12px;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
   
   &:hover {
-    background: #c82333;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
   }
   
   @media (max-width: 768px) {
@@ -129,13 +151,14 @@ const LogoutButton = styled.button`
 `;
 
 const ActiveUsersBar = styled.div`
-  background: #2f3136;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
   padding: 8px 16px;
-  border-bottom: 1px solid #40444b;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #96989d;
+  color: rgba(255, 255, 255, 0.8);
   font-size: 14px;
   
   @media (max-width: 768px) {
@@ -144,8 +167,6 @@ const ActiveUsersBar = styled.div`
     gap: 6px;
   }
 `;
-
-// UserDot component removed - unused
 
 const App = () => {
   const [socket, setSocket] = useState(null);
@@ -296,7 +317,7 @@ const App = () => {
         </BackButton>
         
         <ChatTypeIcon>
-          <span style={{ fontWeight: 'bold', color: '#00d4ff' }}>TK Chat</span>
+          <span style={{ fontWeight: 'bold', color: '#4ecdc4' }}>TK Chat</span>
           {user.chatType === 'text' ? (
             <>
               <Hash size={20} />

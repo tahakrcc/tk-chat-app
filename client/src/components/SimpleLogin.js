@@ -1,6 +1,17 @@
 import React, { useState } from 'react';
-import styled from 'styled-components';
-import { MessageCircle, Mic, ArrowRight, MicOff } from 'lucide-react';
+import styled, { keyframes } from 'styled-components';
+import { MessageCircle, Mic, User, Lock } from 'lucide-react';
+
+const fadeIn = keyframes`
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+`;
+
+const pulse = keyframes`
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+`;
 
 const LoginContainer = styled.div`
   min-height: 100vh;
@@ -9,196 +20,266 @@ const LoginContainer = styled.div`
   align-items: center;
   justify-content: center;
   padding: 20px;
+  animation: ${fadeIn} 0.8s ease-out;
 `;
 
 const LoginCard = styled.div`
-  background: #36393f;
-  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  border-radius: 24px;
   padding: 40px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   width: 100%;
   max-width: 400px;
-  text-align: center;
+  animation: ${fadeIn} 1s ease-out;
+  
+  @media (max-width: 768px) {
+    padding: 30px 20px;
+    margin: 20px;
+  }
 `;
 
 const Logo = styled.div`
+  text-align: center;
+  margin-bottom: 32px;
+  
+  h1 {
+    color: #fff;
+    font-size: 32px;
+    font-weight: 700;
+    margin: 0;
+    text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    animation: ${pulse} 3s infinite;
+  }
+  
+  p {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 16px;
+    margin: 8px 0 0 0;
+  }
+  
+  @media (max-width: 768px) {
+    h1 {
+      font-size: 28px;
+    }
+    
+    p {
+      font-size: 14px;
+    }
+  }
+`;
+
+const InputGroup = styled.div`
+  margin-bottom: 20px;
+  position: relative;
+`;
+
+const InputLabel = styled.label`
+  display: block;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+`;
+
+const InputWrapper = styled.div`
+  position: relative;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 12px;
-  margin-bottom: 32px;
-  color: #fff;
-  font-size: 24px;
-  font-weight: 700;
 `;
 
-const Title = styled.h1`
-  color: #fff;
-  margin-bottom: 8px;
-  font-size: 28px;
-  font-weight: 700;
-`;
-
-const Subtitle = styled.p`
-  color: #96989d;
-  margin-bottom: 32px;
-  font-size: 16px;
+const InputIcon = styled.div`
+  position: absolute;
+  left: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  z-index: 1;
 `;
 
 const Input = styled.input`
   width: 100%;
-  padding: 12px 16px;
-  background: #40444b;
-  border: 1px solid ${props => props.error ? '#f04747' : '#202225'};
-  border-radius: 8px;
-  color: #dcddde;
+  padding: 12px 12px 12px 40px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  color: #fff;
   font-size: 16px;
-  margin-bottom: ${props => props.error ? '8px' : '24px'};
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
   
   &::placeholder {
-    color: #96989d;
+    color: rgba(255, 255, 255, 0.5);
   }
   
   &:focus {
     outline: none;
-    border-color: ${props => props.error ? '#f04747' : '#00d4ff'};
+    border-color: #4ecdc4;
+    box-shadow: 0 0 20px rgba(78, 205, 196, 0.3);
+    transform: translateY(-2px);
+  }
+  
+  @media (max-width: 768px) {
+    font-size: 16px; /* Prevent zoom on iOS */
   }
 `;
 
 const ErrorMessage = styled.div`
-  color: #f04747;
-  font-size: 14px;
-  margin-bottom: 16px;
-  text-align: left;
+  color: #ff6b6b;
+  font-size: 12px;
+  margin-top: 6px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 `;
 
 const ChatTypeSelector = styled.div`
   display: flex;
   gap: 12px;
   margin-bottom: 24px;
+  
+  @media (max-width: 768px) {
+    gap: 8px;
+  }
 `;
 
 const ChatTypeButton = styled.button`
   flex: 1;
-  padding: 16px;
-  background: ${props => props.selected ? '#00d4ff' : '#40444b'};
-  border: 1px solid ${props => props.selected ? '#00d4ff' : '#202225'};
-  border-radius: 8px;
-  color: ${props => props.selected ? '#fff' : '#96989d'};
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  background: ${props => props.selected 
+    ? 'linear-gradient(135deg, #4ecdc4, #44a08d)' 
+    : 'rgba(255, 255, 255, 0.1)'};
+  color: #fff;
   cursor: pointer;
+  transition: all 0.3s ease;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  transition: all 0.2s ease;
+  gap: 6px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
   
   &:hover {
-    background: ${props => props.selected ? '#0099cc' : '#4f545c'};
     transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+  
+  @media (max-width: 768px) {
+    padding: 10px;
+    gap: 4px;
+  }
+`;
+
+const ChatTypeIcon = styled.div`
+  font-size: 20px;
+  
+  @media (max-width: 768px) {
+    font-size: 18px;
+  }
+`;
+
+const ChatTypeText = styled.span`
+  font-size: 12px;
+  font-weight: 600;
+  
+  @media (max-width: 768px) {
+    font-size: 11px;
   }
 `;
 
 const JoinButton = styled.button`
   width: 100%;
   padding: 14px;
-  background: #00d4ff;
+  background: linear-gradient(135deg, #667eea, #764ba2);
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 12px;
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  position: relative;
+  overflow: hidden;
   
-  &:hover {
-    background: #0099cc;
-    transform: translateY(-2px);
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
   }
   
-  &:disabled {
-    background: #40444b;
-    color: #96989d;
-    cursor: not-allowed;
-    transform: none;
+  &:hover::before {
+    left: 100%;
   }
-`;
-
-const PermissionButton = styled.button`
-  width: 100%;
-  padding: 12px;
-  background: ${props => props.granted ? '#43b581' : '#f04747'};
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  transition: all 0.2s ease;
-  margin-top: 12px;
   
   &:hover {
-    background: ${props => props.granted ? '#3ca374' : '#d84040'};
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  }
+  
+  &:active {
     transform: translateY(-1px);
   }
   
   &:disabled {
-    background: #40444b;
-    color: #96989d;
+    opacity: 0.6;
     cursor: not-allowed;
     transform: none;
   }
-`;
-
-const PermissionStatus = styled.div`
-  color: ${props => props.granted ? '#43b581' : '#f04747'};
-  font-size: 12px;
-  margin-top: 8px;
-  font-weight: 500;
-`;
-
-const Spinner = styled.div`
-  width: 16px;
-  height: 16px;
-  border: 2px solid #fff;
-  border-top: 2px solid transparent;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
   
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+  @media (max-width: 768px) {
+    padding: 12px;
+    font-size: 15px;
   }
 `;
 
 const SimpleLogin = ({ onLogin }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [chatType, setChatType] = useState('text'); // 'text' veya 'voice'
-  const [micPermission, setMicPermission] = useState(false);
-  const [micPermissionRequested, setMicPermissionRequested] = useState(false);
+  const [chatType, setChatType] = useState('text');
+  const [usernameError, setUsernameError] = useState('');
   const [passwordError, setPasswordError] = useState('');
 
   const handleJoin = () => {
-    if (!username.trim()) {
-      return;
-    }
-    
-    if (password !== '689tk') {
-      setPasswordError('Şifre yanlış! Doğru şifreyi girin.');
-      return;
-    }
-    
+    // Reset errors
+    setUsernameError('');
     setPasswordError('');
+
+    // Validate username
+    if (!username.trim()) {
+      setUsernameError('Kullanıcı adı gerekli');
+      return;
+    }
+
+    if (username.trim().length < 2) {
+      setUsernameError('Kullanıcı adı en az 2 karakter olmalı');
+      return;
+    }
+
+    // Validate password
+    if (!password.trim()) {
+      setPasswordError('Şifre gerekli');
+      return;
+    }
+
+    if (password !== '689tk') {
+      setPasswordError('Yanlış şifre');
+      return;
+    }
+
+    // Login successful
     onLogin({
-      id: Date.now().toString(),
+      id: Date.now(),
       username: username.trim(),
       chatType: chatType
     });
@@ -210,129 +291,74 @@ const SimpleLogin = ({ onLogin }) => {
     }
   };
 
-  const handlePasswordChange = (e) => {
-    setPassword(e.target.value);
-    if (passwordError) {
-      setPasswordError('');
-    }
-  };
-
-  const requestMicrophonePermission = async () => {
-    try {
-      setMicPermissionRequested(true);
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        audio: true, 
-        video: false 
-      });
-      
-      // İzin verildi, stream'i hemen kapat
-      stream.getTracks().forEach(track => track.stop());
-      
-      setMicPermission(true);
-      setMicPermissionRequested(false);
-    } catch (error) {
-      console.error('Mikrofon izni alınamadı:', error);
-      setMicPermission(false);
-      setMicPermissionRequested(false);
-      alert('Mikrofon izni gerekli! Sesli sohbet için mikrofon erişimine izin verin.');
-    }
-  };
-
   return (
     <LoginContainer>
       <LoginCard>
         <Logo>
-          <MessageCircle size={32} />
-          TK Chat
+          <h1>TK Chat</h1>
+          <p>Güvenli ve hızlı sohbet deneyimi</p>
         </Logo>
-        
-        <Title>Hoş Geldiniz!</Title>
-        <Subtitle>Sohbete katılmak için kullanıcı adınızı girin</Subtitle>
-        
-        <Input
-          type="text"
-          placeholder="Kullanıcı adınız..."
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          onKeyPress={handleKeyPress}
-          autoFocus
-        />
-        
-        <Input
-          type="password"
-          placeholder="Şifre..."
-          value={password}
-          onChange={handlePasswordChange}
-          onKeyPress={handleKeyPress}
-          error={!!passwordError}
-        />
-        
-        {passwordError && (
-          <ErrorMessage>
-            {passwordError}
-          </ErrorMessage>
-        )}
-        
+
+        <InputGroup>
+          <InputLabel>Kullanıcı Adı</InputLabel>
+          <InputWrapper>
+            <InputIcon>
+              <User size={18} />
+            </InputIcon>
+            <Input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Kullanıcı adınızı girin"
+              maxLength={20}
+            />
+          </InputWrapper>
+          {usernameError && <ErrorMessage>{usernameError}</ErrorMessage>}
+        </InputGroup>
+
+        <InputGroup>
+          <InputLabel>Şifre</InputLabel>
+          <InputWrapper>
+            <InputIcon>
+              <Lock size={18} />
+            </InputIcon>
+            <Input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Şifrenizi girin"
+            />
+          </InputWrapper>
+          {passwordError && <ErrorMessage>{passwordError}</ErrorMessage>}
+        </InputGroup>
+
         <ChatTypeSelector>
           <ChatTypeButton
             selected={chatType === 'text'}
             onClick={() => setChatType('text')}
           >
-            <MessageCircle size={24} />
-            <span>Yazılı Sohbet</span>
+            <ChatTypeIcon>
+              <MessageCircle size={20} />
+            </ChatTypeIcon>
+            <ChatTypeText>Yazılı</ChatTypeText>
           </ChatTypeButton>
           
           <ChatTypeButton
             selected={chatType === 'voice'}
             onClick={() => setChatType('voice')}
           >
-            <Mic size={24} />
-            <span>Sesli Sohbet</span>
+            <ChatTypeIcon>
+              <Mic size={20} />
+            </ChatTypeIcon>
+            <ChatTypeText>Sesli</ChatTypeText>
           </ChatTypeButton>
         </ChatTypeSelector>
-        
-        <JoinButton 
-          onClick={handleJoin}
-          disabled={!username.trim() || !password.trim()}
-        >
-          {chatType === 'text' ? 'Yazılı Sohbete Katıl' : 'Sesli Sohbete Katıl'}
-          <ArrowRight size={20} />
+
+        <JoinButton onClick={handleJoin}>
+          Sohbete Katıl
         </JoinButton>
-
-        <PermissionButton
-          onClick={requestMicrophonePermission}
-          granted={micPermission}
-          disabled={micPermissionRequested}
-        >
-          {micPermissionRequested ? (
-            <>
-              <Spinner />
-              İzin İsteniyor...
-            </>
-          ) : micPermission ? (
-            <>
-              <Mic size={16} />
-              Mikrofon İzni Verildi ✓
-            </>
-          ) : (
-            <>
-              <MicOff size={16} />
-              Mikrofon İzni Ver
-            </>
-          )}
-        </PermissionButton>
-
-        {micPermissionRequested && (
-          <PermissionStatus granted={false}>
-            Tarayıcı izin penceresini kontrol edin...
-          </PermissionStatus>
-        )}
-        
-                {micPermission && (
-          <PermissionStatus granted={true}>
-            Mikrofon izni verildi! Sesli sohbete hazırsınız.
-          </PermissionStatus>
-        )}
       </LoginCard>
     </LoginContainer>
   );

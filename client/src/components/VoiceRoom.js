@@ -1,14 +1,36 @@
 import React, { useState, useEffect, useRef } from 'react';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import { Mic, MicOff, Volume2, VolumeX, Users, LogOut } from 'lucide-react';
 import Peer from 'simple-peer';
 
+const fadeIn = keyframes`
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+`;
+
+const pulse = keyframes`
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+`;
+
+const glow = keyframes`
+  0% { box-shadow: 0 0 5px rgba(0, 212, 255, 0.5); }
+  50% { box-shadow: 0 0 20px rgba(0, 212, 255, 0.8); }
+  100% { box-shadow: 0 0 5px rgba(0, 212, 255, 0.5); }
+`;
+
 const VoiceRoomContainer = styled.div`
   flex: 1;
-  background: #2f3136;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   display: flex;
   flex-direction: column;
   padding: 20px;
+  animation: ${fadeIn} 0.6s ease-out;
+  
+  @media (max-width: 768px) {
+    padding: 16px;
+  }
 `;
 
 const VoiceRoomHeader = styled.div`
@@ -19,6 +41,16 @@ const VoiceRoomHeader = styled.div`
   font-weight: 600;
   font-size: 18px;
   margin-bottom: 24px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 16px 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  
+  @media (max-width: 768px) {
+    padding: 12px 16px;
+    font-size: 16px;
+  }
 `;
 
 const VoiceControls = styled.div`
@@ -26,197 +58,66 @@ const VoiceControls = styled.div`
   gap: 12px;
   align-items: center;
   margin-bottom: 24px;
+  flex-wrap: wrap;
+  
+  @media (max-width: 768px) {
+    gap: 8px;
+  }
 `;
 
 const VoiceButton = styled.button`
-  background: ${props => props.variant === 'mute' ? (props.isMuted ? '#dc3545' : '#28a745') : 
-                props.variant === 'volume' ? (props.isMuted ? '#dc3545' : '#28a745') : 
-                props.variant === 'leave' ? '#dc3545' : '#40444b'};
+  background: ${props => {
+    if (props.variant === 'mute') {
+      return props.isMuted 
+        ? 'linear-gradient(135deg, #ff6b6b, #ee5a52)' 
+        : 'linear-gradient(135deg, #4ecdc4, #44a08d)';
+    } else if (props.variant === 'volume') {
+      return props.isMuted 
+        ? 'linear-gradient(135deg, #ff6b6b, #ee5a52)' 
+        : 'linear-gradient(135deg, #4ecdc4, #44a08d)';
+    } else if (props.variant === 'leave') {
+      return 'linear-gradient(135deg, #ff6b6b, #ee5a52)';
+    } else {
+      return 'linear-gradient(135deg, #667eea, #764ba2)';
+    }
+  }};
   color: white;
   border: none;
   padding: 12px;
-  border-radius: 8px;
+  border-radius: 12px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   min-width: 48px;
   min-height: 48px;
-  
-  &:hover {
-    transform: translateY(-2px);
-    filter: brightness(1.1);
-  }
-  
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    transform: none;
-  }
-`;
-
-const UserInfoSection = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px;
-  background: #40444b;
-  border-radius: 8px;
-  margin-bottom: 20px;
-`;
-
-const UserAvatar = styled.div`
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #00d4ff, #0099cc);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-weight: 600;
-  font-size: 16px;
-  text-transform: uppercase;
-`;
-
-const UserDetails = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-`;
-
-const UserName = styled.span`
-  color: #fff;
-  font-weight: 600;
-  font-size: 16px;
-`;
-
-const UserStatus = styled.span`
-  color: #96989d;
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-`;
-
-const StatusIndicator = styled.div`
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: ${props => props.isMuted ? '#dc3545' : '#28a745'};
-`;
-
-const UsersList = styled.div`
-  background: #40444b;
-  border-radius: 8px;
-  padding: 16px;
-`;
-
-const UsersHeader = styled.div`
-  color: #96989d;
-  font-size: 14px;
-  font-weight: 600;
-  margin-bottom: 12px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-`;
-
-const UserItem = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 0;
-  color: #dcddde;
-  font-size: 14px;
-`;
-
-const UserDot = styled.div`
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #43b581;
-`;
-
-const VolumeSlider = styled.div`
-  position: absolute;
-  top: -80px;
-  right: 0;
-  background: #40444b;
-  border-radius: 8px;
-  padding: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  min-width: 200px;
-  z-index: 1000;
-`;
-
-const VolumeSliderContainer = styled.div`
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
   position: relative;
-`;
-
-const Slider = styled.input`
-  width: 100%;
-  height: 6px;
-  border-radius: 3px;
-  background: #202225;
-  outline: none;
-  -webkit-appearance: none;
-  margin: 8px 0;
+  overflow: hidden;
   
-  &::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    background: #00d4ff;
-    cursor: pointer;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
   }
   
-  &::-moz-range-thumb {
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    background: #00d4ff;
-    cursor: pointer;
-    border: none;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  &:hover::before {
+    left: 100%;
   }
-`;
-
-const VolumeLabel = styled.div`
-  color: #96989d;
-  font-size: 12px;
-  margin-bottom: 8px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-`;
-
-const VolumeValue = styled.span`
-  color: #00d4ff;
-  font-weight: 600;
-`;
-
-const TestSoundButton = styled.button`
-  background: #28a745;
-  color: white;
-  border: none;
-  padding: 12px;
-  border-radius: 8px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-  min-width: 48px;
-  min-height: 48px;
   
   &:hover {
-    transform: translateY(-2px);
-    filter: brightness(1.1);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  }
+  
+  &:active {
+    transform: translateY(-1px);
   }
   
   &:disabled {
@@ -228,6 +129,260 @@ const TestSoundButton = styled.button`
   @media (max-width: 768px) {
     min-width: 44px;
     min-height: 44px;
+    padding: 10px;
+  }
+`;
+
+const UserInfoSection = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  margin-bottom: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  animation: ${fadeIn} 0.8s ease-out;
+  
+  @media (max-width: 768px) {
+    padding: 16px;
+    gap: 12px;
+  }
+`;
+
+const UserAvatar = styled.div`
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: 18px;
+  text-transform: uppercase;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  animation: ${pulse} 2s infinite;
+  
+  @media (max-width: 768px) {
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
+  }
+`;
+
+const UserDetails = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+`;
+
+const UserName = styled.span`
+  color: #fff;
+  font-weight: 600;
+  font-size: 18px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  
+  @media (max-width: 768px) {
+    font-size: 16px;
+  }
+`;
+
+const UserStatus = styled.span`
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  
+  @media (max-width: 768px) {
+    font-size: 13px;
+    gap: 6px;
+  }
+`;
+
+const StatusIndicator = styled.div`
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: ${props => props.isMuted 
+    ? 'linear-gradient(135deg, #ff6b6b, #ee5a52)' 
+    : 'linear-gradient(135deg, #4ecdc4, #44a08d)'};
+  box-shadow: 0 0 10px ${props => props.isMuted ? 'rgba(255, 107, 107, 0.5)' : 'rgba(78, 205, 196, 0.5)'};
+  animation: ${glow} 2s infinite;
+`;
+
+const UsersList = styled.div`
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  animation: ${fadeIn} 1s ease-out;
+  
+  @media (max-width: 768px) {
+    padding: 16px;
+  }
+`;
+
+const UsersHeader = styled.div`
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  
+  @media (max-width: 768px) {
+    font-size: 14px;
+    gap: 6px;
+  }
+`;
+
+const UserItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+  
+  &:last-child {
+    border-bottom: none;
+  }
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+  
+  @media (max-width: 768px) {
+    gap: 8px;
+    padding: 8px 0;
+    font-size: 13px;
+  }
+`;
+
+const UserDot = styled.div`
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4ecdc4, #44a08d);
+  box-shadow: 0 0 8px rgba(78, 205, 196, 0.5);
+  animation: ${pulse} 2s infinite;
+`;
+
+const VolumeSlider = styled.div`
+  position: absolute;
+  top: -100px;
+  right: 0;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(15px);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  min-width: 220px;
+  z-index: 1000;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  animation: ${fadeIn} 0.3s ease-out;
+`;
+
+const VolumeSliderContainer = styled.div`
+  position: relative;
+`;
+
+const Slider = styled.input`
+  width: 100%;
+  height: 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  outline: none;
+  -webkit-appearance: none;
+  margin: 12px 0;
+  
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+  }
+  
+  &::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  }
+  
+  &::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  }
+`;
+
+const VolumeLabel = styled.div`
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+`;
+
+const VolumeValue = styled.span`
+  color: #667eea;
+  font-weight: 700;
+  font-size: 16px;
+`;
+
+const TestSoundButton = styled.button`
+  background: linear-gradient(135deg, #4ecdc4, #44a08d);
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  min-width: 48px;
+  min-height: 48px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  font-size: 18px;
+  
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    animation: ${pulse} 0.5s ease;
+  }
+  
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+  
+  @media (max-width: 768px) {
+    min-width: 44px;
+    min-height: 44px;
+    font-size: 16px;
   }
 `;
 
@@ -335,8 +490,6 @@ const VoiceRoom = ({ socket, currentUser, roomName }) => {
     return peer;
   };
 
-  // addPeer function removed - unused
-
   const joinVoiceRoom = async () => {
     try {
       console.log('Joining voice room...');
@@ -440,9 +593,9 @@ const VoiceRoom = ({ socket, currentUser, roomName }) => {
   return (
     <VoiceRoomContainer>
       <VoiceRoomHeader>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <Users size={24} />
-          {roomName}
+          <span style={{ textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}>{roomName}</span>
         </div>
         
         <VoiceControls>
@@ -460,7 +613,7 @@ const VoiceRoom = ({ socket, currentUser, roomName }) => {
               variant="volume"
               onClick={toggleVolumeSlider}
               title="Ses seviyesini ayarla"
-              style={{ background: '#40444b' }}
+              style={{ background: 'linear-gradient(135deg, #667eea, #764ba2)' }}
             >
               <Volume2 size={20} />
             </VoiceButton>
@@ -483,8 +636,8 @@ const VoiceRoom = ({ socket, currentUser, roomName }) => {
                 <div style={{ 
                   display: 'flex', 
                   justifyContent: 'space-between', 
-                  fontSize: '10px', 
-                  color: '#96989d' 
+                  fontSize: '12px', 
+                  color: 'rgba(255, 255, 255, 0.7)' 
                 }}>
                   <span>0%</span>
                   <span>100%</span>
@@ -498,7 +651,6 @@ const VoiceRoom = ({ socket, currentUser, roomName }) => {
             isMuted={isVolumeMuted}
             onClick={toggleVolume}
             title={isVolumeMuted ? "Sesi aç" : "Sesi kapat"}
-            style={{ background: isVolumeMuted ? '#dc3545' : '#28a745' }}
           >
             {isVolumeMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
           </VoiceButton>
@@ -531,7 +683,7 @@ const VoiceRoom = ({ socket, currentUser, roomName }) => {
               }
             }}
             title="Ses durumunu kontrol et"
-            style={{ background: '#40444b' }}
+            style={{ background: 'linear-gradient(135deg, #667eea, #764ba2)' }}
           >
             🔍
           </VoiceButton>
@@ -554,7 +706,7 @@ const VoiceRoom = ({ socket, currentUser, roomName }) => {
       
       <UsersList>
         <UsersHeader>
-          <Users size={16} />
+          <Users size={18} />
           Odadaki Kullanıcılar ({activeUsers.length})
         </UsersHeader>
         
@@ -567,7 +719,7 @@ const VoiceRoom = ({ socket, currentUser, roomName }) => {
         ))}
         
         {activeUsers.length === 0 && (
-          <div style={{ color: '#96989d', fontStyle: 'italic' }}>
+          <div style={{ color: 'rgba(255, 255, 255, 0.7)', fontStyle: 'italic', textAlign: 'center', padding: '20px' }}>
             Henüz kimse odada değil
           </div>
         )}

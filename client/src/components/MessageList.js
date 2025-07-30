@@ -1,5 +1,16 @@
 import React from 'react';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
+
+const fadeIn = keyframes`
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+`;
+
+const pulse = keyframes`
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+`;
 
 const MessageContainer = styled.div`
   display: flex;
@@ -15,9 +26,13 @@ const MessageWrapper = styled.div`
   display: flex;
   gap: 12px;
   padding: 4px 0;
+  animation: ${fadeIn} 0.3s ease-out;
   
   &:hover {
-    background: rgba(255, 255, 255, 0.02);
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 8px;
+    margin: -4px -8px;
   }
   
   @media (max-width: 768px) {
@@ -30,7 +45,7 @@ const Avatar = styled.div`
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: ${props => props.src ? `url(${props.src}) center/cover` : 'linear-gradient(135deg, #00d4ff 0%, #0099cc 100%)'};
+  background: ${props => props.src ? `url(${props.src}) center/cover` : 'linear-gradient(135deg, #667eea, #764ba2)'};
   display: flex;
   align-items: center;
   justify-content: center;
@@ -39,6 +54,8 @@ const Avatar = styled.div`
   font-size: 16px;
   flex-shrink: 0;
   margin-top: 4px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  animation: ${pulse} 2s infinite;
   
   @media (max-width: 768px) {
     width: 32px;
@@ -67,8 +84,9 @@ const MessageHeader = styled.div`
 
 const Username = styled.span`
   color: #fff;
-  font-weight: 500;
+  font-weight: 600;
   font-size: 16px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
   
   &:hover {
     text-decoration: underline;
@@ -81,7 +99,7 @@ const Username = styled.span`
 `;
 
 const Timestamp = styled.span`
-  color: #96989d;
+  color: rgba(255, 255, 255, 0.7);
   font-size: 12px;
   font-weight: 400;
   
@@ -91,7 +109,7 @@ const Timestamp = styled.span`
 `;
 
 const MessageText = styled.div`
-  color: #dcddde;
+  color: rgba(255, 255, 255, 0.9);
   font-size: 14px;
   line-height: 1.4;
   word-wrap: break-word;
@@ -105,16 +123,19 @@ const MessageText = styled.div`
 const SystemMessage = styled.div`
   text-align: center;
   margin: 16px 0;
-  padding: 8px 16px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 8px;
-  color: #96989d;
+  padding: 12px 20px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  color: rgba(255, 255, 255, 0.8);
   font-size: 12px;
   font-style: italic;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  animation: ${fadeIn} 0.5s ease-out;
   
   @media (max-width: 768px) {
     margin: 12px 0;
-    padding: 6px 12px;
+    padding: 10px 16px;
     font-size: 11px;
   }
 `;

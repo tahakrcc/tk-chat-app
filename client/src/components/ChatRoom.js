@@ -1,14 +1,26 @@
 import React, { useState, useEffect, useRef } from 'react';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import { Send } from 'lucide-react';
 import MessageList from './MessageList';
+
+const fadeIn = keyframes`
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+`;
+
+const pulse = keyframes`
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+`;
 
 const ChatContainer = styled.div`
   flex: 1;
   display: flex;
   flex-direction: column;
-  background: #36393f;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   height: 100vh;
+  animation: ${fadeIn} 0.6s ease-out;
   
   @media (max-width: 768px) {
     height: calc(100vh - 120px);
@@ -27,8 +39,9 @@ const MessagesArea = styled.div`
 
 const MessageInputContainer = styled.div`
   padding: 16px;
-  background: #40444b;
-  border-top: 1px solid #202225;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
   
   @media (max-width: 768px) {
     padding: 12px;
@@ -41,13 +54,16 @@ const InputWrapper = styled.div`
   display: flex;
   gap: 12px;
   align-items: flex-end;
-  background: #40444b;
-  border-radius: 8px;
-  border: 1px solid #202225;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
   padding: 12px;
+  transition: all 0.3s ease;
   
   &:focus-within {
-    border-color: #00d4ff;
+    border-color: #667eea;
+    box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
   }
   
   @media (max-width: 768px) {
@@ -60,7 +76,7 @@ const MessageInput = styled.textarea`
   flex: 1;
   background: transparent;
   border: none;
-  color: #dcddde;
+  color: #fff;
   font-size: 14px;
   resize: none;
   outline: none;
@@ -69,7 +85,7 @@ const MessageInput = styled.textarea`
   font-family: inherit;
   
   &::placeholder {
-    color: #96989d;
+    color: rgba(255, 255, 255, 0.6);
   }
   
   @media (max-width: 768px) {
@@ -78,29 +94,49 @@ const MessageInput = styled.textarea`
 `;
 
 const SendButton = styled.button`
-  background: #00d4ff;
+  background: linear-gradient(135deg, #4ecdc4, #44a08d);
   color: white;
   border: none;
   padding: 8px 12px;
-  border-radius: 6px;
+  border-radius: 12px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   min-width: 36px;
   min-height: 36px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+  }
+  
+  &:hover::before {
+    left: 100%;
+  }
   
   &:hover {
-    background: #0099cc;
-    transform: translateY(-1px);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    animation: ${pulse} 0.5s ease;
   }
   
   &:disabled {
-    background: #40444b;
-    color: #96989d;
+    background: rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.5);
     cursor: not-allowed;
     transform: none;
+    box-shadow: none;
   }
   
   @media (max-width: 768px) {
@@ -112,11 +148,12 @@ const SendButton = styled.button`
 
 const TypingIndicator = styled.div`
   padding: 8px 16px;
-  color: #96989d;
+  color: rgba(255, 255, 255, 0.8);
   font-size: 12px;
   font-style: italic;
-  background: #2f3136;
-  border-top: 1px solid #202225;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
   
   @media (max-width: 768px) {
     padding: 6px 12px;
