@@ -96,6 +96,22 @@ io.on('connection', (socket) => {
   // Sesli oda katılımı
   socket.on('join_voice_room', (data) => {
     console.log('Sesli odaya katılım:', socket.id, data);
+    
+    // Kullanıcıyı users Map'ine ekle (eğer yoksa)
+    if (!users.has(socket.id)) {
+      users.set(socket.id, {
+        id: socket.id,
+        username: data.user?.username || `User_${socket.id.slice(-4)}`,
+        room: 'voice'
+      });
+    } else {
+      // Mevcut kullanıcının bilgilerini güncelle
+      const existingUser = users.get(socket.id);
+      existingUser.username = data.user?.username || existingUser.username;
+      existingUser.room = 'voice';
+      users.set(socket.id, existingUser);
+    }
+    
     voiceRoomUsers.add(socket.id);
     
     // Sesli odadaki kullanıcıları gönder

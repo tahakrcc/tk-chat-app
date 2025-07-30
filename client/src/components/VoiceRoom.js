@@ -602,7 +602,9 @@ const VoiceRoom = ({ socket, user, activeUsers }) => {
 
     socket.on('voice_room_users', (data) => {
       console.log('Sesli oda kullanıcıları:', data.users);
+      console.log('Mevcut voiceRoomUsers state:', voiceRoomUsers);
       setVoiceRoomUsers(data.users);
+      console.log('Yeni voiceRoomUsers state:', data.users);
     });
 
     socket.on('user_speaking_update', (data) => {
@@ -699,7 +701,14 @@ const VoiceRoom = ({ socket, user, activeUsers }) => {
         userVideo.current.srcObject = mediaStream;
       }
 
-      socket.emit('join_voice_room', { room: 'voice' });
+      // Kullanıcı bilgilerini de gönder
+      socket.emit('join_voice_room', { 
+        room: 'voice',
+        user: {
+          id: socket.id,
+          username: user.username
+        }
+      });
       
       // Ses seviyesi izlemeyi başlat
       startVoiceMonitoring(mediaStream);
@@ -913,6 +922,10 @@ const VoiceRoom = ({ socket, user, activeUsers }) => {
     { id: socket?.id, username: user?.username, isMuted, isVolumeMuted, isSpeaking, voiceLevel },
     ...voiceRoomUsers.filter(u => u.id !== socket?.id)
   ].filter(Boolean);
+
+  console.log('VoiceRoom - allUsers:', allUsers);
+  console.log('VoiceRoom - voiceRoomUsers:', voiceRoomUsers);
+  console.log('VoiceRoom - current user:', { id: socket?.id, username: user?.username });
 
   return (
     <VoiceRoomContainer>
