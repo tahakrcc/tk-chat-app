@@ -16,7 +16,7 @@ const pulse = keyframes`
 
 const ChatContainer = styled.div`
   flex: 1;
-  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+  background: linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #000000 100%);
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -31,8 +31,9 @@ const ChatContainer = styled.div`
     right: 0;
     bottom: 0;
     background: 
-      radial-gradient(circle at 30% 70%, rgba(120, 119, 198, 0.1) 0%, transparent 50%),
-      radial-gradient(circle at 70% 30%, rgba(255, 119, 198, 0.1) 0%, transparent 50%);
+      radial-gradient(circle at 20% 80%, rgba(83, 82, 237, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, rgba(46, 213, 115, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 40% 40%, rgba(255, 71, 87, 0.1) 0%, transparent 50%);
     pointer-events: none;
     z-index: 0;
   }
@@ -55,9 +56,9 @@ const MessagesArea = styled.div`
 `;
 
 const MessageInputContainer = styled.div`
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(25px);
-  border-top: 2px solid rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(30px);
+  border-top: 2px solid rgba(255, 255, 255, 0.1);
   padding: 20px;
   position: relative;
   z-index: 1;
@@ -71,16 +72,17 @@ const InputWrapper = styled.div`
   display: flex;
   gap: 12px;
   align-items: flex-end;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(15px);
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(20px);
   border-radius: 16px;
   border: 2px solid rgba(255, 255, 255, 0.2);
   padding: 12px;
   transition: all 0.3s ease;
   
   &:focus-within {
-    border-color: rgba(83, 82, 237, 0.7);
-    box-shadow: 0 0 0 4px rgba(83, 82, 237, 0.2);
+    border-color: rgba(83, 82, 237, 0.8);
+    box-shadow: 0 0 0 4px rgba(83, 82, 237, 0.3);
+    background: rgba(0, 0, 0, 0.8);
   }
   
   @media (max-width: 768px) {
@@ -95,7 +97,7 @@ const MessageInput = styled.textarea`
   background: transparent;
   color: #ffffff;
   font-size: 16px;
-  font-weight: 500;
+  font-weight: 600;
   resize: none;
   outline: none;
   min-height: 20px;
@@ -103,7 +105,7 @@ const MessageInput = styled.textarea`
   font-family: inherit;
   
   &::placeholder {
-    color: rgba(255, 255, 255, 0.7);
+    color: rgba(255, 255, 255, 0.8);
     font-weight: 500;
   }
   
@@ -120,12 +122,12 @@ const SendButton = styled.button`
   padding: 12px 16px;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
   position: relative;
   overflow: hidden;
   min-width: 48px;
   min-height: 48px;
-  font-weight: 600;
+  font-weight: 700;
   
   &::before {
     content: '';
@@ -143,8 +145,9 @@ const SendButton = styled.button`
   }
   
   &:hover {
+    background: linear-gradient(135deg, #1e90ff, #2ed573);
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
   }
   
   &:active {
@@ -167,14 +170,14 @@ const SendButton = styled.button`
 const TypingIndicator = styled.div`
   color: #ffffff;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   padding: 8px 20px;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(15px);
-  border-top: 2px solid rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(20px);
+  border-top: 2px solid rgba(255, 255, 255, 0.1);
   position: relative;
   z-index: 1;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
   
   @media (max-width: 768px) {
     padding: 6px 16px;

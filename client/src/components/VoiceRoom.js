@@ -509,6 +509,7 @@ const VoiceRoom = ({ socket, currentUser, roomName }) => {
   const audioContextRef = useRef(null);
   const analyserRef = useRef(null);
   const microphoneRef = useRef(null);
+  const [userVoiceStatus, setUserVoiceStatus] = useState({});
 
   useEffect(() => {
     if (!socket) return;
@@ -682,13 +683,39 @@ const VoiceRoom = ({ socket, currentUser, roomName }) => {
       const audioTrack = localStream.getAudioTracks()[0];
       if (audioTrack) {
         audioTrack.enabled = !audioTrack.enabled;
-        setIsMuted(!audioTrack.enabled);
+        const newMutedState = !audioTrack.enabled;
+        setIsMuted(newMutedState);
+        
+        // Diğer kullanıcılara mikrofon durumunu bildir
+        if (socket) {
+          socket.emit('user_voice_status', {
+            userId: currentUser.id,
+            username: currentUser.username,
+            isMuted: newMutedState,
+            isVolumeMuted: isVolumeMuted
+          });
+        }
+        
+        console.log('Mikrofon durumu:', newMutedState ? 'Kapalı' : 'Açık');
       }
     }
   };
 
   const toggleVolume = () => {
-    setIsVolumeMuted(!isVolumeMuted);
+    const newVolumeMutedState = !isVolumeMuted;
+    setIsVolumeMuted(newVolumeMutedState);
+    
+    // Diğer kullanıcılara ses durumunu bildir
+    if (socket) {
+      socket.emit('user_voice_status', {
+        userId: currentUser.id,
+        username: currentUser.username,
+        isMuted: isMuted,
+        isVolumeMuted: newVolumeMutedState
+      });
+    }
+    
+    console.log('Ses durumu:', newVolumeMutedState ? 'Kapalı' : 'Açık');
   };
 
   const handleVolumeChange = (e) => {
@@ -809,27 +836,55 @@ const VoiceRoom = ({ socket, currentUser, roomName }) => {
     };
   }, [localStream]);
 
-  // Konuşma durumu
-  socket.on('user_speaking_update', (data) => {
-    if (data.isSpeaking) {
-      setSpeakingUsers(prev => new Set([...prev, data.userId]));
-    } else {
-      setSpeakingUsers(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(data.userId);
-        return newSet;
-      });
-    }
-  });
+  // Kullanıcı ses durumu güncellemelerini dinle
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.on('user_voice_status_update', (data) => {
+      console.log('Kullanıcı ses durumu güncellendi:', data);
+      setUserVoiceStatus(prev => ({
+        ...prev,
+        [data.userId]: {
+          isMuted: data.isMuted,
+          isVolumeMuted: data.isVolumeMuted
+        }
+      }));
+    });
+
+    // Konuşma durumu güncellemelerini dinle
+    socket.on('user_speaking_update', (data) => {
+      if (data.isSpeaking) {
+        setSpeakingUsers(prev => new Set([...prev, data.userId]));
+      } else {
+        setSpeakingUsers(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(data.userId);
+          return newSet;
+        });
+      }
+    });
+
+    return () => {
+      socket.off('user_voice_status_update');
+      socket.off('user_speaking_update');
+    };
+  }, [socket]);
 
   const getVoiceStatus = (user) => {
     if (user.id === currentUser?.id) {
       if (isMuted) return 'muted';
+      if (isVolumeMuted) return 'deafened';
       if (isSpeaking) return 'speaking';
       return 'connected';
     }
     
     // Diğer kullanıcılar için
+    const userStatus = userVoiceStatus[user.id];
+    if (userStatus) {
+      if (userStatus.isMuted) return 'muted';
+      if (userStatus.isVolumeMuted) return 'deafened';
+    }
+    
     if (speakingUsers.has(user.id)) return 'speaking';
     return 'connected';
   };
@@ -839,9 +894,9 @@ const VoiceRoom = ({ socket, currentUser, roomName }) => {
       case 'speaking':
         return 'Konuşuyor';
       case 'muted':
-        return 'Sessiz';
+        return 'Mikrofon kapalı';
       case 'deafened':
-        return 'Sağır';
+        return 'Ses kapalı';
       default:
         return 'Bağlı';
     }
@@ -856,7 +911,7 @@ const VoiceRoom = ({ socket, currentUser, roomName }) => {
       case 'deafened':
         return '🔇';
       default:
-        return '��';
+        return '🟢';
     }
   };
 

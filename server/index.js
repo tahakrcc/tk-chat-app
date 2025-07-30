@@ -152,6 +152,20 @@ io.on('connection', (socket) => {
     }
   });
 
+  // Kullanıcı ses durumu (mikrofon/ses açık/kapalı)
+  socket.on('user_voice_status', (data) => {
+    console.log('Kullanıcı ses durumu:', socket.id, data);
+    const user = users.get(socket.id);
+    if (user) {
+      socket.broadcast.emit('user_voice_status_update', {
+        userId: socket.id,
+        username: user.username,
+        isMuted: data.isMuted,
+        isVolumeMuted: data.isVolumeMuted
+      });
+    }
+  });
+
   // Bağlantı koptuğunda
   socket.on('disconnect', () => {
     console.log('Kullanıcı ayrıldı:', socket.id);

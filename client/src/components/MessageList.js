@@ -22,7 +22,7 @@ const MessageContainer = styled.div`
   transition: all 0.3s ease;
   
   &:hover {
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.1);
     border-radius: 12px;
     padding: 8px;
     margin: 8px -8px;
@@ -43,12 +43,13 @@ const UserAvatar = styled.div`
   align-items: center;
   justify-content: center;
   color: white;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 14px;
   text-transform: uppercase;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
   animation: ${pulse} 2s infinite;
   flex-shrink: 0;
+  border: 2px solid rgba(255, 255, 255, 0.2);
   
   @media (max-width: 768px) {
     width: 32px;
@@ -75,7 +76,7 @@ const MessageHeader = styled.div`
 
 const Username = styled.span`
   color: #ffffff;
-  font-weight: 700;
+  font-weight: 800;
   font-size: 14px;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
   
@@ -85,9 +86,9 @@ const Username = styled.span`
 `;
 
 const Timestamp = styled.span`
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 0.9);
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600;
   
   @media (max-width: 768px) {
     font-size: 11px;
@@ -99,7 +100,7 @@ const MessageText = styled.div`
   font-size: 14px;
   line-height: 1.6;
   word-wrap: break-word;
-  font-weight: 500;
+  font-weight: 600;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   
   @media (max-width: 768px) {
@@ -111,15 +112,15 @@ const SystemMessage = styled.div`
   text-align: center;
   padding: 12px 16px;
   margin: 16px 0;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(15px);
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(20px);
   border-radius: 12px;
   color: #ffffff;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   border: 2px solid rgba(255, 255, 255, 0.2);
   animation: ${fadeIn} 0.5s ease-out;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
   
   @media (max-width: 768px) {
     padding: 10px 12px;
