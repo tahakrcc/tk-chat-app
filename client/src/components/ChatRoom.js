@@ -82,6 +82,8 @@ const InputWrapper = styled.div`
   border: 2px solid rgba(255, 255, 255, 0.2);
   padding: 12px;
   transition: all 0.3s ease;
+  position: relative;
+  z-index: 1000;
   
   &:focus-within {
     border-color: rgba(83, 82, 237, 0.8);

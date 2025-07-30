@@ -41,34 +41,28 @@ const EmojiPickerContainer = styled.div`
   position: absolute;
   bottom: 100%;
   left: 0;
-  margin-bottom: 8px;
-  z-index: 1000;
   background: rgba(0, 0, 0, 0.95);
   backdrop-filter: blur(20px);
-  border-radius: 12px;
   border: 2px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+  margin-bottom: 8px;
+  z-index: 1000;
   overflow: hidden;
   
   .EmojiPickerReact {
-    --epr-bg-color: transparent;
-    --epr-category-label-bg-color: transparent;
-    --epr-category-label-color: #ffffff;
-    --epr-search-input-bg-color: rgba(255, 255, 255, 0.1);
-    --epr-search-input-border-color: rgba(255, 255, 255, 0.3);
-    --epr-search-input-color: #ffffff;
-    --epr-search-input-placeholder-color: rgba(255, 255, 255, 0.7);
-    --epr-category-icon-size: 20px;
     --epr-emoji-size: 24px;
+    --epr-category-icon-size: 20px;
     --epr-horizontal-padding: 12px;
     --epr-vertical-padding: 8px;
-  }
-  
-  .EmojiPickerReact .epr-emoji-category-label {
-    font-weight: 700;
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
+    --epr-search-input-border-color: rgba(255, 255, 255, 0.3);
+    --epr-search-input-bg-color: rgba(255, 255, 255, 0.1);
+    --epr-search-input-text-color: #ffffff;
+    --epr-search-input-placeholder-color: rgba(255, 255, 255, 0.7);
+    --epr-category-label-bg-color: rgba(255, 255, 255, 0.1);
+    --epr-category-label-text-color: #ffffff;
+    --epr-skin-tone-picker-menu-bg-color: rgba(0, 0, 0, 0.9);
+    --epr-skin-tone-picker-menu-border-color: rgba(255, 255, 255, 0.2);
   }
   
   .EmojiPickerReact .epr-emoji {
@@ -82,14 +76,15 @@ const EmojiPickerContainer = styled.div`
   
   @media (max-width: 768px) {
     position: fixed;
-    top: 20%;
+    top: 50%;
     left: 50%;
-    transform: translateX(-50%);
+    transform: translate(-50%, -50%);
     width: 90vw;
     max-width: 350px;
+    max-height: 70vh;
     bottom: auto;
     margin-bottom: 0;
-    z-index: 9999;
+    z-index: 10000;
     
     .EmojiPickerReact {
       --epr-emoji-size: 22px;
@@ -102,7 +97,7 @@ const EmojiPickerContainer = styled.div`
   @media (max-width: 480px) {
     width: 95vw;
     max-width: 320px;
-    top: 15%;
+    max-height: 65vh;
     
     .EmojiPickerReact {
       --epr-emoji-size: 20px;
@@ -148,7 +143,7 @@ const EmojiPicker = ({ onEmojiClick, isOpen, onToggle }) => {
                 right: 0,
                 bottom: 0,
                 background: 'rgba(0, 0, 0, 0.5)',
-                zIndex: 9998,
+                zIndex: 9999,
                 cursor: 'pointer'
               }}
               onClick={handleOverlayClick}
@@ -160,7 +155,7 @@ const EmojiPicker = ({ onEmojiClick, isOpen, onToggle }) => {
             autoFocusSearch={false}
             searchPlaceholder="Emoji ara..."
             width="100%"
-            height={window.innerWidth <= 768 ? 300 : 400}
+            height={window.innerWidth <= 768 ? 350 : 400}
             lazyLoadEmojis={true}
           />
           </EmojiPickerContainer>

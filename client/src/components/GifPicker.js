@@ -29,35 +29,34 @@ const GifPickerContainer = styled.div`
   position: absolute;
   bottom: 100%;
   left: 0;
-  margin-bottom: 8px;
-  z-index: 1000;
   background: rgba(0, 0, 0, 0.95);
   backdrop-filter: blur(20px);
-  border-radius: 12px;
   border: 2px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+  margin-bottom: 8px;
+  z-index: 1000;
   overflow: hidden;
   width: 350px;
   max-height: 500px;
   
   @media (max-width: 768px) {
     position: fixed;
-    top: 20%;
+    top: 50%;
     left: 50%;
-    transform: translateX(-50%);
+    transform: translate(-50%, -50%);
     width: 90vw;
     max-width: 350px;
+    max-height: 70vh;
     bottom: auto;
     margin-bottom: 0;
-    max-height: 60vh;
-    z-index: 9999;
+    z-index: 10000;
   }
   
   @media (max-width: 480px) {
     width: 95vw;
     max-width: 320px;
-    max-height: 55vh;
-    top: 15%;
+    max-height: 65vh;
   }
 `;
 
@@ -145,13 +144,13 @@ const GifGrid = styled.div`
   @media (max-width: 768px) {
     gap: 6px;
     padding: 10px 12px;
-    max-height: 280px;
+    max-height: 300px;
   }
   
   @media (max-width: 480px) {
     gap: 4px;
     padding: 8px 10px;
-    max-height: 250px;
+    max-height: 280px;
   }
 `;
 
@@ -176,6 +175,18 @@ const GifItem = styled.div`
     height: 120px;
     object-fit: cover;
     display: block;
+  }
+  
+  @media (max-width: 768px) {
+    img {
+      height: 100px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    img {
+      height: 80px;
+    }
   }
   
   @media (max-width: 768px) {
@@ -276,22 +287,22 @@ const GifPicker = ({ onGifSelect, isOpen, onToggle }) => {
 
   return (
     <>
-      {/* Mobilde overlay */}
-      {window.innerWidth <= 768 && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'rgba(0, 0, 0, 0.5)',
-            zIndex: 9998,
-            cursor: 'pointer'
-          }}
-          onClick={handleOverlayClick}
-        />
-      )}
+              {/* Mobilde overlay */}
+        {window.innerWidth <= 768 && (
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(0, 0, 0, 0.5)',
+              zIndex: 9999,
+              cursor: 'pointer'
+            }}
+            onClick={handleOverlayClick}
+          />
+        )}
       <GifPickerContainer>
         <GifHeader>
           <GifTitle>GIF Ara</GifTitle>
