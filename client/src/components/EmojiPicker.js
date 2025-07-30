@@ -23,6 +23,18 @@ const EmojiButton = styled.button`
   &:active {
     transform: scale(0.95);
   }
+  
+  @media (max-width: 768px) {
+    padding: 10px;
+    min-width: 44px;
+    min-height: 44px;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 12px;
+    min-width: 48px;
+    min-height: 48px;
+  }
 `;
 
 const EmojiPickerContainer = styled.div`
@@ -71,15 +83,46 @@ const EmojiPickerContainer = styled.div`
   @media (max-width: 768px) {
     left: 50%;
     transform: translateX(-50%);
-    width: 90vw;
-    max-width: 350px;
+    width: 95vw;
+    max-width: 320px;
+    bottom: 120%;
+    
+    .EmojiPickerReact {
+      --epr-emoji-size: 20px;
+      --epr-category-icon-size: 18px;
+      --epr-horizontal-padding: 8px;
+      --epr-vertical-padding: 6px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    width: 98vw;
+    max-width: 300px;
+    bottom: 130%;
+    
+    .EmojiPickerReact {
+      --epr-emoji-size: 18px;
+      --epr-category-icon-size: 16px;
+      --epr-horizontal-padding: 6px;
+      --epr-vertical-padding: 4px;
+    }
   }
 `;
 
 const EmojiPicker = ({ onEmojiClick, isOpen, onToggle }) => {
+  const handleToggle = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onToggle();
+  };
+
   return (
     <>
-      <EmojiButton onClick={onToggle} title="Emoji Ekle">
+      <EmojiButton 
+        onClick={handleToggle} 
+        onTouchEnd={handleToggle}
+        title="Emoji Ekle"
+      >
         <Smile size={20} />
       </EmojiButton>
       
@@ -90,7 +133,7 @@ const EmojiPicker = ({ onEmojiClick, isOpen, onToggle }) => {
             autoFocusSearch={false}
             searchPlaceholder="Emoji ara..."
             width="100%"
-            height={400}
+            height={window.innerWidth <= 768 ? 300 : 400}
             lazyLoadEmojis={true}
           />
         </EmojiPickerContainer>

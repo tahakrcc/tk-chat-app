@@ -84,8 +84,13 @@ const InputWrapper = styled.div`
   }
   
   @media (max-width: 768px) {
-    gap: 8px;
-    padding: 10px;
+    gap: 6px;
+    padding: 8px;
+  }
+  
+  @media (max-width: 480px) {
+    gap: 4px;
+    padding: 6px;
   }
 `;
 
@@ -131,6 +136,18 @@ const GifButton = styled.button`
   
   &:active {
     transform: scale(0.95);
+  }
+  
+  @media (max-width: 768px) {
+    padding: 10px;
+    min-width: 44px;
+    min-height: 44px;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 12px;
+    min-width: 48px;
+    min-height: 48px;
   }
 `;
 
@@ -363,14 +380,14 @@ const ChatRoom = ({ socket, user, messages = [], onSendMessage }) => {
       
       <MessageInputContainer>
         <InputWrapper>
-          <div style={{ position: 'relative' }}>
+          <div style={{ position: 'relative', zIndex: 1001 }}>
             <EmojiPicker
               onEmojiClick={handleEmojiClick}
               isOpen={showEmojiPicker}
               onToggle={toggleEmojiPicker}
             />
           </div>
-          <div style={{ position: 'relative' }}>
+          <div style={{ position: 'relative', zIndex: 1001 }}>
             <GifButton onClick={toggleGifPicker} title="GIF Ekle">
               <Image size={20} />
             </GifButton>

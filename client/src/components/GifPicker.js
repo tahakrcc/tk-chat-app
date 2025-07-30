@@ -43,8 +43,17 @@ const GifPickerContainer = styled.div`
   @media (max-width: 768px) {
     left: 50%;
     transform: translateX(-50%);
-    width: 90vw;
-    max-width: 350px;
+    width: 95vw;
+    max-width: 320px;
+    bottom: 120%;
+    max-height: 400px;
+  }
+  
+  @media (max-width: 480px) {
+    width: 98vw;
+    max-width: 300px;
+    bottom: 130%;
+    max-height: 350px;
   }
 `;
 
@@ -128,6 +137,18 @@ const GifGrid = styled.div`
   &::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.5);
   }
+  
+  @media (max-width: 768px) {
+    gap: 6px;
+    padding: 10px 12px;
+    max-height: 280px;
+  }
+  
+  @media (max-width: 480px) {
+    gap: 4px;
+    padding: 8px 10px;
+    max-height: 250px;
+  }
 `;
 
 const GifItem = styled.div`
@@ -142,11 +163,27 @@ const GifItem = styled.div`
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
   }
   
+  &:active {
+    transform: scale(0.98);
+  }
+  
   img {
     width: 100%;
     height: 120px;
     object-fit: cover;
     display: block;
+  }
+  
+  @media (max-width: 768px) {
+    img {
+      height: 100px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    img {
+      height: 80px;
+    }
   }
 `;
 
