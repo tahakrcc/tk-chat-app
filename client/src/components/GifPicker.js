@@ -41,19 +41,22 @@ const GifPickerContainer = styled.div`
   max-height: 500px;
   
   @media (max-width: 768px) {
+    position: fixed;
+    top: 50%;
     left: 50%;
-    transform: translateX(-50%);
-    width: 95vw;
-    max-width: 320px;
-    bottom: 120%;
-    max-height: 400px;
+    transform: translate(-50%, -50%);
+    width: 90vw;
+    max-width: 350px;
+    bottom: auto;
+    margin-bottom: 0;
+    max-height: 70vh;
+    z-index: 9999;
   }
   
   @media (max-width: 480px) {
-    width: 98vw;
-    max-width: 300px;
-    bottom: 130%;
-    max-height: 350px;
+    width: 95vw;
+    max-width: 320px;
+    max-height: 65vh;
   }
 `;
 
@@ -262,45 +265,69 @@ const GifPicker = ({ onGifSelect, isOpen, onToggle }) => {
     onToggle();
   };
 
+  const handleOverlayClick = (e) => {
+    if (e.target === e.currentTarget) {
+      handleClose();
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
-    <GifPickerContainer>
-      <GifHeader>
-        <GifTitle>GIF Ara</GifTitle>
-        <CloseButton onClick={handleClose} title="Kapat">
-          <X size={16} />
-        </CloseButton>
-      </GifHeader>
-      
-      <SearchContainer>
-        <SearchInput
-          type="text"
-          placeholder="GIF ara..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          autoFocus
+    <>
+      {/* Mobilde overlay */}
+      {window.innerWidth <= 768 && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.5)',
+            zIndex: 9998,
+            cursor: 'pointer'
+          }}
+          onClick={handleOverlayClick}
         />
-      </SearchContainer>
-      
-      <GifGrid>
-        {loading ? (
-          <LoadingText>Aranıyor...</LoadingText>
-        ) : gifs.length === 0 && searchTerm ? (
-          <NoResultsText>Sonuç bulunamadı</NoResultsText>
-        ) : (
-          gifs.map((gif) => (
-            <GifItem key={gif.id} onClick={() => handleGifClick(gif)}>
-              <img 
-                src={gif.images.fixed_height_small.url} 
-                alt={gif.title}
-                loading="lazy"
-              />
-            </GifItem>
-          ))
-        )}
-      </GifGrid>
-    </GifPickerContainer>
+      )}
+      <GifPickerContainer>
+        <GifHeader>
+          <GifTitle>GIF Ara</GifTitle>
+          <CloseButton onClick={handleClose} title="Kapat">
+            <X size={16} />
+          </CloseButton>
+        </GifHeader>
+        
+        <SearchContainer>
+          <SearchInput
+            type="text"
+            placeholder="GIF ara..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            autoFocus
+          />
+        </SearchContainer>
+        
+        <GifGrid>
+          {loading ? (
+            <LoadingText>Aranıyor...</LoadingText>
+          ) : gifs.length === 0 && searchTerm ? (
+            <NoResultsText>Sonuç bulunamadı</NoResultsText>
+          ) : (
+            gifs.map((gif) => (
+              <GifItem key={gif.id} onClick={() => handleGifClick(gif)}>
+                <img 
+                  src={gif.images.fixed_height_small.url} 
+                  alt={gif.title}
+                  loading="lazy"
+                />
+              </GifItem>
+            ))
+          )}
+        </GifGrid>
+      </GifPickerContainer>
+    </>
   );
 };
 

@@ -197,7 +197,11 @@ const ActiveUsersBar = styled.div`
 
 const App = () => {
   const [socket, setSocket] = useState(null);
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    // localStorage'dan kullanıcı bilgisini al
+    const savedUser = localStorage.getItem('chatUser');
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
   const [activeUsers, setActiveUsers] = useState([]);
   const [messages, setMessages] = useState([]);
 
@@ -268,9 +272,20 @@ const App = () => {
     };
   }, []);
 
+  // Kullanıcı varsa socket'e bağlan
+  useEffect(() => {
+    if (user && socket && socket.connected) {
+      console.log('✅ Kullanıcı zaten giriş yapmış, socket\'e bağlanıyor:', user);
+      socket.emit('user_join', { ...user, room: 'general' });
+    }
+  }, [user, socket]);
+
   const handleLogin = (userData) => {
     console.log('🔐 Kullanıcı giriş yapıyor:', userData);
     setUser(userData);
+    
+    // Kullanıcı bilgisini localStorage'a kaydet
+    localStorage.setItem('chatUser', JSON.stringify(userData));
     
     // Socket bağlantısını bekle ve kullanıcıyı ekle
     if (socket && socket.connected) {
@@ -301,6 +316,8 @@ const App = () => {
     }
     setUser(null);
     setMessages([]);
+    // localStorage'dan kullanıcı bilgisini sil
+    localStorage.removeItem('chatUser');
   };
 
   const handleBackToLogin = () => {
@@ -309,6 +326,8 @@ const App = () => {
     }
     setUser(null);
     setMessages([]);
+    // localStorage'dan kullanıcı bilgisini sil
+    localStorage.removeItem('chatUser');
   };
 
   const handleSendMessage = (messageContent) => {

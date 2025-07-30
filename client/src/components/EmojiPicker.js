@@ -81,14 +81,18 @@ const EmojiPickerContainer = styled.div`
   }
   
   @media (max-width: 768px) {
+    position: fixed;
+    top: 50%;
     left: 50%;
-    transform: translateX(-50%);
-    width: 95vw;
-    max-width: 320px;
-    bottom: 120%;
+    transform: translate(-50%, -50%);
+    width: 90vw;
+    max-width: 350px;
+    bottom: auto;
+    margin-bottom: 0;
+    z-index: 9999;
     
     .EmojiPickerReact {
-      --epr-emoji-size: 20px;
+      --epr-emoji-size: 22px;
       --epr-category-icon-size: 18px;
       --epr-horizontal-padding: 8px;
       --epr-vertical-padding: 6px;
@@ -96,12 +100,11 @@ const EmojiPickerContainer = styled.div`
   }
   
   @media (max-width: 480px) {
-    width: 98vw;
-    max-width: 300px;
-    bottom: 130%;
+    width: 95vw;
+    max-width: 320px;
     
     .EmojiPickerReact {
-      --epr-emoji-size: 18px;
+      --epr-emoji-size: 20px;
       --epr-category-icon-size: 16px;
       --epr-horizontal-padding: 6px;
       --epr-vertical-padding: 4px;
@@ -116,6 +119,12 @@ const EmojiPicker = ({ onEmojiClick, isOpen, onToggle }) => {
     onToggle();
   };
 
+  const handleOverlayClick = (e) => {
+    if (e.target === e.currentTarget) {
+      onToggle();
+    }
+  };
+
   return (
     <>
       <EmojiButton 
@@ -127,16 +136,34 @@ const EmojiPicker = ({ onEmojiClick, isOpen, onToggle }) => {
       </EmojiButton>
       
       {isOpen && (
-        <EmojiPickerContainer>
-          <EmojiPickerReact
-            onEmojiClick={onEmojiClick}
-            autoFocusSearch={false}
-            searchPlaceholder="Emoji ara..."
-            width="100%"
-            height={window.innerWidth <= 768 ? 300 : 400}
-            lazyLoadEmojis={true}
-          />
-        </EmojiPickerContainer>
+        <>
+          {/* Mobilde overlay */}
+          {window.innerWidth <= 768 && (
+            <div
+              style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: 'rgba(0, 0, 0, 0.5)',
+                zIndex: 9998,
+                cursor: 'pointer'
+              }}
+              onClick={handleOverlayClick}
+            />
+          )}
+          <EmojiPickerContainer>
+            <EmojiPickerReact
+              onEmojiClick={onEmojiClick}
+              autoFocusSearch={false}
+              searchPlaceholder="Emoji ara..."
+              width="100%"
+              height={window.innerWidth <= 768 ? 350 : 400}
+              lazyLoadEmojis={true}
+            />
+          </EmojiPickerContainer>
+        </>
       )}
     </>
   );
