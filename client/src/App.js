@@ -117,38 +117,49 @@ const App = () => {
 
   useEffect(() => {
     const socketUrl = process.env.NODE_ENV === 'production' 
-      ? (window.ENV?.REACT_APP_BACKEND_URL || 'https://tk-chat-backend.onrender.com')
+      ? (window.ENV?.REACT_APP_BACKEND_URL || 'https://tk-chat-app.onrender.com')
       : 'http://localhost:5000';
+    
+    console.log('Socket URL:', socketUrl);
     
     const newSocket = io(socketUrl, {
       transports: ['websocket', 'polling'],
-      upgrade: true
+      upgrade: true,
+      timeout: 20000,
+      forceNew: true
     });
     setSocket(newSocket);
 
     newSocket.on('connect', () => {
       setIsConnected(true);
-      console.log('Sunucuya bağlandı');
+      console.log('✅ Sunucuya bağlandı, Socket ID:', newSocket.id);
     });
 
-    newSocket.on('disconnect', () => {
+    newSocket.on('connect_error', (error) => {
+      console.error('❌ Bağlantı hatası:', error);
       setIsConnected(false);
-      console.log('Sunucu bağlantısı kesildi');
+    });
+
+    newSocket.on('disconnect', (reason) => {
+      setIsConnected(false);
+      console.log('❌ Sunucu bağlantısı kesildi:', reason);
     });
 
     // Aktif kullanıcıları al
     newSocket.on('active_users', (users) => {
+      console.log('👥 Aktif kullanıcılar alındı:', users);
       setActiveUsers(users);
     });
 
     // Yeni mesaj geldiğinde
     newSocket.on('new_message', (message) => {
-      console.log('Yeni mesaj alındı:', message);
+      console.log('💬 Yeni mesaj alındı:', message);
       setMessages(prev => [...prev, message]);
     });
 
     // Kullanıcı katıldı mesajı
     newSocket.on('user_joined', (data) => {
+      console.log('👋 Kullanıcı katıldı:', data);
       setMessages(prev => [...prev, {
         id: Date.now(),
         type: 'system',
@@ -159,6 +170,7 @@ const App = () => {
 
     // Kullanıcı ayrıldı mesajı
     newSocket.on('user_left', (data) => {
+      console.log('👋 Kullanıcı ayrıldı:', data);
       setMessages(prev => [...prev, {
         id: Date.now(),
         type: 'system',
@@ -167,13 +179,36 @@ const App = () => {
       }]);
     });
 
-    return () => newSocket.close();
+    return () => {
+      console.log('🔌 Socket bağlantısı kapatılıyor');
+      newSocket.close();
+    };
   }, []);
 
   const handleLogin = (userData) => {
+    console.log('🔐 Kullanıcı giriş yapıyor:', userData);
     setUser(userData);
-    if (socket) {
+    
+    // Socket bağlantısını bekle ve kullanıcıyı ekle
+    if (socket && socket.connected) {
+      console.log('✅ Socket bağlı, kullanıcı ekleniyor');
       socket.emit('user_join', userData);
+    } else {
+      console.log('⏳ Socket bağlantısı bekleniyor...');
+      // Socket bağlantısını bekle
+      const checkConnection = setInterval(() => {
+        if (socket && socket.connected) {
+          console.log('✅ Socket bağlandı, kullanıcı ekleniyor');
+          socket.emit('user_join', userData);
+          clearInterval(checkConnection);
+        }
+      }, 100);
+      
+      // 10 saniye sonra timeout
+      setTimeout(() => {
+        clearInterval(checkConnection);
+        console.log('❌ Socket bağlantısı timeout');
+      }, 10000);
     }
   };
 

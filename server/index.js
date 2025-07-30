@@ -11,9 +11,11 @@ const server = http.createServer(app);
 // CORS ayarları - production ve development için
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production' 
-    ? [process.env.DOMAIN_URL || 'https://yourdomain.com'] // Domain URL'nizi buraya yazın
+    ? ['https://tk-chat-app.netlify.app', 'https://tk-chat.netlify.app', 'https://*.netlify.app'] // Netlify domain'leri
     : ["http://localhost:3000", "http://localhost:3001"],
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 };
 
 const io = socketIo(server, {
