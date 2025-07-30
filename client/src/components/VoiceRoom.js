@@ -133,6 +133,107 @@ const VoiceButton = styled.button`
   }
 `;
 
+const VolumeControl = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  
+  @media (max-width: 768px) {
+    padding: 6px 10px;
+    gap: 6px;
+  }
+`;
+
+const VolumeIcon = styled.div`
+  color: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+`;
+
+const VolumeSliderInline = styled.input`
+  width: 80px;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.2);
+  outline: none;
+  -webkit-appearance: none;
+  
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+  }
+  
+  &::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  }
+  
+  &::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+  
+  @media (max-width: 768px) {
+    width: 60px;
+  }
+`;
+
+const TestSoundButton = styled.button`
+  background: linear-gradient(135deg, #4ecdc4, #44a08d);
+  color: white;
+  border: none;
+  padding: 12px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.3s ease;
+  min-width: 48px;
+  min-height: 48px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  font-size: 14px;
+  font-weight: 600;
+  
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    animation: ${pulse} 0.5s ease;
+  }
+  
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+  
+  @media (max-width: 768px) {
+    min-width: 44px;
+    min-height: 44px;
+    font-size: 13px;
+    padding: 10px 12px;
+    gap: 4px;
+  }
+`;
+
 const UserInfoSection = styled.div`
   display: flex;
   align-items: center;
@@ -274,9 +375,65 @@ const UserDot = styled.div`
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #4ecdc4, #44a08d);
-  box-shadow: 0 0 8px rgba(78, 205, 196, 0.5);
-  animation: ${pulse} 2s infinite;
+  background: ${props => {
+    if (props.status === 'speaking') {
+      return 'linear-gradient(135deg, #43b581, #3ca374)';
+    } else if (props.status === 'muted') {
+      return 'linear-gradient(135deg, #f04747, #d84040)';
+    } else if (props.status === 'deafened') {
+      return 'linear-gradient(135deg, #747f8d, #5f6a7a)';
+    } else {
+      return 'linear-gradient(135deg, #4ecdc4, #44a08d)';
+    }
+  }};
+  box-shadow: 0 0 8px ${props => {
+    if (props.status === 'speaking') {
+      return 'rgba(67, 181, 129, 0.5)';
+    } else if (props.status === 'muted') {
+      return 'rgba(240, 71, 71, 0.5)';
+    } else if (props.status === 'deafened') {
+      return 'rgba(116, 127, 141, 0.5)';
+    } else {
+      return 'rgba(78, 205, 196, 0.5)';
+    }
+  }};
+  animation: ${props => props.status === 'speaking' ? pulse : 'none'} 1s infinite;
+  position: relative;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border-radius: 50%;
+    border: 2px solid ${props => {
+      if (props.status === 'speaking') {
+        return 'rgba(67, 181, 129, 0.3)';
+      } else if (props.status === 'muted') {
+        return 'rgba(240, 71, 71, 0.3)';
+      } else if (props.status === 'deafened') {
+        return 'rgba(116, 127, 141, 0.3)';
+      } else {
+        return 'rgba(78, 205, 196, 0.3)';
+      }
+    }};
+    animation: ${props => props.status === 'speaking' ? pulse : 'none'} 1.5s infinite;
+  }
+`;
+
+const UserStatusIcon = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  
+  @media (max-width: 768px) {
+    font-size: 11px;
+    gap: 3px;
+  }
 `;
 
 const VolumeSlider = styled.div`
@@ -351,41 +508,6 @@ const VolumeValue = styled.span`
   font-size: 16px;
 `;
 
-const TestSoundButton = styled.button`
-  background: linear-gradient(135deg, #4ecdc4, #44a08d);
-  color: white;
-  border: none;
-  padding: 12px;
-  border-radius: 12px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-  min-width: 48px;
-  min-height: 48px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-  font-size: 18px;
-  
-  &:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-    animation: ${pulse} 0.5s ease;
-  }
-  
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    transform: none;
-  }
-  
-  @media (max-width: 768px) {
-    min-width: 44px;
-    min-height: 44px;
-    font-size: 16px;
-  }
-`;
-
 const VoiceRoom = ({ socket, currentUser, roomName }) => {
   const [isMuted, setIsMuted] = useState(false);
   const [isVolumeMuted, setIsVolumeMuted] = useState(false);
@@ -395,6 +517,7 @@ const VoiceRoom = ({ socket, currentUser, roomName }) => {
   const [localStream, setLocalStream] = useState(null);
   const [peers, setPeers] = useState({});
   const [remoteStreams, setRemoteStreams] = useState({});
+  const [speakingUsers, setSpeakingUsers] = useState(new Set());
   const peersRef = useRef({});
   const testAudioRef = useRef(null);
 
@@ -581,6 +704,43 @@ const VoiceRoom = ({ socket, currentUser, roomName }) => {
     setShowVolumeSlider(!showVolumeSlider);
   };
 
+  const getVoiceStatus = (user) => {
+    if (user.id === currentUser?.id) {
+      if (isMuted) return 'muted';
+      return 'connected';
+    }
+    
+    // Diğer kullanıcılar için varsayılan olarak connected
+    // Gerçek uygulamada bu bilgi server'dan gelir
+    return 'connected';
+  };
+
+  const getStatusText = (status) => {
+    switch (status) {
+      case 'speaking':
+        return 'Konuşuyor';
+      case 'muted':
+        return 'Sessiz';
+      case 'deafened':
+        return 'Sağır';
+      default:
+        return 'Bağlı';
+    }
+  };
+
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 'speaking':
+        return '🎤';
+      case 'muted':
+        return '🔇';
+      case 'deafened':
+        return '🔇';
+      default:
+        return '��';
+    }
+  };
+
   // Otomatik olarak sesli odaya katıl
   useEffect(() => {
     joinVoiceRoom();
@@ -608,43 +768,21 @@ const VoiceRoom = ({ socket, currentUser, roomName }) => {
             {isMuted ? <MicOff size={20} /> : <Mic size={20} />}
           </VoiceButton>
           
-          <VolumeSliderContainer>
-            <VoiceButton
-              variant="volume"
-              onClick={toggleVolumeSlider}
-              title="Ses seviyesini ayarla"
-              style={{ background: 'linear-gradient(135deg, #667eea, #764ba2)' }}
-            >
-              <Volume2 size={20} />
-            </VoiceButton>
-            
-            {showVolumeSlider && (
-              <VolumeSlider>
-                <VolumeLabel>
-                  <span>Ses Seviyesi</span>
-                  <VolumeValue>{Math.round(volumeLevel * 100)}%</VolumeValue>
-                </VolumeLabel>
-                <Slider
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.1"
-                  value={volumeLevel}
-                  onChange={handleVolumeChange}
-                  title="Ses seviyesi"
-                />
-                <div style={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
-                  fontSize: '12px', 
-                  color: 'rgba(255, 255, 255, 0.7)' 
-                }}>
-                  <span>0%</span>
-                  <span>100%</span>
-                </div>
-              </VolumeSlider>
-            )}
-          </VolumeSliderContainer>
+          <VolumeControl>
+            <VolumeIcon>
+              <Volume2 size={16} />
+            </VolumeIcon>
+            <VolumeSliderInline
+              type="range"
+              min="0"
+              max="1"
+              step="0.1"
+              value={volumeLevel}
+              onChange={handleVolumeChange}
+              title="Ses seviyesi"
+            />
+            <VolumeValue>{Math.round(volumeLevel * 100)}%</VolumeValue>
+          </VolumeControl>
           
           <VoiceButton
             variant="volume"
@@ -660,6 +798,7 @@ const VoiceRoom = ({ socket, currentUser, roomName }) => {
             title="Test sesi çal"
           >
             🔊
+            <span className="hide-on-mobile">Ses Testi</span>
           </TestSoundButton>
           
           <VoiceButton
@@ -668,24 +807,6 @@ const VoiceRoom = ({ socket, currentUser, roomName }) => {
             title="Sesli odadan ayrıl"
           >
             <LogOut size={20} />
-          </VoiceButton>
-          
-          <VoiceButton
-            variant="mute"
-            onClick={() => {
-              if (localStream) {
-                const audioTrack = localStream.getAudioTracks()[0];
-                if (audioTrack) {
-                  console.log('Audio track enabled:', audioTrack.enabled);
-                  console.log('Audio track muted:', audioTrack.muted);
-                  console.log('Audio track readyState:', audioTrack.readyState);
-                }
-              }
-            }}
-            title="Ses durumunu kontrol et"
-            style={{ background: 'linear-gradient(135deg, #667eea, #764ba2)' }}
-          >
-            🔍
           </VoiceButton>
         </VoiceControls>
       </VoiceRoomHeader>
@@ -710,13 +831,20 @@ const VoiceRoom = ({ socket, currentUser, roomName }) => {
           Odadaki Kullanıcılar ({activeUsers.length})
         </UsersHeader>
         
-        {activeUsers.map((user) => (
-          <UserItem key={user.id}>
-            <UserDot />
-            <span>{user.username}</span>
-            {user.id === currentUser?.id && ' (Sen)'}
-          </UserItem>
-        ))}
+        {activeUsers.map((user) => {
+          const voiceStatus = getVoiceStatus(user);
+          return (
+            <UserItem key={user.id}>
+              <UserDot status={voiceStatus} />
+              <span>{user.username}</span>
+              {user.id === currentUser?.id && ' (Sen)'}
+              <UserStatusIcon>
+                <span>{getStatusIcon(voiceStatus)}</span>
+                <span>{getStatusText(voiceStatus)}</span>
+              </UserStatusIcon>
+            </UserItem>
+          );
+        })}
         
         {activeUsers.length === 0 && (
           <div style={{ color: 'rgba(255, 255, 255, 0.7)', fontStyle: 'italic', textAlign: 'center', padding: '20px' }}>

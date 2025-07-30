@@ -19,6 +19,38 @@ code {
   box-sizing: border-box;
 }
 
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  body {
+    background: #36393f;
+    color: #dcddde;
+  }
+}
+
+/* iOS Safari specific fixes */
+@supports (-webkit-touch-callout: none) {
+  body {
+    background: #36393f !important;
+    color: #dcddde !important;
+  }
+  
+  /* Prevent white flash on iOS */
+  html {
+    background: #36393f;
+  }
+  
+  /* Fix input background on iOS */
+  input, textarea, select {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    color: #fff !important;
+  }
+  
+  /* Fix button backgrounds on iOS */
+  button {
+    background-color: inherit !important;
+  }
+}
+
 /* Mobile-specific styles */
 @media (max-width: 768px) {
   .hide-on-mobile {
@@ -51,5 +83,25 @@ code {
 @media (min-width: 769px) {
   .hide-on-desktop {
     display: none !important;
+  }
+}
+
+/* Force dark theme for all elements */
+html {
+  background: #36393f;
+}
+
+/* Ensure all backgrounds are dark */
+div, section, main, aside, header, footer {
+  background-color: inherit;
+}
+
+/* Fix for iOS Safari status bar */
+@supports (-webkit-touch-callout: none) {
+  body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
   }
 } 

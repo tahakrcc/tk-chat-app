@@ -2,19 +2,41 @@
 <html lang="tr">
   <head>
     <meta charset="utf-8" />
-    <link rel="icon" href="%PUBLIC_URL%/tk.png" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
+    <meta name="theme-color" content="#36393f" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="TK Chat" />
+    <meta name="msapplication-TileColor" content="#36393f" />
+    <meta name="msapplication-config" content="%PUBLIC_URL%/browserconfig.xml" />
     <meta
       name="description"
-      content="TK Chat - Modern gerçek zamanlı sohbet uygulaması"
+      content="TK Chat - Güvenli ve hızlı sohbet deneyimi"
     />
-    <title>TK Chat - Modern Sohbet</title>
-    <script src="%PUBLIC_URL%/env.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <title>TK Chat</title>
+    <style>
+      /* Prevent white flash on load */
+      html, body {
+        background: #36393f !important;
+        color: #dcddde !important;
+      }
+      
+      /* iOS Safari specific */
+      @supports (-webkit-touch-callout: none) {
+        body {
+          background: #36393f !important;
+          color: #dcddde !important;
+        }
+      }
+    </style>
   </head>
   <body>
     <noscript>Bu uygulamayı çalıştırmak için JavaScript'i etkinleştirmeniz gerekiyor.</noscript>
     <div id="root"></div>
+    <script src="%PUBLIC_URL%/env.js"></script>
   </body>
 </html> 
