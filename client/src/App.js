@@ -19,10 +19,26 @@ const pulse = keyframes`
 
 const AppContainer = styled.div`
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #000000 100%);
   display: flex;
   flex-direction: column;
   animation: ${fadeIn} 0.6s ease-out;
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+      radial-gradient(circle at 20% 80%, rgba(83, 82, 237, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, rgba(46, 213, 115, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 40% 40%, rgba(255, 71, 87, 0.1) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
   
   @media (max-width: 768px) {
     height: 100vh;
@@ -31,15 +47,17 @@ const AppContainer = styled.div`
 `;
 
 const ChatHeader = styled.div`
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(20px);
   padding: 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
   display: flex;
   align-items: center;
   gap: 12px;
-  color: #fff;
-  font-weight: 600;
+  color: #ffffff;
+  font-weight: 700;
+  position: relative;
+  z-index: 1;
   
   @media (max-width: 768px) {
     padding: 12px;
@@ -48,29 +66,30 @@ const ChatHeader = styled.div`
 `;
 
 const BackButton = styled.button`
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: rgba(255, 255, 255, 0.9);
-  padding: 8px 12px;
+  background: linear-gradient(135deg, #5352ed, #3742fa);
+  backdrop-filter: blur(15px);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  padding: 10px 14px;
   border-radius: 12px;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 6px;
   font-size: 14px;
+  font-weight: 700;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
   
   &:hover {
-    background: rgba(255, 255, 255, 0.2);
-    color: #fff;
+    background: linear-gradient(135deg, #3742fa, #5352ed);
+    color: #ffffff;
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
   }
   
   @media (max-width: 768px) {
-    padding: 6px 10px;
+    padding: 8px 12px;
     font-size: 13px;
     gap: 4px;
   }
@@ -80,8 +99,9 @@ const ChatTypeIcon = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #4ecdc4;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  color: #2ed573;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  font-weight: 700;
   
   @media (max-width: 768px) {
     gap: 6px;
@@ -94,8 +114,9 @@ const UserInfo = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-  color: rgba(255, 255, 255, 0.8);
+  color: #ffffff;
   font-size: 14px;
+  font-weight: 600;
   
   @media (max-width: 768px) {
     gap: 6px;
@@ -104,65 +125,71 @@ const UserInfo = styled.div`
 `;
 
 const UserAvatar = styled.div`
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(135deg, #5352ed, #3742fa);
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
   animation: ${pulse} 2s infinite;
+  border: 2px solid rgba(255, 255, 255, 0.2);
   
   @media (max-width: 768px) {
-    width: 20px;
-    height: 20px;
+    width: 24px;
+    height: 24px;
     font-size: 10px;
   }
 `;
 
 const LogoutButton = styled.button`
-  background: linear-gradient(135deg, #ff6b6b, #ee5a52);
-  border: none;
+  background: linear-gradient(135deg, #ff4757, #ff3742);
+  border: 2px solid rgba(255, 255, 255, 0.2);
   color: white;
-  padding: 6px 10px;
-  border-radius: 8px;
+  padding: 8px 12px;
+  border-radius: 10px;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 4px;
   font-size: 12px;
+  font-weight: 700;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
   
   &:hover {
+    background: linear-gradient(135deg, #ff3742, #ff4757);
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
   }
   
   @media (max-width: 768px) {
-    padding: 4px 8px;
+    padding: 6px 10px;
     font-size: 11px;
     gap: 3px;
   }
 `;
 
 const ActiveUsersBar = styled.div`
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  padding: 8px 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(20px);
+  padding: 10px 16px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
   display: flex;
   align-items: center;
   gap: 8px;
-  color: rgba(255, 255, 255, 0.8);
+  color: #ffffff;
   font-size: 14px;
+  font-weight: 600;
+  position: relative;
+  z-index: 1;
   
   @media (max-width: 768px) {
-    padding: 6px 12px;
+    padding: 8px 12px;
     font-size: 12px;
     gap: 6px;
   }
@@ -317,7 +344,7 @@ const App = () => {
         </BackButton>
         
         <ChatTypeIcon>
-          <span style={{ fontWeight: 'bold', color: '#4ecdc4' }}>TK Chat</span>
+          <span style={{ fontWeight: 'bold', color: '#2ed573' }}>TK Chat</span>
           {user.chatType === 'text' ? (
             <>
               <Hash size={20} />
@@ -351,7 +378,7 @@ const App = () => {
             <span>•</span>
             <span className="hide-on-mobile">
               {activeUsers.slice(0, 3).map((activeUser, index) => (
-                <span key={activeUser.id} style={{ color: '#fff' }}>
+                <span key={activeUser.id} style={{ color: '#ffffff' }}>
                   {activeUser.username}
                   {index < Math.min(2, activeUsers.length - 1) && ', '}
                 </span>
