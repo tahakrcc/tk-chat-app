@@ -7,7 +7,7 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: ["https://tk-chat-app.netlify.app", "http://localhost:3000", "https://tk-chat-app.netlify.app/"],
+    origin: ["https://tk-chat-app.netlify.app", "https://tk-chat-app.onrender.com", "http://localhost:3000"],
     methods: ["GET", "POST"],
     allowedHeaders: ["Content-Type"]
   }
@@ -205,5 +205,5 @@ const PORT = process.env.PORT || 5000;
 
 server.listen(PORT, () => {
   console.log(`Server ${PORT} portunda çalışıyor`);
-  console.log(`CORS origins: https://tk-chat-app.netlify.app, http://localhost:3000`);
+  console.log(`CORS origins: https://tk-chat-app.netlify.app, https://tk-chat-app.onrender.com, http://localhost:3000`);
 }); 
