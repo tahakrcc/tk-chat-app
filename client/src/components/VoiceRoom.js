@@ -1000,7 +1000,7 @@ const VoiceRoom = ({ socket, currentUser, roomName }) => {
     text-align: center;
     min-width: 320px;
     position: relative;
-    z-index: 1;
+    z-index: 2001;
     
     @media (max-width: 768px) {
       min-width: 280px;
@@ -1065,7 +1065,11 @@ const VoiceRoom = ({ socket, currentUser, roomName }) => {
     font-weight: bold;
     transition: all 0.3s ease;
     box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4);
-    z-index: 10;
+    z-index: 1000;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
     
     &:hover {
       background: linear-gradient(135deg, #ff3742, #ff4757);
@@ -1075,6 +1079,11 @@ const VoiceRoom = ({ socket, currentUser, roomName }) => {
     
     &:active {
       transform: scale(0.95);
+    }
+    
+    &:focus {
+      outline: 2px solid rgba(255, 255, 255, 0.5);
+      outline-offset: 2px;
     }
     
     @media (max-width: 768px) {
@@ -1221,7 +1230,15 @@ const VoiceRoom = ({ socket, currentUser, roomName }) => {
       {showVoiceMonitor && (
         <VoiceMonitorModal onClick={() => setShowVoiceMonitor(false)}>
           <VoiceMonitorContent onClick={(e) => e.stopPropagation()}>
-            <CloseButton onClick={() => setShowVoiceMonitor(false)}>×</CloseButton>
+            <CloseButton 
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowVoiceMonitor(false);
+              }}
+              onMouseDown={(e) => e.stopPropagation()}
+            >
+              ×
+            </CloseButton>
             <h3 style={{ 
               color: '#ffffff', 
               marginBottom: '20px', 

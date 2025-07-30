@@ -1,0 +1,102 @@
+import React from 'react';
+import styled from 'styled-components';
+import EmojiPickerReact from 'emoji-picker-react';
+import { Smile } from 'lucide-react';
+
+const EmojiButton = styled.button`
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: scale(1.1);
+  }
+  
+  &:active {
+    transform: scale(0.95);
+  }
+`;
+
+const EmojiPickerContainer = styled.div`
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  margin-bottom: 8px;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+  
+  .EmojiPickerReact {
+    --epr-bg-color: transparent;
+    --epr-category-label-bg-color: transparent;
+    --epr-category-label-color: #ffffff;
+    --epr-search-input-bg-color: rgba(255, 255, 255, 0.1);
+    --epr-search-input-border-color: rgba(255, 255, 255, 0.3);
+    --epr-search-input-color: #ffffff;
+    --epr-search-input-placeholder-color: rgba(255, 255, 255, 0.7);
+    --epr-category-icon-size: 20px;
+    --epr-emoji-size: 24px;
+    --epr-horizontal-padding: 12px;
+    --epr-vertical-padding: 8px;
+  }
+  
+  .EmojiPickerReact .epr-emoji-category-label {
+    font-weight: 700;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  
+  .EmojiPickerReact .epr-emoji {
+    transition: all 0.2s ease;
+    
+    &:hover {
+      transform: scale(1.2);
+      background: rgba(255, 255, 255, 0.1);
+    }
+  }
+  
+  @media (max-width: 768px) {
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90vw;
+    max-width: 350px;
+  }
+`;
+
+const EmojiPicker = ({ onEmojiClick, isOpen, onToggle }) => {
+  return (
+    <>
+      <EmojiButton onClick={onToggle} title="Emoji Ekle">
+        <Smile size={20} />
+      </EmojiButton>
+      
+      {isOpen && (
+        <EmojiPickerContainer>
+          <EmojiPickerReact
+            onEmojiClick={onEmojiClick}
+            autoFocusSearch={false}
+            searchPlaceholder="Emoji ara..."
+            width="100%"
+            height={400}
+            lazyLoadEmojis={true}
+          />
+        </EmojiPickerContainer>
+      )}
+    </>
+  );
+};
+
+export default EmojiPicker; 

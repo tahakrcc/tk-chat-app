@@ -1,18 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styled, { keyframes } from 'styled-components';
-import { Send } from 'lucide-react';
+import { Send, Image } from 'lucide-react';
 import MessageList from './MessageList';
+import EmojiPicker from './EmojiPicker';
+import GifPicker from './GifPicker';
 
 const fadeIn = keyframes`
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
 `;
 
-const pulse = keyframes`
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
-`;
+
 
 const ChatContainer = styled.div`
   flex: 1;
@@ -114,6 +112,28 @@ const MessageInput = styled.textarea`
   }
 `;
 
+const GifButton = styled.button`
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: scale(1.1);
+  }
+  
+  &:active {
+    transform: scale(0.95);
+  }
+`;
+
 const SendButton = styled.button`
   background: linear-gradient(135deg, #2ed573, #1e90ff);
   color: white;
@@ -189,6 +209,8 @@ const ChatRoom = ({ socket, user, messages = [], onSendMessage }) => {
   const [newMessage, setNewMessage] = useState('');
   const [typingUsers, setTypingUsers] = useState(new Set());
   const [isTyping, setIsTyping] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showGifPicker, setShowGifPicker] = useState(false);
   const inputRef = useRef(null);
   const messagesEndRef = useRef(null);
 
@@ -302,6 +324,30 @@ const ChatRoom = ({ socket, user, messages = [], onSendMessage }) => {
     return `✏️ ${users[0]} ve ${users.length - 1} kişi daha mesaj yazıyor...`;
   };
 
+  const handleEmojiClick = (emojiObject) => {
+    const emoji = emojiObject.emoji;
+    setNewMessage(prev => prev + emoji);
+    setShowEmojiPicker(false);
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  };
+
+  const handleGifSelect = (gifUrl) => {
+    onSendMessage(gifUrl);
+    setShowGifPicker(false);
+  };
+
+  const toggleEmojiPicker = () => {
+    setShowEmojiPicker(!showEmojiPicker);
+    setShowGifPicker(false);
+  };
+
+  const toggleGifPicker = () => {
+    setShowGifPicker(!showGifPicker);
+    setShowEmojiPicker(false);
+  };
+
   return (
     <ChatContainer>
       <MessagesArea>
@@ -317,6 +363,23 @@ const ChatRoom = ({ socket, user, messages = [], onSendMessage }) => {
       
       <MessageInputContainer>
         <InputWrapper>
+          <div style={{ position: 'relative' }}>
+            <EmojiPicker
+              onEmojiClick={handleEmojiClick}
+              isOpen={showEmojiPicker}
+              onToggle={toggleEmojiPicker}
+            />
+          </div>
+          <div style={{ position: 'relative' }}>
+            <GifButton onClick={toggleGifPicker} title="GIF Ekle">
+              <Image size={20} />
+            </GifButton>
+            <GifPicker
+              onGifSelect={handleGifSelect}
+              isOpen={showGifPicker}
+              onToggle={toggleGifPicker}
+            />
+          </div>
           <MessageInput
             ref={inputRef}
             value={newMessage}

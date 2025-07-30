@@ -108,6 +108,21 @@ const MessageText = styled.div`
   }
 `;
 
+const MessageImage = styled.img`
+  max-width: 100%;
+  max-height: 300px;
+  border-radius: 8px;
+  margin-top: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: scale(1.02);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+  }
+`;
+
 const SystemMessage = styled.div`
   text-align: center;
   padding: 12px 16px;
@@ -163,6 +178,13 @@ const MessageList = ({ messages }) => {
         }
 
         // Regular message handling
+        const isImage = message.content.startsWith('http') && 
+          (message.content.includes('.gif') || 
+           message.content.includes('.jpg') || 
+           message.content.includes('.jpeg') || 
+           message.content.includes('.png') || 
+           message.content.includes('.webp'));
+
         return (
           <MessageContainer key={index}>
             <UserAvatar>
@@ -175,7 +197,17 @@ const MessageList = ({ messages }) => {
                   {formatTime(message.timestamp)}
                 </Timestamp>
               </MessageHeader>
-              <MessageText>{message.content}</MessageText>
+              <MessageText>
+                {isImage ? (
+                  <MessageImage 
+                    src={message.content} 
+                    alt="Gönderilen resim"
+                    onClick={() => window.open(message.content, '_blank')}
+                  />
+                ) : (
+                  message.content
+                )}
+              </MessageText>
             </MessageContent>
           </MessageContainer>
         );

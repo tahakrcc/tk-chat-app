@@ -5,6 +5,8 @@ Modern ve güzel arayüzlü gerçek zamanlı sohbet uygulaması. React, Node.js 
 ## 🌟 Özellikler
 
 - 🚀 **Gerçek Zamanlı Mesajlaşma** - Socket.io ile anlık mesaj gönderimi
+- 😊 **Emoji Desteği** - Emoji seçici ve gönderme
+- 🎬 **GIF Desteği** - GIF arama ve gönderme
 - 🎤 **Sesli Sohbet Odaları** - WebRTC ile sesli iletişim
 - 👥 **Aktif Kullanıcı Listesi** - Sohbetteki kullanıcıları görme
 - ✍️ **Yazıyor Göstergesi** - Kimin yazdığını görme
@@ -28,6 +30,8 @@ Modern ve güzel arayüzlü gerçek zamanlı sohbet uygulaması. React, Node.js 
 - **Socket.io Client** - Sunucu bağlantısı
 - **Simple Peer** - WebRTC peer-to-peer bağlantı
 - **Lucide React** - İkonlar
+- **Emoji Picker React** - Emoji seçici
+- **GIPHY API** - GIF arama ve gönderme
 
 ## 🚀 Kurulum
 
