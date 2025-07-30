@@ -686,6 +686,14 @@ const VoiceRoom = ({ socket, currentUser, roomName }) => {
         const newMutedState = !audioTrack.enabled;
         setIsMuted(newMutedState);
         
+        // Mikrofon kapandığında konuşma durumunu temizle
+        if (newMutedState) {
+          setIsSpeaking(false);
+          if (socket) {
+            socket.emit('user_speaking', { isSpeaking: false });
+          }
+        }
+        
         // Diğer kullanıcılara mikrofon durumunu bildir
         if (socket) {
           socket.emit('user_voice_status', {
@@ -704,6 +712,12 @@ const VoiceRoom = ({ socket, currentUser, roomName }) => {
   const toggleVolume = () => {
     const newVolumeMutedState = !isVolumeMuted;
     setIsVolumeMuted(newVolumeMutedState);
+    
+    // Ses kapandığında konuşma durumunu temizle (sadece görsel olarak)
+    if (newVolumeMutedState && isSpeaking) {
+      // Ses kapalıyken konuşma durumunu gizle
+      setIsSpeaking(false);
+    }
     
     // Diğer kullanıcılara ses durumunu bildir
     if (socket) {
@@ -784,22 +798,34 @@ const VoiceRoom = ({ socket, currentUser, roomName }) => {
       microphoneRef.current.connect(analyserRef.current);
       
       const updateVoiceLevel = () => {
-        if (!analyserRef.current) return;
+        if (!analyserRef.current || isMuted || isVolumeMuted) {
+          // Mikrofon veya ses kapalıysa ses seviyesi izlemeyi durdur
+          setVoiceLevel(0);
+          if (isSpeaking) {
+            setIsSpeaking(false);
+            if (socket) {
+              socket.emit('user_speaking', { isSpeaking: false });
+            }
+          }
+          return;
+        }
         
         analyserRef.current.getByteFrequencyData(dataArray);
         const average = dataArray.reduce((a, b) => a + b) / bufferLength;
         const level = average / 255;
         
         setVoiceLevel(level);
-        setIsSpeaking(level > 0.1);
+        const speaking = level > 0.1;
         
-        if (level > 0.1 && !isSpeaking) {
+        if (speaking && !isSpeaking) {
           // Konuşmaya başladı
+          setIsSpeaking(true);
           if (socket) {
             socket.emit('user_speaking', { isSpeaking: true });
           }
-        } else if (level <= 0.1 && isSpeaking) {
+        } else if (!speaking && isSpeaking) {
           // Konuşmayı durdurdu
+          setIsSpeaking(false);
           if (socket) {
             socket.emit('user_speaking', { isSpeaking: false });
           }
@@ -835,6 +861,16 @@ const VoiceRoom = ({ socket, currentUser, roomName }) => {
       stopVoiceMonitoring();
     };
   }, [localStream]);
+
+  // Mikrofon veya ses durumu değiştiğinde ses izlemeyi güncelle
+  useEffect(() => {
+    if ((isMuted || isVolumeMuted) && isSpeaking) {
+      setIsSpeaking(false);
+      if (socket) {
+        socket.emit('user_speaking', { isSpeaking: false });
+      }
+    }
+  }, [isMuted, isVolumeMuted, isSpeaking, socket]);
 
   // Kullanıcı ses durumu güncellemelerini dinle
   useEffect(() => {
