@@ -147,14 +147,14 @@ io.on('connection', (socket) => {
 
   // WebRTC sinyalleri
   socket.on('sending_signal', (payload) => {
-    console.log('Sinyal gönderiliyor:', payload.userToSignal);
+    console.log('Sinyal gönderiliyor:', payload.userToSignal, 'CallerId:', payload.callerId);
     io.to(payload.userToSignal).emit('user_joined_voice', payload.callerId);
     io.to(payload.userToSignal).emit('receiving_returned_signal', { id: payload.callerId, signal: payload.signal });
   });
 
   socket.on('returning_signal', (payload) => {
-    console.log('Sinyal döndürülüyor:', payload.id);
-    io.to(payload.id).emit('receiving_returned_signal', { id: socket.id, signal: payload.signal });
+    console.log('Sinyal döndürülüyor:', payload.callerId, 'TargetId:', payload.id);
+    io.to(payload.callerId).emit('receiving_returned_signal', { id: socket.id, signal: payload.signal });
   });
 
   // Konuşma durumu

@@ -560,7 +560,8 @@ const VoiceRoom = ({ socket, user, activeUsers }) => {
 
     socket.on('user_joined_voice', (userId) => {
       console.log('Kullanıcı sesli odaya katıldı:', userId);
-      if (stream) {
+      if (stream && userId !== socket.id) {
+        console.log('Yeni peer oluşturuluyor:', userId);
         const peer = createPeer(userId, socket.id, stream);
         peersRef.current[userId] = peer;
         setPeers(prev => ({ ...prev, [userId]: peer }));
@@ -571,19 +572,14 @@ const VoiceRoom = ({ socket, user, activeUsers }) => {
       console.log('Sinyal alındı:', payload);
       const peer = peersRef.current[payload.id];
       if (peer) {
+        console.log('Mevcut peer\'e sinyal gönderiliyor:', payload.id);
         peer.signal(payload.signal);
-      } else if (stream) {
+      } else if (stream && payload.id !== socket.id) {
         // Eğer peer yoksa yeni peer oluştur
+        console.log('Yeni peer oluşturuluyor (sinyal ile):', payload.id);
         const newPeer = addPeer(payload.signal, payload.id, stream);
         peersRef.current[payload.id] = newPeer;
         setPeers(prev => ({ ...prev, [payload.id]: newPeer }));
-      }
-    });
-
-    socket.on('receiving_returned_signal', (payload) => {
-      const peer = peersRef.current[payload.id];
-      if (peer) {
-        peer.signal(payload.signal);
       }
     });
 
@@ -647,15 +643,26 @@ const VoiceRoom = ({ socket, user, activeUsers }) => {
     });
 
     peer.on('signal', signal => {
+      console.log('Sinyal gönderiliyor:', userToSignal);
       socket.emit('sending_signal', { userToSignal, callerId, signal });
     });
 
     peer.on('stream', (remoteStream) => {
-      console.log('Uzak ses akışı alındı:', userToSignal);
+      console.log('Uzak ses akışı alındı (createPeer):', userToSignal);
       // Uzak ses akışını oynat
       const audio = new Audio();
       audio.srcObject = remoteStream;
+      audio.autoplay = true;
+      audio.volume = volume;
       audio.play().catch(e => console.error('Ses oynatma hatası:', e));
+    });
+
+    peer.on('error', (err) => {
+      console.error('Peer hatası (createPeer):', err);
+    });
+
+    peer.on('close', () => {
+      console.log('Peer bağlantısı kapandı (createPeer):', userToSignal);
     });
 
     return peer;
@@ -669,15 +676,26 @@ const VoiceRoom = ({ socket, user, activeUsers }) => {
     });
 
     peer.on('signal', signal => {
+      console.log('Sinyal döndürülüyor:', callerId);
       socket.emit('returning_signal', { signal, callerId });
     });
 
     peer.on('stream', (remoteStream) => {
-      console.log('Uzak ses akışı alındı:', callerId);
+      console.log('Uzak ses akışı alındı (addPeer):', callerId);
       // Uzak ses akışını oynat
       const audio = new Audio();
       audio.srcObject = remoteStream;
+      audio.autoplay = true;
+      audio.volume = volume;
       audio.play().catch(e => console.error('Ses oynatma hatası:', e));
+    });
+
+    peer.on('error', (err) => {
+      console.error('Peer hatası (addPeer):', err);
+    });
+
+    peer.on('close', () => {
+      console.log('Peer bağlantısı kapandı (addPeer):', callerId);
     });
 
     peer.signal(incomingSignal);
@@ -686,15 +704,20 @@ const VoiceRoom = ({ socket, user, activeUsers }) => {
 
   const joinVoiceRoom = async () => {
     try {
+      console.log('Sesli odaya katılmaya çalışılıyor...');
+      
       const mediaStream = await navigator.mediaDevices.getUserMedia({ 
         video: false, 
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
-          autoGainControl: true
+          autoGainControl: true,
+          sampleRate: 44100,
+          channelCount: 1
         }
       });
       
+      console.log('Mikrofon erişimi başarılı');
       setStream(mediaStream);
       
       if (userVideo.current) {
