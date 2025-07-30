@@ -266,7 +266,7 @@ const VoiceRoom = ({ socket, currentUser, roomName }) => {
       socket.off('receiving_returned_signal');
       socket.off('user_left_voice');
     };
-  }, [socket, localStream, createPeer]);
+  }, [socket, localStream]);
 
   const createPeer = (userToSignal, callerId, stream) => {
     console.log('Creating peer for:', userToSignal);
@@ -303,41 +303,7 @@ const VoiceRoom = ({ socket, currentUser, roomName }) => {
     return peer;
   };
 
-  const addPeer = (incomingSignal, callerId, stream) => {
-    console.log('Adding peer for:', callerId);
-    const peer = new Peer({
-      initiator: false,
-      trickle: false,
-      stream,
-      config: {
-        iceServers: [
-          { urls: 'stun:stun.l.google.com:19302' },
-          { urls: 'stun:stun1.l.google.com:19302' }
-        ]
-      }
-    });
-
-    peer.on('signal', signal => {
-      console.log('Returning signal to:', callerId);
-      socket.emit('returning_signal', { signal, callerId });
-    });
-
-    peer.on('stream', remoteStream => {
-      console.log('Received remote stream from:', callerId);
-      setRemoteStreams(prev => ({ ...prev, [callerId]: remoteStream }));
-    });
-
-    peer.on('error', err => {
-      console.error('Peer error:', err);
-    });
-
-    peer.on('connect', () => {
-      console.log('Peer connected:', callerId);
-    });
-
-    peer.signal(incomingSignal);
-    return peer;
-  };
+  // addPeer function removed - unused
 
   const joinVoiceRoom = async () => {
     try {
@@ -427,7 +393,7 @@ const VoiceRoom = ({ socket, currentUser, roomName }) => {
     return () => {
       leaveVoiceRoom();
     };
-  }, [joinVoiceRoom, leaveVoiceRoom]);
+  }, []);
 
   return (
     <VoiceRoomContainer>
