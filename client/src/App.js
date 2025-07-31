@@ -700,6 +700,7 @@ const App = () => {
         onOpenProfile={handleOpenProfile}
         onLogout={handleLogout}
         onUserClick={handleUserClick}
+        onSendPrivateMessage={handleSendPrivateMessage}
       />
     );
   };

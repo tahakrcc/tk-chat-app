@@ -1,6 +1,23 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
-import { MessageCircle, Users, Hash, ArrowRight, Menu, X, Settings, LogOut } from 'lucide-react';
+import { 
+  MessageCircle, 
+  Users, 
+  Hash, 
+  ArrowRight, 
+  Menu, 
+  X, 
+  Settings, 
+  LogOut, 
+  ChevronDown, 
+  ChevronRight,
+  UserPlus,
+  UserCheck,
+  Heart,
+  MessageSquare,
+  Mic,
+  User
+} from 'lucide-react';
 import SERVER_URL from '../config';
 
 const RoomSelectionContainer = styled.div`
@@ -154,24 +171,72 @@ const RoomList = styled.div`
   padding: 16px 0;
 `;
 
-const RoomCategory = styled.div`
-  margin-bottom: 24px;
+const CategoryHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #96989d;
+  
+  &:hover {
+    background: #40444b;
+    color: #dcddde;
+  }
 `;
 
 const CategoryTitle = styled.h3`
-  color: #96989d;
+  color: inherit;
   font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
-  margin: 0 0 8px 20px;
+  margin: 0;
   letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+const CategoryIcon = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+`;
+
+const CategoryToggle = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  transition: transform 0.2s ease;
+  transform: ${props => props.$isExpanded ? 'rotate(0deg)' : 'rotate(-90deg)'};
+`;
+
+const CategoryContent = styled.div`
+  display: ${props => props.$isExpanded ? 'block' : 'none'};
+  animation: ${props => props.$isExpanded ? 'slideDown 0.2s ease' : 'none'};
+  
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 `;
 
 const RoomItem = styled.div`
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 8px 20px;
+  padding: 8px 20px 8px 36px;
   cursor: pointer;
   transition: all 0.2s ease;
   color: #96989d;
@@ -221,23 +286,293 @@ const RoomStats = styled.div`
   flex-shrink: 0;
 `;
 
-// Çevrimiçi Kullanıcılar Bölümü
+const FollowRequestsSection = styled.div`
+  padding: 16px 20px;
+  border-bottom: 1px solid #202225;
+  background: #292b2f;
+`;
+
+const FollowRequestsHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+`;
+
+const FollowRequestsTitle = styled.h3`
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+const FollowRequestsCount = styled.span`
+  background: #ed4245;
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 10px;
+  min-width: 18px;
+  text-align: center;
+`;
+
+const FollowRequestItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: #40444b;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: #4f545c;
+  }
+`;
+
+const FollowRequestAvatar = styled.div`
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: ${props => props.$avatarUrl ? `url(${props.$avatarUrl}) center/cover` : 'linear-gradient(135deg, #7289da, #5865f2)'};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+`;
+
+const FollowRequestInfo = styled.div`
+  flex: 1;
+  min-width: 0;
+`;
+
+const FollowRequestName = styled.div`
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+const FollowRequestActions = styled.div`
+  display: flex;
+  gap: 4px;
+`;
+
+const FollowRequestButton = styled.button`
+  background: ${props => props.$variant === 'accept' ? '#3ba55c' : '#ed4245'};
+  border: none;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: ${props => props.$variant === 'accept' ? '#2d7d46' : '#c03537'};
+  }
+`;
+
+const FriendsSection = styled.div`
+  padding: 16px 20px;
+  border-bottom: 1px solid #202225;
+  background: #292b2f;
+`;
+
+const FriendsHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+`;
+
+const FriendsTitle = styled.h3`
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+const FriendsCount = styled.span`
+  color: #96989d;
+  font-size: 12px;
+`;
+
+const FriendItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: #40444b;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: #4f545c;
+  }
+`;
+
+const FriendAvatar = styled.div`
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: ${props => props.$avatarUrl ? `url(${props.$avatarUrl}) center/cover` : 'linear-gradient(135deg, #7289da, #5865f2)'};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+`;
+
+const FriendInfo = styled.div`
+  flex: 1;
+  min-width: 0;
+`;
+
+const FriendName = styled.div`
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+const FriendStatus = styled.div`
+  color: #96989d;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+`;
+
+const DirectMessagesSection = styled.div`
+  padding: 16px 20px;
+  border-bottom: 1px solid #202225;
+  background: #292b2f;
+`;
+
+const DirectMessagesHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+`;
+
+const DirectMessagesTitle = styled.h3`
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+const DirectMessagesCount = styled.span`
+  color: #96989d;
+  font-size: 12px;
+`;
+
+const DirectMessageItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: #40444b;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  
+  &:hover {
+    background: #4f545c;
+  }
+`;
+
+const DirectMessageAvatar = styled.div`
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: ${props => props.$avatarUrl ? `url(${props.$avatarUrl}) center/cover` : 'linear-gradient(135deg, #7289da, #5865f2)'};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+`;
+
+const DirectMessageInfo = styled.div`
+  flex: 1;
+  min-width: 0;
+`;
+
+const DirectMessageName = styled.div`
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+const DirectMessageLastMessage = styled.div`
+  color: #96989d;
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+const UnreadBadge = styled.div`
+  background: #ed4245;
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 4px;
+  border-radius: 8px;
+  min-width: 16px;
+  text-align: center;
+  position: absolute;
+  top: 4px;
+  right: 4px;
+`;
+
 const OnlineUsersSection = styled.div`
   padding: 16px 20px;
-  border-top: 1px solid #202225;
+  border-bottom: 1px solid #202225;
   background: #292b2f;
 `;
 
 const OnlineUsersTitle = styled.h3`
-  color: #96989d;
-  font-size: 12px;
+  color: #ffffff;
+  font-size: 14px;
   font-weight: 600;
-  text-transform: uppercase;
   margin: 0 0 12px 0;
-  letter-spacing: 0.5px;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 `;
 
 const OnlineUsersList = styled.div`
@@ -249,21 +584,29 @@ const OnlineUsersList = styled.div`
 const OnlineUserItem = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 4px 0;
+  gap: 12px;
+  padding: 8px 12px;
+  background: #40444b;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: #4f545c;
+  }
 `;
 
 const OnlineUserAvatar = styled.div`
-  width: 24px;
-  height: 24px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   background: ${props => props.$avatarUrl ? `url(${props.$avatarUrl}) center/cover` : 'linear-gradient(135deg, #7289da, #5865f2)'};
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  font-weight: 600;
   font-size: 12px;
+  font-weight: 700;
   flex-shrink: 0;
 `;
 
@@ -610,12 +953,17 @@ const JoinButton = styled.button`
   }
 `;
 
-const RoomSelection = ({ user, socket, onJoinRoom, onOpenProfile, onLogout, onUserClick }) => {
+const RoomSelection = ({ user, socket, onJoinRoom, onOpenProfile, onLogout, onUserClick, onSendPrivateMessage }) => {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [textChannelsExpanded, setTextChannelsExpanded] = useState(false);
+  const [voiceChannelsExpanded, setVoiceChannelsExpanded] = useState(false);
   const [roomStats, setRoomStats] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const [onlineUsers, setOnlineUsers] = useState([]);
+  const [followRequests, setFollowRequests] = useState([]);
+  const [friends, setFriends] = useState([]);
+  const [directMessages, setDirectMessages] = useState([]);
 
   const rooms = [
     {
@@ -694,18 +1042,66 @@ const RoomSelection = ({ user, socket, onJoinRoom, onOpenProfile, onLogout, onUs
     }
   }, [user]);
 
+  const fetchFollowRequests = useCallback(async () => {
+    if (!user) return;
+    
+    try {
+      const response = await fetch(`${SERVER_URL}/api/follow/requests/${user.username}`);
+      if (response.ok) {
+        const data = await response.json();
+        setFollowRequests(data.requests || []);
+      }
+    } catch (error) {
+      console.error('Takip istekleri yüklenirken hata:', error);
+    }
+  }, [user]);
+
+  const fetchFriends = useCallback(async () => {
+    if (!user) return;
+    
+    try {
+      const response = await fetch(`${SERVER_URL}/api/follow/followers/${user.username}`);
+      if (response.ok) {
+        const data = await response.json();
+        setFriends(data.followers || []);
+      }
+    } catch (error) {
+      console.error('Arkadaşlar yüklenirken hata:', error);
+    }
+  }, [user]);
+
+  const fetchDirectMessages = useCallback(async () => {
+    if (!user) return;
+    
+    try {
+      const response = await fetch(`${SERVER_URL}/api/private-message/conversations/${user.username}`);
+      if (response.ok) {
+        const data = await response.json();
+        setDirectMessages(data.conversations || []);
+      }
+    } catch (error) {
+      console.error('Özel mesajlar yüklenirken hata:', error);
+    }
+  }, [user]);
+
   useEffect(() => {
     fetchRoomStats();
     fetchOnlineUsers();
+    fetchFollowRequests();
+    fetchFriends();
+    fetchDirectMessages();
     
     // Her 30 saniyede bir güncelle
     const interval = setInterval(() => {
       fetchRoomStats();
       fetchOnlineUsers();
+      fetchFollowRequests();
+      fetchFriends();
+      fetchDirectMessages();
     }, 30000);
     
     return () => clearInterval(interval);
-  }, [fetchOnlineUsers]);
+  }, [fetchOnlineUsers, fetchFollowRequests, fetchFriends, fetchDirectMessages]);
 
   // Çevrimiçi kullanıcılar anlık güncelleme
   useEffect(() => {
@@ -744,6 +1140,51 @@ const RoomSelection = ({ user, socket, onJoinRoom, onOpenProfile, onLogout, onUs
     return roomStats[roomId] || { users: 0, messages: 0 };
   };
 
+  const handleAcceptFollowRequest = async (fromUsername) => {
+    try {
+      const response = await fetch(`${SERVER_URL}/api/follow/accept`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fromUsername,
+          toUsername: user.username
+        })
+      });
+      
+      if (response.ok) {
+        fetchFollowRequests();
+        fetchFriends();
+      }
+    } catch (error) {
+      console.error('Takip isteği kabul hatası:', error);
+    }
+  };
+
+  const handleRejectFollowRequest = async (fromUsername) => {
+    try {
+      const response = await fetch(`${SERVER_URL}/api/follow/reject`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fromUsername,
+          toUsername: user.username
+        })
+      });
+      
+      if (response.ok) {
+        fetchFollowRequests();
+      }
+    } catch (error) {
+      console.error('Takip isteği red hatası:', error);
+    }
+  };
+
+  const handleDirectMessageClick = (conversation) => {
+    if (onSendPrivateMessage) {
+      onSendPrivateMessage(conversation.user);
+    }
+  };
+
   return (
     <RoomSelectionContainer>
       <MobileOverlay $isOpen={isSidebarOpen} onClick={toggleSidebar} />
@@ -777,8 +1218,16 @@ const RoomSelection = ({ user, socket, onJoinRoom, onOpenProfile, onLogout, onUs
         </UserInfo>
         
         <RoomList>
-          <RoomCategory>
-            <CategoryTitle>Metin Kanalları</CategoryTitle>
+          <CategoryHeader onClick={() => setTextChannelsExpanded(!textChannelsExpanded)}>
+            <CategoryTitle>
+              <MessageCircle size={16} />
+              Metin Kanalları
+            </CategoryTitle>
+            <CategoryToggle $isExpanded={textChannelsExpanded}>
+              <ChevronDown size={16} />
+            </CategoryToggle>
+          </CategoryHeader>
+          <CategoryContent $isExpanded={textChannelsExpanded}>
             {rooms.filter(room => room.type === 'public').map(room => {
               const stats = getRoomStats(room.id);
               return (
@@ -798,10 +1247,18 @@ const RoomSelection = ({ user, socket, onJoinRoom, onOpenProfile, onLogout, onUs
                 </RoomItem>
               );
             })}
-          </RoomCategory>
-          
-          <RoomCategory>
-            <CategoryTitle>Sesli Kanallar</CategoryTitle>
+          </CategoryContent>
+
+          <CategoryHeader onClick={() => setVoiceChannelsExpanded(!voiceChannelsExpanded)}>
+            <CategoryTitle>
+              <Mic size={16} />
+              Sesli Kanallar
+            </CategoryTitle>
+            <CategoryToggle $isExpanded={voiceChannelsExpanded}>
+              <ChevronDown size={16} />
+            </CategoryToggle>
+          </CategoryHeader>
+          <CategoryContent $isExpanded={voiceChannelsExpanded}>
             {rooms.filter(room => room.type === 'voice').map(room => {
               const stats = getRoomStats(room.id);
               return (
@@ -821,8 +1278,126 @@ const RoomSelection = ({ user, socket, onJoinRoom, onOpenProfile, onLogout, onUs
                 </RoomItem>
               );
             })}
-          </RoomCategory>
+          </CategoryContent>
         </RoomList>
+
+        {/* Takip İstekleri Bölümü */}
+        {followRequests.length > 0 && (
+          <FollowRequestsSection>
+            <FollowRequestsHeader>
+              <FollowRequestsTitle>
+                <UserPlus size={16} />
+                Takip İstekleri
+              </FollowRequestsTitle>
+              <FollowRequestsCount>{followRequests.length}</FollowRequestsCount>
+            </FollowRequestsHeader>
+            {followRequests.map((request) => (
+              <FollowRequestItem key={request.username}>
+                <FollowRequestAvatar $avatarUrl={request.avatar}>
+                  {!request.avatar && (request.displayName?.charAt(0) || request.username?.charAt(0) || 'U').toUpperCase()}
+                </FollowRequestAvatar>
+                <FollowRequestInfo>
+                  <FollowRequestName onClick={() => onUserClick && onUserClick(request)}>
+                    {request.displayName || request.username}
+                    {request.gender === 'female' ? ' 👩' : ' 👨'}
+                  </FollowRequestName>
+                </FollowRequestInfo>
+                <FollowRequestActions>
+                  <FollowRequestButton 
+                    $variant="accept"
+                    onClick={() => handleAcceptFollowRequest(request.username)}
+                  >
+                    Kabul
+                  </FollowRequestButton>
+                  <FollowRequestButton 
+                    $variant="reject"
+                    onClick={() => handleRejectFollowRequest(request.username)}
+                  >
+                    Red
+                  </FollowRequestButton>
+                </FollowRequestActions>
+              </FollowRequestItem>
+            ))}
+          </FollowRequestsSection>
+        )}
+
+        {/* Arkadaşlar Bölümü */}
+        <FriendsSection>
+          <FriendsHeader>
+            <FriendsTitle>
+              <Heart size={16} />
+              Arkadaşlar
+            </FriendsTitle>
+            <FriendsCount>{friends.length}</FriendsCount>
+          </FriendsHeader>
+          {friends.length > 0 ? (
+            friends.map((friend) => (
+              <FriendItem key={friend.username} onClick={() => onUserClick && onUserClick(friend)}>
+                <FriendAvatar $avatarUrl={friend.avatar}>
+                  {!friend.avatar && (friend.displayName?.charAt(0) || friend.username?.charAt(0) || 'U').toUpperCase()}
+                </FriendAvatar>
+                <FriendInfo>
+                  <FriendName>
+                    {friend.displayName || friend.username}
+                    {friend.gender === 'female' ? ' 👩' : ' 👨'}
+                  </FriendName>
+                  <FriendStatus>
+                    <StatusDot $status={friend.status || 'online'} />
+                    {friend.status === 'online' ? 'Çevrimiçi' : 'Çevrimdışı'}
+                  </FriendStatus>
+                </FriendInfo>
+              </FriendItem>
+            ))
+          ) : (
+            <div style={{ color: '#72767d', fontSize: '12px', textAlign: 'center', padding: '8px 0' }}>
+              Henüz arkadaş yok
+            </div>
+          )}
+        </FriendsSection>
+
+        {/* Özel Mesajlar Bölümü */}
+        <DirectMessagesSection>
+          <DirectMessagesHeader>
+            <DirectMessagesTitle>
+              <MessageSquare size={16} />
+              Özel Mesajlar
+            </DirectMessagesTitle>
+            <DirectMessagesCount>{directMessages.length}</DirectMessagesCount>
+          </DirectMessagesHeader>
+          {directMessages.length > 0 ? (
+            directMessages.map((conversation) => (
+              <DirectMessageItem 
+                key={conversation.user.username} 
+                onClick={() => handleDirectMessageClick(conversation)}
+              >
+                <DirectMessageAvatar $avatarUrl={conversation.user.avatar}>
+                  {!conversation.user.avatar && (conversation.user.displayName?.charAt(0) || conversation.user.username?.charAt(0) || 'U').toUpperCase()}
+                </DirectMessageAvatar>
+                <DirectMessageInfo>
+                  <DirectMessageName>
+                    {conversation.user.displayName || conversation.user.username}
+                    {conversation.user.gender === 'female' ? ' 👩' : ' 👨'}
+                  </DirectMessageName>
+                  <DirectMessageLastMessage>
+                    {conversation.lastMessage ? 
+                      (conversation.lastMessage.content.length > 20 
+                        ? conversation.lastMessage.content.substring(0, 20) + '...' 
+                        : conversation.lastMessage.content)
+                      : 'Henüz mesaj yok'
+                    }
+                  </DirectMessageLastMessage>
+                </DirectMessageInfo>
+                {conversation.unreadCount > 0 && (
+                  <UnreadBadge>{conversation.unreadCount}</UnreadBadge>
+                )}
+              </DirectMessageItem>
+            ))
+          ) : (
+            <div style={{ color: '#72767d', fontSize: '12px', textAlign: 'center', padding: '8px 0' }}>
+              Henüz özel mesaj yok
+            </div>
+          )}
+        </DirectMessagesSection>
 
         {/* Çevrimiçi Kullanıcılar Bölümü */}
         <OnlineUsersSection>
