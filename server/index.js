@@ -88,12 +88,8 @@ console.log('📏 MongoDB URI uzunluğu:', MONGO_URI ? MONGO_URI.length : 0);
 // MongoDB bağlantı seçenekleri
 const mongooseOptions = {
   maxPoolSize: 10,
-  serverSelectionTimeoutMS: 10000, // 10 saniye
-  socketTimeoutMS: 45000,
-  bufferMaxEntries: 0,
-  bufferCommands: true, // true yapıyoruz
-  retryWrites: true,
-  w: 'majority'
+  serverSelectionTimeoutMS: 10000,
+  socketTimeoutMS: 45000
 };
 
 // MongoDB bağlantı fonksiyonu
