@@ -302,9 +302,16 @@ const ChatRoom = ({ socket, user, messages = [], onSendMessage }) => {
       }
     });
 
+    socket.on('profile_updated', (data) => {
+      console.log('ChatRoom: Profil güncellendi:', data);
+      // Profil güncellemesi sonrası UI'ı yenile
+      setTimeout(scrollToBottom, 100);
+    });
+
     return () => {
       socket.off('user_typing');
       socket.off('user_stop_typing');
+      socket.off('profile_updated');
     };
   }, [socket, user]);
 

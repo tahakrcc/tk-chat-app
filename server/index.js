@@ -100,6 +100,25 @@ io.on('connection', (socket) => {
     }
   });
 
+  // Profil güncelleme
+  socket.on('update_profile', (updatedUser) => {
+    console.log('Profil güncellendi:', updatedUser);
+    const user = users.get(socket.id);
+    if (user) {
+      // Kullanıcı bilgilerini güncelle
+      users.set(socket.id, {
+        ...user,
+        ...updatedUser
+      });
+      
+      // Diğer kullanıcılara profil güncellemesini bildir
+      socket.to(user.room || 'general').emit('profile_updated', {
+        userId: socket.id,
+        user: updatedUser
+      });
+    }
+  });
+
   // Sesli oda katılımı
   socket.on('join_voice_room', (data) => {
     console.log('Sesli odaya katılım:', socket.id, data);

@@ -5,7 +5,8 @@ import SimpleLogin from './components/SimpleLogin';
 import RoomSelection from './components/RoomSelection';
 import ChatRoom from './components/ChatRoom';
 import VoiceRoom from './components/VoiceRoom';
-import { ArrowLeft, Users, Hash, Mic, LogOut } from 'lucide-react';
+import ProfileModalComponent from './components/ProfileModal';
+import { ArrowLeft, Users, Hash, Mic, LogOut, Settings } from 'lucide-react';
 
 const fadeIn = keyframes`
   from { opacity: 0; transform: translateY(20px); }
@@ -168,6 +169,38 @@ const UserAvatar = styled.div`
   }
 `;
 
+const ProfileButton = styled.button`
+  background: linear-gradient(135deg, #7289da, #5865f2);
+  border: none;
+  color: #ffffff;
+  padding: 8px 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(114, 137, 218, 0.3);
+  
+  &:hover {
+    background: linear-gradient(135deg, #5865f2, #7289da);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(114, 137, 218, 0.4);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+  
+  @media (max-width: 768px) {
+    padding: 6px 10px;
+    font-size: 11px;
+    gap: 4px;
+  }
+`;
+
 const LogoutButton = styled.button`
   background: linear-gradient(135deg, #ff6b6b, #ee5a24);
   border: none;
@@ -244,6 +277,7 @@ const App = () => {
   });
   const [activeUsers, setActiveUsers] = useState([]);
   const [messages, setMessages] = useState([]);
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   useEffect(() => {
     const socketUrl = process.env.NODE_ENV === 'production' 
@@ -446,6 +480,31 @@ const App = () => {
     }
   };
 
+  const handleOpenProfile = () => {
+    setShowProfileModal(true);
+  };
+
+  const handleCloseProfile = () => {
+    setShowProfileModal(false);
+  };
+
+  const handleSaveProfile = async (updatedUser) => {
+    try {
+      // Kullanıcı bilgilerini güncelle
+      setUser(updatedUser);
+      localStorage.setItem('chatUser', JSON.stringify(updatedUser));
+      
+      // Socket üzerinden profil güncellemesini gönder
+      if (socket && socket.connected) {
+        socket.emit('update_profile', updatedUser);
+      }
+      
+      console.log('Profil başarıyla güncellendi:', updatedUser);
+    } catch (error) {
+      console.error('Profil güncellenirken hata:', error);
+    }
+  };
+
   // Login sayfası
   if (!user) {
     return <SimpleLogin onLogin={handleLogin} />;
@@ -496,10 +555,22 @@ const App = () => {
         </ChatTypeIcon>
         
         <UserInfo>
-          <UserAvatar>
-            {user.username.charAt(0).toUpperCase()}
+          <UserAvatar onClick={handleOpenProfile} style={{ cursor: 'pointer' }}>
+            {user.avatar ? (
+              <img 
+                src={user.avatar} 
+                alt={user.username} 
+                style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+              />
+            ) : (
+              user.username.charAt(0).toUpperCase()
+            )}
           </UserAvatar>
-          <span className="hide-on-mobile">{user.username}</span>
+          <span className="hide-on-mobile">{user.displayName || user.username}</span>
+          <ProfileButton onClick={handleOpenProfile}>
+            <Settings size={12} />
+            <span className="hide-on-mobile">Profil</span>
+          </ProfileButton>
           <LogoutButton onClick={handleLogout}>
             <LogOut size={12} />
             <span className="hide-on-mobile">Çıkış</span>
@@ -538,6 +609,14 @@ const App = () => {
           socket={socket} 
           user={user} 
           activeUsers={activeUsers}
+        />
+      )}
+
+      {showProfileModal && (
+        <ProfileModalComponent
+          user={user}
+          onClose={handleCloseProfile}
+          onSave={handleSaveProfile}
         />
       )}
     </AppContainer>
