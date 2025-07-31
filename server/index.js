@@ -82,9 +82,33 @@ app.post('/api/upload-avatar', upload.single('avatar'), async (req, res) => {
 
 // MONGODB BAĞLANTISI VE USER MODELİ
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/tk-chat-app';
-mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log('MongoDB bağlantısı başarılı'))
-  .catch((err) => console.error('MongoDB bağlantı hatası:', err));
+console.log('MongoDB URI ayarlandı mı:', !!process.env.MONGO_URI);
+console.log('MongoDB URI uzunluğu:', MONGO_URI ? MONGO_URI.length : 0);
+
+// MongoDB bağlantı seçenekleri
+const mongooseOptions = {
+  maxPoolSize: 10,
+  serverSelectionTimeoutMS: 5000,
+  socketTimeoutMS: 45000,
+  bufferMaxEntries: 0,
+  bufferCommands: false
+};
+
+mongoose.connect(MONGO_URI, mongooseOptions)
+  .then(() => {
+    console.log('✅ MongoDB bağlantısı başarılı');
+    console.log('📊 Bağlantı durumu:', mongoose.connection.readyState);
+    console.log('🌐 Host:', mongoose.connection.host);
+    console.log('📁 Database:', mongoose.connection.name);
+  })
+  .catch((err) => {
+    console.error('❌ MongoDB bağlantı hatası:', err);
+    console.error('🔍 Hata detayı:', err.message);
+    console.error('📋 Hata kodu:', err.code);
+    
+    // Eğer MongoDB bağlantısı başarısız olursa, uygulama çalışmaya devam etsin
+    console.log('⚠️ MongoDB olmadan devam ediliyor...');
+  });
 
 const userSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
@@ -209,22 +233,35 @@ app.get('/api/rooms/:roomId/messages', (req, res) => {
 // Kullanıcı kayıt API'si
 app.post('/api/register', async (req, res) => {
   try {
+    console.log('📝 Register isteği alındı:', { username: req.body.username, email: req.body.email });
+    
     const { username, email, password, displayName } = req.body;
 
     // Validasyon
     if (!username || !email || !password) {
+      console.log('❌ Eksik alanlar:', { username: !!username, email: !!email, password: !!password });
       return res.status(400).json({ error: 'Tüm alanlar gerekli' });
     }
     if (password.length < 6) {
+      console.log('❌ Şifre çok kısa:', password.length);
       return res.status(400).json({ error: 'Şifre en az 6 karakter olmalı' });
     }
 
+    // MongoDB bağlantısını kontrol et
+    if (mongoose.connection.readyState !== 1) {
+      console.error('❌ MongoDB bağlantısı yok');
+      return res.status(500).json({ error: 'Veritabanı bağlantısı yok' });
+    }
+
+    console.log('🔍 Kullanıcı kontrol ediliyor...');
     // Kullanıcı adı ve e-posta kontrolü
     const existingUser = await User.findOne({ $or: [ { username }, { email } ] });
     if (existingUser) {
+      console.log('❌ Kullanıcı zaten var:', existingUser.username);
       return res.status(400).json({ error: 'Bu kullanıcı adı veya e-posta zaten kullanılıyor' });
     }
 
+    console.log('🔐 Şifre hash ediliyor...');
     // Yeni kullanıcı oluştur
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = new User({
@@ -235,7 +272,10 @@ app.post('/api/register', async (req, res) => {
       status: 'online',
       email
     });
+    
+    console.log('💾 Kullanıcı kaydediliyor...');
     await newUser.save();
+    console.log('✅ Kullanıcı kaydedildi:', username);
 
     // Şifreyi çıkar ve kullanıcıyı döndür
     const userObj = newUser.toObject();
@@ -245,44 +285,60 @@ app.post('/api/register', async (req, res) => {
       user: userObj
     });
   } catch (error) {
-    console.error('Kayıt hatası:', error);
-    res.status(500).json({ error: 'Sunucu hatası' });
+    console.error('❌ Kayıt hatası detayı:', error);
+    console.error('📋 Hata stack:', error.stack);
+    res.status(500).json({ error: 'Sunucu hatası', details: error.message });
   }
 });
 
 // Kullanıcı giriş API'si
 app.post('/api/login', async (req, res) => {
   try {
+    console.log('Login isteği alındı:', req.body);
     const { username, password } = req.body;
+    
     if (!username || !password) {
+      console.log('Eksik alanlar:', { username: !!username, password: !!password });
       return res.status(400).json({ error: 'Kullanıcı adı ve şifre gerekli' });
     }
+    
+    console.log('Kullanıcı aranıyor:', username);
     // Kullanıcıyı bul
     const user = await User.findOne({ username });
+    console.log('Kullanıcı bulundu mu:', !!user);
+    
     if (!user) {
       return res.status(401).json({ error: 'Kullanıcı adı veya şifre hatalı' });
     }
+    
     // Şifreyi kontrol et
+    console.log('Şifre kontrol ediliyor...');
     const isValidPassword = await bcrypt.compare(password, user.password);
+    console.log('Şifre geçerli mi:', isValidPassword);
+    
     if (!isValidPassword) {
       return res.status(401).json({ error: 'Kullanıcı adı veya şifre hatalı' });
     }
     
     // Kullanıcıyı çevrimiçi yap
+    console.log('Kullanıcı çevrimiçi yapılıyor...');
     user.isOnline = true;
     user.lastSeen = new Date();
     await user.save();
+    console.log('Kullanıcı kaydedildi');
     
     // Şifreyi çıkar ve kullanıcıyı döndür
     const userObj = user.toObject();
     delete userObj.password;
+    console.log('Login başarılı, kullanıcı döndürülüyor');
     res.json({
       message: 'Giriş başarılı',
       user: userObj
     });
   } catch (error) {
-    console.error('Giriş hatası:', error);
-    res.status(500).json({ error: 'Sunucu hatası' });
+    console.error('Giriş hatası detayı:', error);
+    console.error('Hata stack:', error.stack);
+    res.status(500).json({ error: 'Sunucu hatası', details: error.message });
   }
 });
 
