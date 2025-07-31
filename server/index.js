@@ -117,6 +117,7 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true },
   displayName: { type: String },
   avatar: { type: String },
+  gender: { type: String, enum: ['male', 'female'], default: 'male' },
   status: { type: String, default: 'online' },
   isOnline: { type: Boolean, default: false },
   lastSeen: { type: Date, default: Date.now },
@@ -237,7 +238,7 @@ app.post('/api/register', async (req, res) => {
   try {
     console.log('📝 Register isteği alındı:', { username: req.body.username, email: req.body.email });
     
-    const { username, email, password, displayName } = req.body;
+    const { username, email, password, displayName, gender } = req.body;
 
     // Validasyon
     if (!username || !email || !password) {
@@ -271,6 +272,7 @@ app.post('/api/register', async (req, res) => {
       password: hashedPassword,
       displayName: displayName || username,
       avatar: null,
+      gender: gender || 'male',
       status: 'online',
       email
     });
@@ -381,7 +383,7 @@ app.get('/api/users/:username', (req, res) => {
 // PROFİL GÜNCELLEME ENDPOINTİ (GELİŞTİRİLMİŞ)
 app.post('/api/profile/update', async (req, res) => {
   try {
-    const { username, displayName, avatar } = req.body;
+    const { username, displayName, avatar, gender } = req.body;
     if (!username) {
       return res.status(400).json({ error: 'Kullanıcı adı gerekli' });
     }
@@ -393,6 +395,7 @@ app.post('/api/profile/update', async (req, res) => {
     
     if (displayName) user.displayName = displayName;
     if (avatar) user.avatar = avatar;
+    if (gender) user.gender = gender;
     
     await user.save();
     
@@ -408,6 +411,43 @@ app.post('/api/profile/update', async (req, res) => {
     });
   } catch (error) {
     console.error('Profil güncelleme hatası:', error);
+    res.status(500).json({ error: 'Sunucu hatası' });
+  }
+});
+
+// ŞİFRE DEĞİŞTİRME ENDPOINTİ
+app.post('/api/profile/change-password', async (req, res) => {
+  try {
+    const { username, currentPassword, newPassword } = req.body;
+    
+    if (!username || !currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Tüm alanlar gerekli' });
+    }
+    
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: 'Yeni şifre en az 6 karakter olmalı' });
+    }
+    
+    const user = await User.findOne({ username });
+    if (!user) {
+      return res.status(404).json({ error: 'Kullanıcı bulunamadı' });
+    }
+    
+    // Mevcut şifreyi kontrol et
+    const isValidPassword = await bcrypt.compare(currentPassword, user.password);
+    if (!isValidPassword) {
+      return res.status(401).json({ error: 'Mevcut şifre hatalı' });
+    }
+    
+    // Yeni şifreyi hash et
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedNewPassword;
+    
+    await user.save();
+    
+    res.json({ message: 'Şifre başarıyla değiştirildi' });
+  } catch (error) {
+    console.error('Şifre değiştirme hatası:', error);
     res.status(500).json({ error: 'Sunucu hatası' });
   }
 });
@@ -455,6 +495,7 @@ io.on('connection', (socket) => {
         room: userData.room || 'general',
         displayName: registeredUser.displayName,
         avatar: registeredUser.avatar,
+        gender: registeredUser.gender,
         status: registeredUser.status
       });
       
@@ -475,6 +516,7 @@ io.on('connection', (socket) => {
           username: userData.username,
           displayName: registeredUser.displayName,
           avatar: registeredUser.avatar,
+          gender: registeredUser.gender,
           status: registeredUser.status
         }
       });
@@ -502,7 +544,8 @@ io.on('connection', (socket) => {
           id: user.id,
           username: user.username,
           displayName: user.displayName,
-          avatar: user.avatar
+          avatar: user.avatar,
+          gender: user.gender
         },
         timestamp: new Date().toISOString()
       };

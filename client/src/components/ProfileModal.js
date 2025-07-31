@@ -214,6 +214,24 @@ const AvatarUploadButton = styled.button`
   }
 `;
 
+const PasswordChangeButton = styled.button`
+  background: #f04747;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  
+  &:hover {
+    background: #d84040;
+    transform: translateY(-1px);
+  }
+`;
+
 const ButtonGroup = styled.div`
   display: flex;
   gap: 12px;
@@ -307,6 +325,12 @@ const ProfileModalComponent = ({ user, onClose, onSave }) => {
     displayName: user?.displayName || '',
     avatar: user?.avatar || null
   });
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [showPasswordChange, setShowPasswordChange] = useState(false);
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(user?.avatar || null);
   const [isLoading, setIsLoading] = useState(false);
@@ -315,6 +339,14 @@ const ProfileModalComponent = ({ user, onClose, onSave }) => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handlePasswordChange = (e) => {
+    const { name, value } = e.target;
+    setPasswordData(prev => ({
       ...prev,
       [name]: value
     }));
@@ -382,6 +414,52 @@ const ProfileModalComponent = ({ user, onClose, onSave }) => {
     onClose();
   };
 
+  const handlePasswordUpdate = async () => {
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      alert('Yeni şifreler eşleşmiyor!');
+      return;
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      alert('Yeni şifre en az 6 karakter olmalı!');
+      return;
+    }
+
+    setIsLoading(true);
+    
+    try {
+      const response = await fetch(`${SERVER_URL}/api/profile/change-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: user.username,
+          currentPassword: passwordData.currentPassword,
+          newPassword: passwordData.newPassword
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Şifre değiştirilemedi');
+      }
+
+      alert('Şifre başarıyla değiştirildi!');
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+      setShowPasswordChange(false);
+    } catch (error) {
+      console.error('Şifre değiştirme hatası:', error);
+      alert('Şifre değiştirilirken hata oluştu: ' + error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <ModalOverlay onClick={onClose}>
       <ProfileModal onClick={(e) => e.stopPropagation()}>
@@ -442,6 +520,67 @@ const ProfileModalComponent = ({ user, onClose, onSave }) => {
                 style={{ display: 'none' }}
               />
             </FormGroup>
+          </FormSection>
+
+          <FormSection>
+            <SectionTitle>🔐 Şifre Değiştir</SectionTitle>
+            
+            {!showPasswordChange ? (
+              <PasswordChangeButton onClick={() => setShowPasswordChange(true)}>
+                Şifre Değiştir
+              </PasswordChangeButton>
+            ) : (
+              <>
+                <FormGroup>
+                  <Label>Mevcut Şifre</Label>
+                  <Input
+                    type="password"
+                    name="currentPassword"
+                    value={passwordData.currentPassword}
+                    onChange={handlePasswordChange}
+                    placeholder="Mevcut şifrenizi girin"
+                  />
+                </FormGroup>
+
+                <FormGroup>
+                  <Label>Yeni Şifre</Label>
+                  <Input
+                    type="password"
+                    name="newPassword"
+                    value={passwordData.newPassword}
+                    onChange={handlePasswordChange}
+                    placeholder="Yeni şifrenizi girin"
+                  />
+                </FormGroup>
+
+                <FormGroup>
+                  <Label>Yeni Şifre Tekrar</Label>
+                  <Input
+                    type="password"
+                    name="confirmPassword"
+                    value={passwordData.confirmPassword}
+                    onChange={handlePasswordChange}
+                    placeholder="Yeni şifrenizi tekrar girin"
+                  />
+                </FormGroup>
+
+                <ButtonGroup>
+                  <SaveButton onClick={handlePasswordUpdate} disabled={isLoading}>
+                    {isLoading ? 'Değiştiriliyor...' : 'Şifreyi Değiştir'}
+                  </SaveButton>
+                  <CancelButton onClick={() => {
+                    setShowPasswordChange(false);
+                    setPasswordData({
+                      currentPassword: '',
+                      newPassword: '',
+                      confirmPassword: ''
+                    });
+                  }} disabled={isLoading}>
+                    İptal
+                  </CancelButton>
+                </ButtonGroup>
+              </>
+            )}
           </FormSection>
 
           <ButtonGroup>

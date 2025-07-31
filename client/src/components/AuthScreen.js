@@ -95,6 +95,35 @@ const Label = styled.label`
   letter-spacing: 0.5px;
 `;
 
+const GenderContainer = styled.div`
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+`;
+
+const GenderOption = styled.button`
+  flex: 1;
+  padding: 12px 16px;
+  border: 2px solid ${props => props.$selected ? '#7289da' : '#40444b'};
+  background: ${props => props.$selected ? 'rgba(114, 137, 218, 0.2)' : 'transparent'};
+  color: ${props => props.$selected ? '#fff' : '#96989d'};
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  
+  &:hover {
+    border-color: #7289da;
+    color: #fff;
+    background: rgba(114, 137, 218, 0.1);
+  }
+`;
+
 const InputWrapper = styled.div`
   position: relative;
   display: flex;
@@ -220,7 +249,8 @@ const AuthScreen = ({ onLogin, isConnected }) => {
     email: '',
     password: '',
     confirmPassword: '',
-    displayName: ''
+    displayName: '',
+    gender: 'male'
   });
   const [errors, setErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState('');
@@ -240,6 +270,18 @@ const AuthScreen = ({ onLogin, isConnected }) => {
         [name]: ''
       }));
     }
+    
+    // Clear success message
+    if (successMessage) {
+      setSuccessMessage('');
+    }
+  };
+
+  const handleGenderChange = (gender) => {
+    setFormData(prev => ({
+      ...prev,
+      gender
+    }));
     
     // Clear success message
     if (successMessage) {
@@ -314,7 +356,8 @@ const AuthScreen = ({ onLogin, isConnected }) => {
             username: formData.username, 
             email: formData.email, 
             password: formData.password,
-            displayName: formData.displayName
+            displayName: formData.displayName,
+            gender: formData.gender
           };
       
       console.log('API çağrısı yapılıyor:', `${SERVER_URL}${endpoint}`);
@@ -346,7 +389,8 @@ const AuthScreen = ({ onLogin, isConnected }) => {
           email: '',
           password: '',
           confirmPassword: '',
-          displayName: ''
+          displayName: '',
+          gender: 'male'
         });
       } else {
         // Login başarılı
@@ -472,6 +516,28 @@ const AuthScreen = ({ onLogin, isConnected }) => {
                     {errors.displayName}
                   </ErrorMessage>
                 )}
+              </InputGroup>
+              
+              <InputGroup>
+                <Label>Cinsiyet</Label>
+                <GenderContainer>
+                  <GenderOption
+                    type="button"
+                    $selected={formData.gender === 'male'}
+                    onClick={() => handleGenderChange('male')}
+                  >
+                    <span>👨</span>
+                    Erkek
+                  </GenderOption>
+                  <GenderOption
+                    type="button"
+                    $selected={formData.gender === 'female'}
+                    onClick={() => handleGenderChange('female')}
+                  >
+                    <span>👩</span>
+                    Kadın
+                  </GenderOption>
+                </GenderContainer>
               </InputGroup>
             </>
           )}

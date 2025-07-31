@@ -38,7 +38,7 @@ const UserAvatar = styled.div`
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #8a2be2, #40e0d0);
+  background: ${props => props.avatar ? `url(${props.avatar}) center/cover` : 'linear-gradient(135deg, #8a2be2, #40e0d0)'};
   display: flex;
   align-items: center;
   justify-content: center;
@@ -79,10 +79,18 @@ const Username = styled.span`
   font-weight: 800;
   font-size: 14px;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  gap: 6px;
   
   @media (max-width: 768px) {
     font-size: 13px;
   }
+`;
+
+const GenderIndicator = styled.span`
+  font-size: 12px;
+  opacity: 0.8;
 `;
 
 const Timestamp = styled.span`
@@ -154,7 +162,7 @@ const CurrentUserMessage = styled(MessageContainer)`
 `;
 
 const CurrentUserAvatar = styled(UserAvatar)`
-  background: linear-gradient(135deg, #40e0d0, #8a2be2);
+  background: ${props => props.avatar ? `url(${props.avatar}) center/cover` : 'linear-gradient(135deg, #40e0d0, #8a2be2)'};
   box-shadow: 0 4px 15px rgba(64, 224, 208, 0.3);
 `;
 
@@ -226,14 +234,17 @@ const MessageList = ({ messages, currentUser }) => {
         if (isCurrentUser) {
           return (
             <CurrentUserMessage key={message.id || index}>
-              <CurrentUserAvatar>
-                {message.user?.username?.charAt(0).toUpperCase() || 'U'}
+              <CurrentUserAvatar avatar={message.user?.avatar}>
+                {!message.user?.avatar && (message.user?.displayName?.charAt(0) || message.user?.username?.charAt(0) || 'U').toUpperCase()}
               </CurrentUserAvatar>
               <CurrentUserContent>
                 <CurrentUserHeader>
-                  <CurrentUserUsername>
-                    {message.user?.username || 'Bilinmeyen Kullanıcı'}
-                  </CurrentUserUsername>
+                                  <CurrentUserUsername>
+                  {message.user?.displayName || message.user?.username || 'Bilinmeyen Kullanıcı'}
+                  <GenderIndicator>
+                    {message.user?.gender === 'female' ? '👩' : '👨'}
+                  </GenderIndicator>
+                </CurrentUserUsername>
                   <Timestamp>
                     {formatTime(message.timestamp)}
                   </Timestamp>
@@ -256,13 +267,16 @@ const MessageList = ({ messages, currentUser }) => {
 
         return (
           <MessageContainer key={message.id || index}>
-            <UserAvatar>
-              {message.user?.username?.charAt(0).toUpperCase() || 'U'}
+            <UserAvatar avatar={message.user?.avatar}>
+              {!message.user?.avatar && (message.user?.displayName?.charAt(0) || message.user?.username?.charAt(0) || 'U').toUpperCase()}
             </UserAvatar>
             <MessageContent>
               <MessageHeader>
                 <Username>
-                  {message.user?.username || 'Bilinmeyen Kullanıcı'}
+                  {message.user?.displayName || message.user?.username || 'Bilinmeyen Kullanıcı'}
+                  <GenderIndicator>
+                    {message.user?.gender === 'female' ? '👩' : '👨'}
+                  </GenderIndicator>
                 </Username>
                 <Timestamp>
                   {formatTime(message.timestamp)}
