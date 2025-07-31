@@ -699,6 +699,7 @@ const App = () => {
         onJoinRoom={handleJoinRoom}
         onOpenProfile={handleOpenProfile}
         onLogout={handleLogout}
+        onUserClick={handleUserClick}
       />
     );
   };

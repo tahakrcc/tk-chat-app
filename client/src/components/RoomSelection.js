@@ -116,6 +116,13 @@ const UserName = styled.div`
   color: #fff;
   font-weight: 600;
   font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    color: #7289da;
+    text-decoration: underline;
+  }
 `;
 
 const UserStatus = styled.div`
@@ -272,6 +279,13 @@ const OnlineUserName = styled.div`
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    color: #7289da;
+    text-decoration: underline;
+  }
 `;
 
 const OnlineUserStatus = styled.div`
@@ -319,6 +333,13 @@ const UserProfileName = styled.div`
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    color: #7289da;
+    text-decoration: underline;
+  }
 `;
 
 const UserProfileStatus = styled.div`
@@ -589,7 +610,7 @@ const JoinButton = styled.button`
   }
 `;
 
-const RoomSelection = ({ user, socket, onJoinRoom, onOpenProfile, onLogout }) => {
+const RoomSelection = ({ user, socket, onJoinRoom, onOpenProfile, onLogout, onUserClick }) => {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [roomStats, setRoomStats] = useState({});
@@ -743,7 +764,9 @@ const RoomSelection = ({ user, socket, onJoinRoom, onOpenProfile, onLogout }) =>
           <UserAvatar $avatarUrl={user?.avatar}>
             {user?.displayName?.charAt(0)?.toUpperCase() || user?.username?.charAt(0)?.toUpperCase() || 'U'}
           </UserAvatar>
-          <UserName>{user?.displayName || user?.username}</UserName>
+          <UserName onClick={() => onUserClick && onUserClick(user)}>
+            {user?.displayName || user?.username}
+          </UserName>
           <UserStatus>
             <StatusDot $status={user?.status || 'online'} />
             {user?.status === 'online' && 'Çevrimiçi'}
@@ -815,7 +838,9 @@ const RoomSelection = ({ user, socket, onJoinRoom, onOpenProfile, onLogout }) =>
                     {onlineUser.displayName?.charAt(0)?.toUpperCase() || onlineUser.username?.charAt(0)?.toUpperCase() || 'U'}
                   </OnlineUserAvatar>
                   <OnlineUserInfo>
-                    <OnlineUserName>{onlineUser.displayName || onlineUser.username}</OnlineUserName>
+                    <OnlineUserName onClick={() => onUserClick && onUserClick(onlineUser)}>
+                      {onlineUser.displayName || onlineUser.username}
+                    </OnlineUserName>
                     <OnlineUserStatus>
                       <StatusDot $status={onlineUser.status || 'online'} />
                       Çevrimiçi
@@ -837,7 +862,9 @@ const RoomSelection = ({ user, socket, onJoinRoom, onOpenProfile, onLogout }) =>
               {user?.displayName?.charAt(0)?.toUpperCase() || user?.username?.charAt(0)?.toUpperCase() || 'U'}
             </UserAvatar>
             <UserProfileInfo>
-              <UserProfileName>{user?.displayName || user?.username}</UserProfileName>
+              <UserProfileName onClick={() => onUserClick && onUserClick(user)}>
+                {user?.displayName || user?.username}
+              </UserProfileName>
               <UserProfileStatus>
                 <StatusDot $status={user?.status || 'online'} />
                 {user?.status === 'online' && 'Çevrimiçi'}
