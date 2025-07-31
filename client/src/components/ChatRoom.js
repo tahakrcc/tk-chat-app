@@ -294,10 +294,14 @@ const ChatRoom = ({ socket, user, room, onBack }) => {
   }, [socket]);
 
   const handleSendMessage = () => {
-    console.log('Mesaj gönderme denemesi:', { newMessage, socket: !!socket, room });
+    console.log('Mesaj gönderme denemesi:', { newMessage, socket: !!socket, room, socketConnected: socket?.connected });
     
-    if (!newMessage.trim() || !socket) {
-      console.log('Mesaj gönderilemedi:', { hasMessage: !!newMessage.trim(), hasSocket: !!socket });
+    if (!newMessage.trim() || !socket || !socket.connected) {
+      console.log('Mesaj gönderilemedi:', { 
+        hasMessage: !!newMessage.trim(), 
+        hasSocket: !!socket, 
+        socketConnected: socket?.connected 
+      });
       return;
     }
 

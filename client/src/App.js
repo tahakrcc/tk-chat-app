@@ -376,6 +376,49 @@ const StatusIndicator = styled.div`
   }};
 `;
 
+const NotificationContainer = styled.div`
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  
+  @media (max-width: 768px) {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+  }
+`;
+
+const NotificationItem = styled.div`
+  background: #2f3136;
+  border: 1px solid #202225;
+  border-radius: 8px;
+  padding: 12px 16px;
+  color: #dcddde;
+  font-size: 14px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  animation: ${fadeIn} 0.3s ease-out;
+  max-width: 300px;
+  
+  @media (max-width: 768px) {
+    max-width: none;
+  }
+`;
+
+const NotificationTitle = styled.div`
+  font-weight: 600;
+  color: #7289da;
+  margin-bottom: 4px;
+`;
+
+const NotificationMessage = styled.div`
+  color: #96989d;
+  font-size: 13px;
+`;
+
 const App = () => {
   const [socket, setSocket] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
@@ -385,6 +428,7 @@ const App = () => {
   const [activeUsers, setActiveUsers] = useState([]);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [notifications, setNotifications] = useState([]);
 
   // Socket bağlantısı
   useEffect(() => {
@@ -419,6 +463,16 @@ const App = () => {
 
     newSocket.on('user_left', (data) => {
       console.log('Kullanıcı ayrıldı:', data);
+    });
+
+    newSocket.on('notification', (notification) => {
+      console.log('Bildirim alındı:', notification);
+      setNotifications(prev => [...prev, { ...notification, id: Date.now() }]);
+      
+      // 5 saniye sonra bildirimi kaldır
+      setTimeout(() => {
+        setNotifications(prev => prev.filter(n => n.id !== Date.now()));
+      }, 5000);
     });
 
     newSocket.on('auth_error', (data) => {
@@ -461,10 +515,10 @@ const App = () => {
   // Oda seçildiğinde
   const handleJoinRoom = (room) => {
     console.log('Oda seçildi:', room);
-    console.log('Socket durumu:', { socket: !!socket, user: !!user });
+    console.log('Socket durumu:', { socket: !!socket, user: !!user, isConnected });
     setSelectedRoom(room);
     
-    if (socket && user) {
+    if (socket && user && isConnected) {
       // Socket'e kullanıcı bilgilerini gönder
       const joinData = {
         username: user.username,
@@ -480,7 +534,24 @@ const App = () => {
         setCurrentView('chat');
       }
     } else {
-      console.error('Socket veya user yok:', { socket: !!socket, user: !!user });
+      console.error('Socket, user veya bağlantı yok:', { socket: !!socket, user: !!user, isConnected });
+      // Socket bağlantısını bekleyip tekrar dene
+      setTimeout(() => {
+        if (socket && user && isConnected) {
+          const joinData = {
+            username: user.username,
+            room: room.id
+          };
+          console.log('Tekrar deneme - Socket user_join emit ediliyor:', joinData);
+          socket.emit('user_join', joinData);
+          
+          if (room.type === 'voice') {
+            setCurrentView('voice');
+          } else {
+            setCurrentView('chat');
+          }
+        }
+      }, 1000);
     }
   };
 
@@ -700,6 +771,25 @@ const App = () => {
     );
   };
 
+  const renderNotifications = () => {
+    if (notifications.length === 0) return null;
+    
+    return (
+      <NotificationContainer>
+        {notifications.map((notification) => (
+          <NotificationItem key={notification.id}>
+            <NotificationTitle>
+              💬 {notification.sender} - {notification.room}
+            </NotificationTitle>
+            <NotificationMessage>
+              {notification.message}
+            </NotificationMessage>
+          </NotificationItem>
+        ))}
+      </NotificationContainer>
+    );
+  };
+
   return (
     <AppContainer>
       {renderHeader()}
@@ -712,6 +802,8 @@ const App = () => {
         
         {renderActiveUsers()}
       </ContentArea>
+      
+      {renderNotifications()}
       
       {/* Mobile Floating Menu */}
       {(currentView === 'chat' || currentView === 'voice') && (

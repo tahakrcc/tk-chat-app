@@ -35,27 +35,12 @@ const echoLines = keyframes`
 
 const VoiceRoomContainer = styled.div`
   flex: 1;
-  background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 25%, #16213e 50%, #0f3460 75%, #533483 100%);
+  background: #36393f;
   display: flex;
   flex-direction: column;
   padding: 20px;
   animation: ${fadeIn} 0.6s ease-out;
   position: relative;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: 
-      radial-gradient(circle at 30% 70%, rgba(138, 43, 226, 0.1) 0%, transparent 50%),
-      radial-gradient(circle at 70% 30%, rgba(64, 224, 208, 0.08) 0%, transparent 50%),
-      radial-gradient(circle at 50% 50%, rgba(255, 105, 180, 0.06) 0%, transparent 50%);
-    pointer-events: none;
-    z-index: 0;
-  }
   
   @media (max-width: 768px) {
     padding: 16px;
@@ -70,12 +55,10 @@ const VoiceRoomHeader = styled.div`
   font-weight: 600;
   font-size: 18px;
   margin-bottom: 24px;
-  background: rgba(15, 15, 35, 0.95);
-  backdrop-filter: blur(20px);
-  border-radius: 20px;
+  background: #292b2f;
+  border-radius: 8px;
   padding: 16px 20px;
-  border: 2px solid rgba(138, 43, 226, 0.3);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  border: 1px solid #202225;
   position: relative;
   z-index: 1;
   
@@ -175,11 +158,10 @@ const VolumeSlider = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-  background: rgba(15, 15, 35, 0.8);
-  backdrop-filter: blur(20px);
-  border-radius: 16px;
+  background: #40444b;
+  border-radius: 8px;
   padding: 8px 12px;
-  border: 2px solid rgba(138, 43, 226, 0.3);
+  border: 1px solid #202225;
   
   @media (max-width: 768px) {
     padding: 6px 10px;
@@ -191,7 +173,7 @@ const VolumeInput = styled.input`
   width: 100px;
   height: 6px;
   border-radius: 3px;
-  background: rgba(255, 255, 255, 0.2);
+  background: #72767d;
   outline: none;
   cursor: pointer;
   -webkit-appearance: none;
@@ -202,7 +184,7 @@ const VolumeInput = styled.input`
     width: 18px;
     height: 18px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #8a2be2, #40e0d0);
+    background: #7289da;
     cursor: pointer;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   }
@@ -211,7 +193,7 @@ const VolumeInput = styled.input`
     width: 18px;
     height: 18px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #8a2be2, #40e0d0);
+    background: #7289da;
     cursor: pointer;
     border: none;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
@@ -229,10 +211,9 @@ const UsersContainer = styled.div`
   gap: 20px;
   overflow-y: auto;
   padding: 20px;
-  background: rgba(15, 15, 35, 0.5);
-  backdrop-filter: blur(20px);
-  border-radius: 20px;
-  border: 2px solid rgba(138, 43, 226, 0.2);
+  background: #2f3136;
+  border-radius: 8px;
+  border: 1px solid #202225;
   position: relative;
   z-index: 1;
   
@@ -244,39 +225,23 @@ const UsersContainer = styled.div`
 `;
 
 const UserCard = styled.div`
-  background: rgba(15, 15, 35, 0.8);
-  backdrop-filter: blur(20px);
-  border-radius: 20px;
+  background: #40444b;
+  border-radius: 8px;
   padding: 20px;
-  border: 2px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid #202225;
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
   
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(138, 43, 226, 0.1), transparent);
-    transition: left 0.5s;
-  }
-  
-  &:hover::before {
-    left: 100%;
-  }
-  
   &:hover {
-    border-color: rgba(64, 224, 208, 0.3);
+    border-color: #7289da;
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 15px rgba(114, 137, 218, 0.2);
   }
   
   ${props => props.isSpeaking && `
     animation: ${glow} 2s infinite;
-    border-color: rgba(64, 224, 208, 0.5);
+    border-color: #40e0d0;
   `}
   
   @media (max-width: 768px) {
@@ -301,14 +266,14 @@ const UserAvatar = styled.div`
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #8a2be2, #40e0d0);
+  background: linear-gradient(135deg, #7289da, #5865f2);
   display: flex;
   align-items: center;
   justify-content: center;
   color: #ffffff;
   font-weight: 700;
   font-size: 18px;
-  box-shadow: 0 4px 15px rgba(138, 43, 226, 0.3);
+  box-shadow: 0 4px 15px rgba(114, 137, 218, 0.3);
   animation: ${pulse} 2s infinite;
   position: relative;
   
@@ -368,7 +333,7 @@ const UserInfo = styled.div`
 `;
 
 const Username = styled.div`
-  color: #40e0d0;
+  color: #dcddde;
   font-size: 16px;
   font-weight: 700;
   margin-bottom: 4px;
@@ -379,7 +344,7 @@ const Username = styled.div`
 `;
 
 const UserStatus = styled.div`
-  color: rgba(255, 255, 255, 0.7);
+  color: #96989d;
   font-size: 12px;
   font-weight: 600;
   display: flex;
@@ -402,7 +367,7 @@ const SpeakingIndicator = styled.div`
   text-shadow: 0 0 8px rgba(64, 224, 208, 0.6);
   background: rgba(64, 224, 208, 0.1);
   padding: 2px 6px;
-  border-radius: 8px;
+  border-radius: 4px;
   border: 1px solid rgba(64, 224, 208, 0.3);
   
   @media (max-width: 768px) {
@@ -418,7 +383,7 @@ const StatusIcon = styled.div`
     if (props.status === 'speaking') return '#40e0d0';
     if (props.status === 'muted') return '#ff6b6b';
     if (props.status === 'volume-muted') return '#ffa500';
-    return '#8a2be2';
+    return '#7289da';
   }};
   animation: ${props => props.status === 'speaking' ? pulse : 'none'} 1s infinite;
 `;
@@ -428,11 +393,10 @@ const VoiceMonitor = styled.div`
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: rgba(15, 15, 35, 0.98);
-  backdrop-filter: blur(30px);
-  border-radius: 24px;
+  background: #36393f;
+  border-radius: 8px;
   padding: 30px;
-  border: 2px solid rgba(138, 43, 226, 0.3);
+  border: 1px solid #202225;
   box-shadow: 0 25px 80px rgba(0, 0, 0, 0.8);
   z-index: 2000;
   width: 90vw;
@@ -469,19 +433,19 @@ const VoiceMonitorTitle = styled.h3`
 `;
 
 const CloseButton = styled.button`
-  background: rgba(255, 255, 255, 0.1);
+  background: #40444b;
   border: none;
   color: #ffffff;
   cursor: pointer;
   padding: 8px;
-  border-radius: 12px;
+  border-radius: 6px;
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
   justify-content: center;
   
   &:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: #4f545c;
     transform: scale(1.1);
   }
   
@@ -497,8 +461,8 @@ const VoiceMonitorContent = styled.div`
 const VoiceLevel = styled.div`
   width: 100%;
   height: 60px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
+  background: #40444b;
+  border-radius: 8px;
   margin-bottom: 20px;
   overflow: hidden;
   position: relative;
@@ -511,10 +475,10 @@ const VoiceLevel = styled.div`
 
 const VoiceLevelBar = styled.div`
   height: 100%;
-  background: linear-gradient(135deg, #8a2be2, #40e0d0);
+  background: linear-gradient(135deg, #7289da, #5865f2);
   width: ${props => props.level}%;
   transition: width 0.1s ease;
-  border-radius: 16px;
+  border-radius: 8px;
 `;
 
 const VoiceLevelText = styled.div`

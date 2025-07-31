@@ -42,7 +42,9 @@ const app = express();
 const server = http.createServer(app);
 
 // SERVER_URL tanımı
-const SERVER_URL = process.env.SERVER_URL || 'http://localhost:5001';
+const SERVER_URL = process.env.NODE_ENV === 'production' 
+  ? 'https://tk-chat-app.onrender.com' 
+  : 'http://localhost:5001';
 
 const io = socketIo(server, {
   cors: {
@@ -168,6 +170,9 @@ const roomMessages = new Map();
 // Çevrimiçi kullanıcılar
 const users = new Map();
 
+// Kullanıcıların hangi odada olduğunu takip et
+const userRooms = new Map();
+
 // Oda başlatma
 const initializeRooms = () => {
   rooms.forEach(room => {
@@ -220,6 +225,24 @@ app.get('/api/rooms/stats', (req, res) => {
     res.status(500).json({ error: 'Sunucu hatası' });
   }
 });
+
+// Mesajları temizleme fonksiyonu (30 dakika sonra)
+const cleanupOldMessages = () => {
+  const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+  
+  roomMessages.forEach((messages, roomId) => {
+    const filteredMessages = messages.filter(message => {
+      const messageTime = new Date(message.timestamp);
+      return messageTime > thirtyMinutesAgo;
+    });
+    roomMessages.set(roomId, filteredMessages);
+  });
+  
+  console.log('Eski mesajlar temizlendi');
+};
+
+// Her 5 dakikada bir eski mesajları temizle
+setInterval(cleanupOldMessages, 5 * 60 * 1000);
 
 // Oda mesajları API'si
 app.get('/api/rooms/:roomId/messages', (req, res) => {
@@ -394,13 +417,23 @@ app.post('/api/profile/update', async (req, res) => {
     }
     
     if (displayName) user.displayName = displayName;
-    if (avatar) user.avatar = avatar;
+    if (avatar !== undefined) user.avatar = avatar;
     if (gender) user.gender = gender;
     
     await user.save();
     
     const userObj = user.toObject();
     delete userObj.password;
+    
+    // Users Map'indeki avatar bilgisini güncelle
+    users.forEach((userData, socketId) => {
+      if (userData.username === username) {
+        userData.displayName = user.displayName;
+        userData.avatar = user.avatar;
+        userData.gender = user.gender;
+        users.set(socketId, userData);
+      }
+    });
     
     // Socket ile herkese yayınla
     io.emit('profile_updated', userObj);
@@ -494,12 +527,15 @@ io.on('connection', (socket) => {
         username: userData.username,
         room: userData.room || 'general',
         displayName: registeredUser.displayName,
-        avatar: registeredUser.avatar,
+        avatar: registeredUser.avatar || null,
         gender: registeredUser.gender,
         status: registeredUser.status
       });
       
       socket.join(userData.room || 'general');
+      
+      // Kullanıcının hangi odada olduğunu kaydet
+      userRooms.set(socket.id, userData.room || 'general');
       
       // Oda istatistiklerini güncelle
       const roomId = userData.room || 'general';
@@ -544,7 +580,7 @@ io.on('connection', (socket) => {
           id: user.id,
           username: user.username,
           displayName: user.displayName,
-          avatar: user.avatar,
+          avatar: user.avatar || null,
           gender: user.gender
         },
         timestamp: new Date().toISOString()
@@ -553,6 +589,18 @@ io.on('connection', (socket) => {
       // Mesajı odadaki tüm kullanıcılara gönder (gönderen dahil)
       const roomId = messageData.room || 'general';
       io.to(roomId).emit('new_message', messageWithUser);
+      
+      // Diğer odalardaki kullanıcılara bildirim gönder
+      const senderRoom = userRooms.get(socket.id);
+      if (senderRoom && senderRoom !== roomId) {
+        // Gönderen farklı bir odadaysa, o odadaki kullanıcılara bildirim gönder
+        socket.to(senderRoom).emit('notification', {
+          type: 'new_message',
+          room: roomId,
+          sender: user.displayName || user.username,
+          message: messageData.content.substring(0, 50) + (messageData.content.length > 50 ? '...' : '')
+        });
+      }
       
       // Mesaj sayısını güncelle
       const stats = roomStats.get(roomId);
@@ -564,7 +612,9 @@ io.on('connection', (socket) => {
       // Mesajı kaydet
       const roomMessagesList = roomMessages.get(roomId) || [];
       roomMessagesList.push(messageWithUser);
-      if (roomMessagesList.length > 100) {
+      
+      // Mesaj sayısını sınırla (50 mesaj)
+      if (roomMessagesList.length > 50) {
         roomMessagesList.shift(); // En eski mesajı sil
       }
       roomMessages.set(roomId, roomMessagesList);
@@ -743,6 +793,7 @@ io.on('connection', (socket) => {
       });
       
       users.delete(socket.id);
+      userRooms.delete(socket.id);
       
       // Oda istatistiklerini güncelle
       const roomId = user.room;
