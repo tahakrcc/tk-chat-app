@@ -561,9 +561,7 @@ const VoiceRoom = ({ socket, user, activeUsers }) => {
 
     const handleUserJoined = (userId) => {
       try {
-        console.log('Kullanıcı sesli odaya katıldı:', userId);
         if (stream && userId !== socket.id) {
-          console.log('Yeni peer oluşturuluyor:', userId);
           const peer = createPeer(userId, socket.id, stream);
           if (peer) {
             peersRef.current[userId] = peer;
@@ -579,17 +577,14 @@ const VoiceRoom = ({ socket, user, activeUsers }) => {
 
     const handleSignal = (payload) => {
       try {
-        console.log('Sinyal alındı:', payload);
         const peer = peersRef.current[payload.id];
         if (peer) {
-          console.log('Mevcut peer\'e sinyal gönderiliyor:', payload.id);
           try {
             peer.signal(payload.signal);
           } catch (error) {
             console.error('Sinyal gönderme hatası:', error);
           }
         } else if (stream && payload.id !== socket.id) {
-          console.log('Yeni peer oluşturuluyor (sinyal ile):', payload.id);
           const newPeer = addPeer(payload.signal, payload.id, stream);
           if (newPeer) {
             peersRef.current[payload.id] = newPeer;
@@ -605,7 +600,6 @@ const VoiceRoom = ({ socket, user, activeUsers }) => {
 
     const handleUserLeft = (userId) => {
       try {
-        console.log('Kullanıcı sesli odadan ayrıldı:', userId);
         if (peersRef.current[userId]) {
           peersRef.current[userId].destroy();
           delete peersRef.current[userId];
@@ -622,7 +616,6 @@ const VoiceRoom = ({ socket, user, activeUsers }) => {
 
     const handleVoiceRoomUsers = (data) => {
       try {
-        console.log('Sesli oda kullanıcıları:', data.users);
         setVoiceRoomUsers(data.users || []);
       } catch (error) {
         console.error('Voice room users error:', error);
@@ -631,7 +624,6 @@ const VoiceRoom = ({ socket, user, activeUsers }) => {
 
     const handleUserSpeaking = (data) => {
       try {
-        console.log('Kullanıcı konuşma durumu:', data);
         setVoiceRoomUsers(prev => 
           prev.map(user => 
             user.id === data.userId 
@@ -646,7 +638,6 @@ const VoiceRoom = ({ socket, user, activeUsers }) => {
 
     const handleUserVoiceStatus = (data) => {
       try {
-        console.log('Kullanıcı ses durumu:', data);
         setVoiceRoomUsers(prev => 
           prev.map(user => 
             user.id === data.userId 
@@ -1101,10 +1092,6 @@ const VoiceRoom = ({ socket, user, activeUsers }) => {
     { id: socket?.id, username: user?.username, isMuted, isVolumeMuted, isSpeaking, voiceLevel },
     ...voiceRoomUsers.filter(u => u.id !== socket?.id)
   ].filter(Boolean);
-
-  console.log('VoiceRoom - allUsers:', allUsers);
-  console.log('VoiceRoom - voiceRoomUsers:', voiceRoomUsers);
-  console.log('VoiceRoom - current user:', { id: socket?.id, username: user?.username });
 
   return (
     <VoiceRoomContainer>
