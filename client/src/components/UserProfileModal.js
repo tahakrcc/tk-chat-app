@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { X, User, MessageCircle, Users, UserPlus, UserCheck, UserX, Lock, Unlock } from 'lucide-react';
-import { SERVER_URL } from '../config';
+import SERVER_URL from '../config';
 
 const fadeIn = keyframes`
   from { opacity: 0; transform: scale(0.9); }

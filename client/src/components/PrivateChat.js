@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { Send, ArrowLeft, MessageCircle, Users, User } from 'lucide-react';
-import { SERVER_URL } from '../config';
+import SERVER_URL from '../config';
 
 const fadeIn = keyframes`
   from { opacity: 0; transform: translateY(20px); }
