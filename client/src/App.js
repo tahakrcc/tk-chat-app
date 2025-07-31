@@ -893,14 +893,7 @@ const App = () => {
         />
       )}
 
-      {showPrivateChat && (
-        <PrivateChat
-          currentUser={user}
-          socket={socket}
-          onBack={handleBackFromPrivateChat}
-          onSendPrivateMessage={handleSendPrivateMessage}
-        />
-      )}
+
     </AppContainer>
   );
 };

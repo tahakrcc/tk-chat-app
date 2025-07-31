@@ -1482,7 +1482,7 @@ const RoomSelection = ({ user, socket, onJoinRoom, onOpenProfile, onLogout, onUs
         </OnlineUsersSection>
         
         <UserProfileSection>
-          <UserProfileButton onClick={onOpenProfile}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px' }}>
             <UserAvatar $avatarUrl={user?.avatar} $size="32px">
               {user?.displayName?.charAt(0)?.toUpperCase() || user?.username?.charAt(0)?.toUpperCase() || 'U'}
             </UserAvatar>
@@ -1506,7 +1506,7 @@ const RoomSelection = ({ user, socket, onJoinRoom, onOpenProfile, onLogout, onUs
                 <LogOut size={16} />
               </LogoutActionButton>
             </UserProfileActions>
-          </UserProfileButton>
+          </div>
         </UserProfileSection>
       </Sidebar>
       

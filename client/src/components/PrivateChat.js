@@ -365,6 +365,89 @@ const EmptySubtitle = styled.p`
   line-height: 1.5;
 `;
 
+const FriendsSection = styled.div`
+  padding: 16px 20px;
+  border-bottom: 1px solid #202225;
+`;
+
+const FriendsHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+`;
+
+const FriendsTitle = styled.h3`
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0;
+`;
+
+const FriendsList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
+
+const FriendItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: #40444b;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: #4f545c;
+  }
+`;
+
+const FriendAvatar = styled.div`
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: ${props => props.$avatarUrl ? `url(${props.$avatarUrl}) center/cover` : 'linear-gradient(135deg, #7289da, #5865f2)'};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+`;
+
+const FriendInfo = styled.div`
+  flex: 1;
+  min-width: 0;
+`;
+
+const FriendName = styled.div`
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+const FriendStatus = styled.div`
+  color: #96989d;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+`;
+
+const StatusDot = styled.div`
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: ${props => props.$isOnline ? '#43b581' : '#ed4245'};
+`;
+
 const PrivateChat = ({ 
   currentUser, 
   socket, 
@@ -372,6 +455,7 @@ const PrivateChat = ({
   onSendPrivateMessage 
 }) => {
   const [conversations, setConversations] = useState([]);
+  const [friends, setFriends] = useState([]);
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
@@ -381,6 +465,7 @@ const PrivateChat = ({
   useEffect(() => {
     if (currentUser) {
       fetchConversations();
+      fetchFriends();
     }
   }, [currentUser]);
 
@@ -424,6 +509,16 @@ const PrivateChat = ({
       setConversations(data.conversations || []);
     } catch (error) {
       console.error('Sohbet listesi hatası:', error);
+    }
+  };
+
+  const fetchFriends = async () => {
+    try {
+      const response = await fetch(`${SERVER_URL}/api/follow/followers/${currentUser.username}`);
+      const data = await response.json();
+      setFriends(data.followers || []);
+    } catch (error) {
+      console.error('Arkadaşlar yüklenirken hata:', error);
     }
   };
 
@@ -480,6 +575,17 @@ const PrivateChat = ({
   };
 
   const handleConversationSelect = (conversation) => {
+    setSelectedConversation(conversation);
+    setShowChat(true);
+  };
+
+  const handleFriendSelect = (friend) => {
+    // Arkadaşla sohbet başlat
+    const conversation = {
+      user: friend,
+      lastMessage: null,
+      unreadCount: 0
+    };
     setSelectedConversation(conversation);
     setShowChat(true);
   };
@@ -565,6 +671,42 @@ const PrivateChat = ({
               </EmptyState>
             )}
           </ConversationsContainer>
+
+          {/* Arkadaşlar Bölümü */}
+          <FriendsSection>
+            <FriendsHeader>
+              <Users size={16} />
+              <FriendsTitle>Arkadaşlar ({friends.length})</FriendsTitle>
+            </FriendsHeader>
+            <FriendsList>
+              {friends.length > 0 ? (
+                friends.map((friend) => (
+                  <FriendItem 
+                    key={friend.username}
+                    onClick={() => handleFriendSelect(friend)}
+                  >
+                    <FriendAvatar $avatarUrl={friend.avatar}>
+                      {!friend.avatar && (friend.displayName?.charAt(0) || friend.username?.charAt(0) || 'U').toUpperCase()}
+                    </FriendAvatar>
+                    <FriendInfo>
+                      <FriendName>
+                        {friend.displayName || friend.username}
+                        {friend.gender === 'female' ? ' 👩' : ' 👨'}
+                      </FriendName>
+                      <FriendStatus>
+                        <StatusDot $isOnline={friend.isOnline} />
+                        {friend.isOnline ? 'Çevrimiçi' : 'Çevrimdışı'}
+                      </FriendStatus>
+                    </FriendInfo>
+                  </FriendItem>
+                ))
+              ) : (
+                <div style={{ color: '#72767d', fontSize: '12px', textAlign: 'center', padding: '8px 0' }}>
+                  Henüz arkadaş yok
+                </div>
+              )}
+            </FriendsList>
+          </FriendsSection>
         </ConversationsList>
 
         <ChatArea $showChat={showChat}>
