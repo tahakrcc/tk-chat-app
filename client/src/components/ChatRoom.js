@@ -259,6 +259,7 @@ const ChatRoom = ({ socket, user, room, onBack }) => {
 
     // Mesaj alma
     socket.on('new_message', (message) => {
+      console.log('Yeni mesaj alındı:', message);
       setMessages(prev => [...prev, message]);
     });
 
@@ -292,13 +293,19 @@ const ChatRoom = ({ socket, user, room, onBack }) => {
   }, [socket]);
 
   const handleSendMessage = () => {
-    if (!newMessage.trim() || !socket) return;
+    console.log('Mesaj gönderme denemesi:', { newMessage, socket: !!socket, room });
+    
+    if (!newMessage.trim() || !socket) {
+      console.log('Mesaj gönderilemedi:', { hasMessage: !!newMessage.trim(), hasSocket: !!socket });
+      return;
+    }
 
     const messageData = {
       content: newMessage.trim(),
       room: room?.id || 'general'
     };
 
+    console.log('Socket emit ediliyor:', messageData);
     socket.emit('send_message', messageData);
     setNewMessage('');
     setShowEmojiPicker(false);

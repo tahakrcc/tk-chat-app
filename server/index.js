@@ -9,7 +9,7 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: ["https://tk-chat-app.netlify.app", "https://tk-chat-app.onrender.com", "http://localhost:3000", "http://localhost:3001"],
+    origin: true, // Tüm origin'lere izin ver
     methods: ["GET", "POST"],
     allowedHeaders: ["Content-Type"],
     credentials: true
@@ -19,7 +19,7 @@ const io = socketIo(server, {
 
 app.use(helmet());
 app.use(cors({
-  origin: ["https://tk-chat-app.netlify.app", "https://tk-chat-app.onrender.com", "http://localhost:3000", "http://localhost:3001"],
+  origin: true, // Tüm origin'lere izin ver
   credentials: true
 }));
 app.use(express.json());
@@ -45,8 +45,8 @@ const initializeRooms = () => {
   
   rooms.forEach(room => {
     roomStats.set(room.id, {
-      users: Math.floor(Math.random() * 20) + 5, // 5-25 arası rastgele kullanıcı
-      messages: Math.floor(Math.random() * 2000) + 500, // 500-2500 arası rastgele mesaj
+      users: 0, // Gerçek kullanıcı sayısı
+      messages: 0, // Gerçek mesaj sayısı
       lastActivity: new Date().toISOString()
     });
     roomMessages.set(room.id, []);
@@ -55,36 +55,10 @@ const initializeRooms = () => {
 
 initializeRooms();
 
-// Örnek kullanıcılar (test için)
+// Kullanıcı başlatma (artık test kullanıcıları yok)
 const initializeUsers = () => {
-  const testUsers = [
-    {
-      id: '1',
-      username: 'admin',
-      email: 'admin@test.com',
-      password: bcrypt.hashSync('123456', 10),
-      displayName: 'Admin',
-      bio: 'Sistem yöneticisi',
-      avatar: null,
-      status: 'online',
-      createdAt: new Date().toISOString()
-    },
-    {
-      id: '2',
-      username: 'test',
-      email: 'test@test.com',
-      password: bcrypt.hashSync('123456', 10),
-      displayName: 'Test User',
-      bio: 'Test kullanıcısı',
-      avatar: null,
-      status: 'online',
-      createdAt: new Date().toISOString()
-    }
-  ];
-  
-  testUsers.forEach(user => {
-    registeredUsers.set(user.username, user);
-  });
+  // Gerçek kullanıcılar kayıt oldukça eklenecek
+  console.log('Kullanıcı sistemi başlatıldı - test kullanıcıları kaldırıldı');
 };
 
 initializeUsers();
@@ -92,6 +66,18 @@ initializeUsers();
 // Ana sayfa için basit response
 app.get('/', (req, res) => {
   res.json({ message: 'TK Chat Server is running!', timestamp: new Date().toISOString() });
+});
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    message: 'Server is healthy', 
+    timestamp: new Date().toISOString(),
+    cors: 'enabled',
+    users: registeredUsers.size,
+    rooms: roomStats.size
+  });
 });
 
 // Oda istatistikleri API'si
@@ -209,16 +195,21 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-// Kullanıcı listesi API'si
+// Çevrimiçi kullanıcılar API'si
 app.get('/api/users', (req, res) => {
   try {
-    const usersList = Array.from(registeredUsers.values()).map(user => {
-      const { password, ...userWithoutPassword } = user;
-      return userWithoutPassword;
-    });
-    res.json(usersList);
+    // Sadece çevrimiçi kullanıcıları döndür
+    const onlineUsers = Array.from(users.values()).map(user => ({
+      id: user.id,
+      username: user.username,
+      displayName: user.displayName,
+      avatar: user.avatar,
+      status: 'online',
+      room: user.room
+    }));
+    res.json(onlineUsers);
   } catch (error) {
-    console.error('Kullanıcı listesi hatası:', error);
+    console.error('Çevrimiçi kullanıcılar hatası:', error);
     res.status(500).json({ error: 'Sunucu hatası' });
   }
 });
@@ -482,9 +473,20 @@ io.on('connection', (socket) => {
       
       users.delete(socket.id);
       
+      // Oda istatistiklerini güncelle
+      const roomId = user.room;
+      const stats = roomStats.get(roomId);
+      if (stats) {
+        stats.users = Array.from(users.values()).filter(u => u.room === roomId).length;
+        stats.lastActivity = new Date().toISOString();
+      }
+      
       // Aktif kullanıcıları güncelle
       const roomUsers = Array.from(users.values()).filter(u => u.room === user.room);
       io.to(user.room).emit('active_users', roomUsers);
+      
+      // Oda istatistiklerini güncelle
+      io.to(user.room).emit('room_stats_updated', roomStats.get(roomId));
     }
     
     // Sesli odadan da çıkar

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { User, Lock, Mail, Eye, EyeOff, Wifi, WifiOff, MessageCircle, AlertCircle, CheckCircle } from 'lucide-react';
+import { User, Lock, Mail, Eye, EyeOff, MessageCircle, AlertCircle, CheckCircle } from 'lucide-react';
+import SERVER_URL from '../config';
 
 const AuthContainer = styled.div`
   flex: 1;
@@ -208,27 +209,7 @@ const LoadingSpinner = styled.div`
   }
 `;
 
-const TestAccounts = styled.div`
-  margin-top: 24px;
-  padding: 16px;
-  background: rgba(114, 137, 218, 0.1);
-  border-radius: 8px;
-  border: 1px solid rgba(114, 137, 218, 0.2);
-`;
 
-const TestAccountsTitle = styled.h4`
-  color: #7289da;
-  font-size: 14px;
-  font-weight: 600;
-  margin: 0 0 12px 0;
-`;
-
-const TestAccount = styled.div`
-  color: #96989d;
-  font-size: 13px;
-  margin-bottom: 4px;
-  text-align: left;
-`;
 
 const AuthScreen = ({ onLogin, isConnected }) => {
   const [activeTab, setActiveTab] = useState('login');
@@ -314,6 +295,17 @@ const AuthScreen = ({ onLogin, isConnected }) => {
       return;
     }
     
+    // Önce server bağlantısını test et
+    try {
+      const healthResponse = await fetch(`${SERVER_URL}/api/health`);
+      console.log('Health check response:', healthResponse.status);
+    } catch (healthError) {
+      console.error('Health check failed:', healthError);
+      setErrors({ general: 'Sunucuya bağlanılamıyor. Lütfen daha sonra tekrar deneyin.' });
+      setIsLoading(false);
+      return;
+    }
+    
     try {
       const endpoint = activeTab === 'login' ? '/api/login' : '/api/register';
       const requestData = activeTab === 'login' 
@@ -325,7 +317,10 @@ const AuthScreen = ({ onLogin, isConnected }) => {
             displayName: formData.displayName
           };
       
-      const response = await fetch(`http://localhost:5001${endpoint}`, {
+      console.log('API çağrısı yapılıyor:', `${SERVER_URL}${endpoint}`);
+      console.log('Request data:', requestData);
+      
+      const response = await fetch(`${SERVER_URL}${endpoint}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -333,7 +328,11 @@ const AuthScreen = ({ onLogin, isConnected }) => {
         body: JSON.stringify(requestData)
       });
       
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
+      
       const data = await response.json();
+      console.log('Response data:', data);
       
       if (!response.ok) {
         throw new Error(data.error || 'Bir hata oluştu');
@@ -356,20 +355,26 @@ const AuthScreen = ({ onLogin, isConnected }) => {
       
     } catch (error) {
       console.error('Auth error:', error);
-      setErrors({ general: error.message || 'Bir hata oluştu' });
+      console.error('Error details:', {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      });
+      
+      let errorMessage = 'Bir hata oluştu';
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        errorMessage = 'Sunucuya bağlanılamıyor. Lütfen internet bağlantınızı kontrol edin.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      setErrors({ general: errorMessage });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const fillTestAccount = (username, password) => {
-    setFormData(prev => ({
-      ...prev,
-      username,
-      password
-    }));
-    setActiveTab('login');
-  };
+
 
   return (
     <AuthContainer>
@@ -559,18 +564,7 @@ const AuthScreen = ({ onLogin, isConnected }) => {
           </SubmitButton>
         </form>
         
-        <TestAccounts>
-          <TestAccountsTitle>Test Hesapları</TestAccountsTitle>
-          <TestAccount>
-            <strong>Admin:</strong> admin / 123456
-          </TestAccount>
-          <TestAccount>
-            <strong>Test:</strong> test / 123456
-          </TestAccount>
-          <div style={{ marginTop: '8px', fontSize: '12px', color: '#72767d' }}>
-            Test hesaplarından birini hızlıca doldurmak için tıklayın
-          </div>
-        </TestAccounts>
+
       </AuthForm>
     </AuthContainer>
   );

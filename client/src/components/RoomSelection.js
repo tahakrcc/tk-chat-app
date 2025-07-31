@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { MessageCircle, Users, Hash, ArrowRight, Menu, X } from 'lucide-react';
+import { MessageCircle, Users, Hash, ArrowRight, Menu, X, Settings, LogOut } from 'lucide-react';
+import SERVER_URL from '../config';
 
 const RoomSelectionContainer = styled.div`
   flex: 1;
@@ -51,36 +52,11 @@ const Header = styled.div`
   position: relative;
 `;
 
-const MobileMenuButton = styled.button`
-  display: none;
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  background: #40444b;
-  border: none;
-  color: #dcddde;
-  padding: 8px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  
-  @media (max-width: 768px) {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  &:hover {
-    background: #4f545c;
-    color: #fff;
-  }
-`;
-
-const Title = styled.h2`
+const Title = styled.h1`
   color: #fff;
   font-size: 20px;
   font-weight: 700;
-  margin: 0 0 8px 0;
+  margin: 0 0 4px 0;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -92,9 +68,33 @@ const Subtitle = styled.p`
   margin: 0;
 `;
 
+const MobileMenuButton = styled.button`
+  display: none;
+  background: none;
+  border: none;
+  color: #dcddde;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 4px;
+  
+  @media (max-width: 768px) {
+    display: flex;
+    position: absolute;
+    top: 20px;
+    right: 20px;
+  }
+  
+  &:hover {
+    background: #40444b;
+  }
+`;
+
 const UserInfo = styled.div`
   padding: 16px 20px;
   border-bottom: 1px solid #202225;
+  display: flex;
+  align-items: center;
+  gap: 12px;
   background: #292b2f;
 `;
 
@@ -107,15 +107,15 @@ const UserAvatar = styled.div`
   align-items: center;
   justify-content: center;
   color: white;
-  font-weight: 700;
-  margin-bottom: 8px;
+  font-weight: 600;
+  font-size: 16px;
+  flex-shrink: 0;
 `;
 
 const UserName = styled.div`
   color: #fff;
   font-weight: 600;
   font-size: 14px;
-  margin-bottom: 4px;
 `;
 
 const UserStatus = styled.div`
@@ -143,8 +143,8 @@ const StatusDot = styled.div`
 
 const RoomList = styled.div`
   flex: 1;
-  padding: 16px 0;
   overflow-y: auto;
+  padding: 16px 0;
 `;
 
 const RoomCategory = styled.div`
@@ -156,13 +156,14 @@ const CategoryTitle = styled.h3`
   font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
   margin: 0 0 8px 20px;
+  letter-spacing: 0.5px;
 `;
 
 const RoomItem = styled.div`
   display: flex;
   align-items: center;
+  gap: 12px;
   padding: 8px 20px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -180,13 +181,17 @@ const RoomItem = styled.div`
 `;
 
 const RoomIcon = styled.div`
-  margin-right: 12px;
+  width: 20px;
+  height: 20px;
   display: flex;
   align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 `;
 
 const RoomInfo = styled.div`
   flex: 1;
+  min-width: 0;
 `;
 
 const RoomName = styled.div`
@@ -198,55 +203,143 @@ const RoomName = styled.div`
 const RoomDescription = styled.div`
   font-size: 12px;
   color: #72767d;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `;
 
 const RoomStats = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
+  font-size: 11px;
   color: #72767d;
+  flex-shrink: 0;
 `;
 
-const MainContent = styled.div`
-  flex: 1;
+// Çevrimiçi Kullanıcılar Bölümü
+const OnlineUsersSection = styled.div`
+  padding: 16px 20px;
+  border-top: 1px solid #202225;
+  background: #292b2f;
+`;
+
+const OnlineUsersTitle = styled.h3`
+  color: #96989d;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin: 0 0 12px 0;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+`;
+
+const OnlineUsersList = styled.div`
   display: flex;
   flex-direction: column;
-  
-  @media (max-width: 768px) {
-    width: 100%;
-  }
-`;
-
-const MobileHeader = styled.div`
-  display: none;
-  padding: 16px 20px;
-  background: #292b2f;
-  border-bottom: 1px solid #202225;
-  
-  @media (max-width: 768px) {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-`;
-
-const MobileTitle = styled.h2`
-  color: #fff;
-  font-size: 18px;
-  font-weight: 700;
-  margin: 0;
-  display: flex;
-  align-items: center;
   gap: 8px;
 `;
 
-const MobileMenuToggle = styled.button`
+const OnlineUserItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+`;
+
+const OnlineUserAvatar = styled.div`
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: ${props => props.$avatarUrl ? `url(${props.$avatarUrl}) center/cover` : 'linear-gradient(135deg, #7289da, #5865f2)'};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: 12px;
+  flex-shrink: 0;
+`;
+
+const OnlineUserInfo = styled.div`
+  flex: 1;
+  min-width: 0;
+`;
+
+const OnlineUserName = styled.div`
+  color: #dcddde;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+const OnlineUserStatus = styled.div`
+  color: #72767d;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+`;
+
+const UserProfileSection = styled.div`
+  padding: 16px 20px;
+  border-top: 1px solid #202225;
+  background: #292b2f;
+`;
+
+const UserProfileButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: none;
+  border: none;
+  color: #dcddde;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 6px;
+  width: 100%;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: #40444b;
+    color: #fff;
+  }
+`;
+
+const UserProfileInfo = styled.div`
+  flex: 1;
+  min-width: 0;
+`;
+
+const UserProfileName = styled.div`
+  color: #dcddde;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+const UserProfileStatus = styled.div`
+  color: #72767d;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+`;
+
+const UserProfileActions = styled.div`
+  display: flex;
+  gap: 4px;
+`;
+
+const ProfileActionButton = styled.button`
   background: #40444b;
   border: none;
   color: #dcddde;
-  padding: 8px;
-  border-radius: 6px;
+  padding: 6px;
+  border-radius: 4px;
   cursor: pointer;
   transition: all 0.2s ease;
   
@@ -256,38 +349,108 @@ const MobileMenuToggle = styled.button`
   }
 `;
 
+const LogoutActionButton = styled.button`
+  background: #ed4245;
+  border: none;
+  color: #fff;
+  padding: 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: #c03537;
+  }
+`;
+
+const MainContent = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+`;
+
+const MobileHeader = styled.div`
+  display: none;
+  background: #292b2f;
+  padding: 12px 16px;
+  border-bottom: 1px solid #202225;
+  align-items: center;
+  gap: 12px;
+  
+  @media (max-width: 768px) {
+    display: flex;
+  }
+`;
+
+const MobileTitle = styled.div`
+  color: #fff;
+  font-size: 18px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+`;
+
+const MobileHeaderActions = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+const MobileProfileButton = styled.button`
+  background: none;
+  border: none;
+  color: #dcddde;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  
+  &:hover {
+    background: #40444b;
+  }
+`;
+
+const MobileLogoutButton = styled.button`
+  background: #ed4245;
+  border: none;
+  color: #fff;
+  padding: 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: #c03537;
+  }
+`;
+
+const MobileMenuToggle = styled.button`
+  background: none;
+  border: none;
+  color: #dcddde;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  
+  &:hover {
+    background: #40444b;
+  }
+`;
+
 const WelcomeSection = styled.div`
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 40px;
+  padding: 40px 20px;
   text-align: center;
-  
-  @media (max-width: 768px) {
-    padding: 20px;
-  }
 `;
 
 const WelcomeIcon = styled.div`
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #7289da, #5865f2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 32px;
-  color: white;
-  font-size: 48px;
-  
-  @media (max-width: 768px) {
-    width: 80px;
-    height: 80px;
-    font-size: 32px;
-    margin-bottom: 24px;
-  }
+  color: #7289da;
+  margin-bottom: 24px;
 `;
 
 const WelcomeTitle = styled.h1`
@@ -298,20 +461,32 @@ const WelcomeTitle = styled.h1`
   
   @media (max-width: 768px) {
     font-size: 24px;
-    margin-bottom: 12px;
   }
 `;
 
 const WelcomeSubtitle = styled.p`
   color: #96989d;
-  font-size: 18px;
+  font-size: 16px;
   margin: 0 0 32px 0;
   max-width: 500px;
   line-height: 1.5;
   
   @media (max-width: 768px) {
-    font-size: 16px;
-    margin-bottom: 24px;
+    font-size: 14px;
+  }
+`;
+
+const LoadingSpinner = styled.div`
+  width: 20px;
+  height: 20px;
+  border: 2px solid #40444b;
+  border-top: 2px solid #7289da;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
   }
 `;
 
@@ -319,8 +494,8 @@ const RoomGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 20px;
-  max-width: 800px;
   width: 100%;
+  max-width: 1200px;
   
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
@@ -331,46 +506,35 @@ const RoomGrid = styled.div`
 const RoomCard = styled.div`
   background: #2f3136;
   border: 1px solid #202225;
-  border-radius: 12px;
-  padding: 24px;
+  border-radius: 8px;
+  padding: 20px;
   cursor: pointer;
   transition: all 0.3s ease;
   
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
     border-color: #7289da;
-  }
-  
-  @media (max-width: 768px) {
-    padding: 20px;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   }
 `;
 
 const RoomCardHeader = styled.div`
   display: flex;
   align-items: center;
+  gap: 12px;
   margin-bottom: 16px;
 `;
 
 const RoomCardIcon = styled.div`
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
   background: linear-gradient(135deg, #7289da, #5865f2);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-right: 16px;
   color: white;
-  font-size: 24px;
-  
-  @media (max-width: 768px) {
-    width: 40px;
-    height: 40px;
-    font-size: 20px;
-    margin-right: 12px;
-  }
+  font-size: 18px;
 `;
 
 const RoomCardInfo = styled.div`
@@ -382,94 +546,55 @@ const RoomCardTitle = styled.h3`
   font-size: 18px;
   font-weight: 600;
   margin: 0 0 4px 0;
-  
-  @media (max-width: 768px) {
-    font-size: 16px;
-  }
 `;
 
 const RoomCardDescription = styled.p`
   color: #96989d;
   font-size: 14px;
   margin: 0;
-  
-  @media (max-width: 768px) {
-    font-size: 13px;
-  }
+  line-height: 1.4;
 `;
 
 const RoomCardStats = styled.div`
   display: flex;
   align-items: center;
-  gap: 16px;
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid #202225;
-  
-  @media (max-width: 768px) {
-    gap: 12px;
-    margin-top: 12px;
-    padding-top: 12px;
-  }
+  justify-content: space-between;
+  gap: 12px;
 `;
 
 const Stat = styled.div`
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #96989d;
+  color: #72767d;
   font-size: 13px;
-  
-  @media (max-width: 768px) {
-    font-size: 12px;
-  }
 `;
 
 const JoinButton = styled.button`
-  background: linear-gradient(135deg, #7289da, #5865f2);
-  color: white;
+  background: #7289da;
   border: none;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-weight: 600;
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 6px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  font-weight: 600;
+  font-size: 14px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-left: auto;
+  gap: 6px;
+  transition: all 0.2s ease;
   
   &:hover {
-    background: linear-gradient(135deg, #5865f2, #7289da);
-    transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(114, 137, 218, 0.3);
-  }
-  
-  @media (max-width: 768px) {
-    padding: 10px 20px;
-    font-size: 14px;
+    background: #5865f2;
   }
 `;
 
-const LoadingSpinner = styled.div`
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  border-top-color: #fff;
-  animation: spin 1s ease-in-out infinite;
-  
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
-`;
-
-const RoomSelection = ({ user, onJoinRoom }) => {
+const RoomSelection = ({ user, onJoinRoom, onOpenProfile, onLogout }) => {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [roomStats, setRoomStats] = useState({});
   const [isLoading, setIsLoading] = useState(true);
+  const [onlineUsers, setOnlineUsers] = useState([]);
 
   const rooms = [
     {
@@ -509,11 +634,11 @@ const RoomSelection = ({ user, onJoinRoom }) => {
     }
   ];
 
-  // Oda istatistiklerini yükle
+  // Oda istatistiklerini ve çevrimiçi kullanıcıları yükle
   useEffect(() => {
     const fetchRoomStats = async () => {
       try {
-        const response = await fetch('http://localhost:5001/api/rooms/stats');
+        const response = await fetch(`${SERVER_URL}/api/rooms/stats`);
         if (response.ok) {
           const stats = await response.json();
           setRoomStats(stats);
@@ -525,7 +650,35 @@ const RoomSelection = ({ user, onJoinRoom }) => {
       }
     };
 
+    const fetchOnlineUsers = async () => {
+      try {
+        const response = await fetch(`${SERVER_URL}/api/users`);
+        if (response.ok) {
+          const users = await response.json();
+          // Sadece online kullanıcıları filtrele ve kendini de ekle
+          const online = users.filter(user => user.status === 'online');
+          
+          // Eğer mevcut kullanıcı listede yoksa ekle
+          const currentUserInList = online.find(u => u.username === user?.username);
+          if (!currentUserInList && user) {
+            online.push({
+              id: 'current',
+              username: user.username,
+              displayName: user.displayName,
+              avatar: user.avatar,
+              status: 'online'
+            });
+          }
+          
+          setOnlineUsers(online);
+        }
+      } catch (error) {
+        console.error('Çevrimiçi kullanıcılar yüklenirken hata:', error);
+      }
+    };
+
     fetchRoomStats();
+    fetchOnlineUsers();
   }, []);
 
   const handleRoomSelect = (room) => {
@@ -619,6 +772,62 @@ const RoomSelection = ({ user, onJoinRoom }) => {
             })}
           </RoomCategory>
         </RoomList>
+
+        {/* Çevrimiçi Kullanıcılar Bölümü */}
+        <OnlineUsersSection>
+          <OnlineUsersTitle>
+            <Users size={14} />
+            Çevrimiçi Kullanıcılar ({onlineUsers.length})
+          </OnlineUsersTitle>
+          <OnlineUsersList>
+            {onlineUsers.length > 0 ? (
+              onlineUsers.map((onlineUser, index) => (
+                <OnlineUserItem key={onlineUser.id || index}>
+                  <OnlineUserAvatar $avatarUrl={onlineUser.avatar}>
+                    {onlineUser.displayName?.charAt(0)?.toUpperCase() || onlineUser.username?.charAt(0)?.toUpperCase() || 'U'}
+                  </OnlineUserAvatar>
+                  <OnlineUserInfo>
+                    <OnlineUserName>{onlineUser.displayName || onlineUser.username}</OnlineUserName>
+                    <OnlineUserStatus>
+                      <StatusDot $status={onlineUser.status || 'online'} />
+                      Çevrimiçi
+                    </OnlineUserStatus>
+                  </OnlineUserInfo>
+                </OnlineUserItem>
+              ))
+            ) : (
+              <div style={{ color: '#72767d', fontSize: '12px', textAlign: 'center', padding: '8px 0' }}>
+                Henüz çevrimiçi kullanıcı yok
+              </div>
+            )}
+          </OnlineUsersList>
+        </OnlineUsersSection>
+        
+        <UserProfileSection>
+          <UserProfileButton onClick={onOpenProfile}>
+            <UserAvatar $avatarUrl={user?.avatar} $size="32px">
+              {user?.displayName?.charAt(0)?.toUpperCase() || user?.username?.charAt(0)?.toUpperCase() || 'U'}
+            </UserAvatar>
+            <UserProfileInfo>
+              <UserProfileName>{user?.displayName || user?.username}</UserProfileName>
+              <UserProfileStatus>
+                <StatusDot $status={user?.status || 'online'} />
+                {user?.status === 'online' && 'Çevrimiçi'}
+                {user?.status === 'idle' && 'Boşta'}
+                {user?.status === 'dnd' && 'Rahatsız Etmeyin'}
+                {user?.status === 'offline' && 'Çevrimdışı'}
+              </UserProfileStatus>
+            </UserProfileInfo>
+            <UserProfileActions>
+              <ProfileActionButton onClick={onOpenProfile}>
+                <Settings size={16} />
+              </ProfileActionButton>
+              <LogoutActionButton onClick={onLogout}>
+                <LogOut size={16} />
+              </LogoutActionButton>
+            </UserProfileActions>
+          </UserProfileButton>
+        </UserProfileSection>
       </Sidebar>
       
       <MainContent>
@@ -627,6 +836,16 @@ const RoomSelection = ({ user, onJoinRoom }) => {
             <MessageCircle size={20} />
             TK Chat
           </MobileTitle>
+          <MobileHeaderActions>
+            <MobileProfileButton onClick={onOpenProfile}>
+              <UserAvatar $avatarUrl={user?.avatar} $size="24px">
+                {user?.displayName?.charAt(0)?.toUpperCase() || user?.username?.charAt(0)?.toUpperCase() || 'U'}
+              </UserAvatar>
+            </MobileProfileButton>
+            <MobileLogoutButton onClick={onLogout}>
+              <LogOut size={16} />
+            </MobileLogoutButton>
+          </MobileHeaderActions>
           <MobileMenuToggle onClick={toggleSidebar}>
             <Menu size={20} />
           </MobileMenuToggle>

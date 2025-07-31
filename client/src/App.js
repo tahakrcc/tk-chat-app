@@ -7,22 +7,14 @@ import ChatRoom from './components/ChatRoom';
 import VoiceRoom from './components/VoiceRoom';
 import ProfileModalComponent from './components/ProfileModal';
 import { ArrowLeft, Users, Hash, Mic, LogOut, Settings } from 'lucide-react';
+import SERVER_URL from './config';
 
 const fadeIn = keyframes`
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
 `;
 
-const pulse = keyframes`
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
-`;
 
-const shimmer = keyframes`
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-`;
 
 const AppContainer = styled.div`
   min-height: 100vh;
@@ -51,8 +43,9 @@ const ChatHeader = styled.div`
   z-index: 1;
   
   @media (max-width: 768px) {
-    padding: 16px;
-    gap: 12px;
+    padding: 12px;
+    gap: 8px;
+    flex-wrap: wrap;
   }
 `;
 
@@ -115,6 +108,11 @@ const HeaderActions = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
+  
+  @media (max-width: 768px) {
+    gap: 4px;
+    flex-wrap: wrap;
+  }
 `;
 
 const ActionButton = styled.button`
@@ -152,6 +150,16 @@ const LogoutButton = styled.button`
   &:hover {
     background: #c03537;
   }
+  
+  @media (max-width: 768px) {
+    padding: 8px 12px;
+    font-size: 12px;
+    gap: 4px;
+    
+    span {
+      display: none;
+    }
+  }
 `;
 
 const MobileFloatingMenu = styled.div`
@@ -179,10 +187,15 @@ const FloatingMenuButton = styled.button`
   cursor: pointer;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   transition: all 0.2s ease;
+  z-index: 1001;
   
   &:hover {
     background: #5865f2;
     transform: scale(1.05);
+  }
+  
+  &:active {
+    transform: scale(0.95);
   }
 `;
 
@@ -239,9 +252,11 @@ const ProfileButton = styled.button`
   }
   
   @media (max-width: 768px) {
-    padding: 6px 10px;
+    padding: 8px;
     font-size: 12px;
-    gap: 6px;
+    gap: 4px;
+    min-width: 40px;
+    justify-content: center;
     
     span {
       display: none;
@@ -373,7 +388,9 @@ const App = () => {
 
   // Socket bağlantısı
   useEffect(() => {
-    const newSocket = io('http://localhost:5001', {
+    console.log('Socket bağlantısı kuruluyor:', SERVER_URL);
+    
+    const newSocket = io(SERVER_URL, {
       transports: ['websocket', 'polling']
     });
 
@@ -384,6 +401,11 @@ const App = () => {
 
     newSocket.on('disconnect', () => {
       console.log('Socket bağlantısı kesildi');
+      setIsConnected(false);
+    });
+
+    newSocket.on('connect_error', (error) => {
+      console.error('Socket bağlantı hatası:', error);
       setIsConnected(false);
     });
 
@@ -428,14 +450,17 @@ const App = () => {
   // Oda seçildiğinde
   const handleJoinRoom = (room) => {
     console.log('Oda seçildi:', room);
+    console.log('Socket durumu:', { socket: !!socket, user: !!user });
     setSelectedRoom(room);
     
     if (socket && user) {
       // Socket'e kullanıcı bilgilerini gönder
-      socket.emit('user_join', {
+      const joinData = {
         username: user.username,
         room: room.id
-      });
+      };
+      console.log('Socket user_join emit ediliyor:', joinData);
+      socket.emit('user_join', joinData);
       
       // Oda tipine göre view'ı ayarla
       if (room.type === 'voice') {
@@ -443,6 +468,8 @@ const App = () => {
       } else {
         setCurrentView('chat');
       }
+    } else {
+      console.error('Socket veya user yok:', { socket: !!socket, user: !!user });
     }
   };
 
@@ -452,12 +479,7 @@ const App = () => {
     setSelectedRoom(null);
   };
 
-  const handleBackToAuth = () => {
-    setCurrentView('auth');
-    setUser(null);
-    setSelectedRoom(null);
-    localStorage.removeItem('user');
-  };
+
 
   // Çıkış yap
   const handleLogout = () => {
@@ -537,7 +559,14 @@ const App = () => {
   };
 
   const renderRoomSelection = () => {
-    return <RoomSelection user={user} onJoinRoom={handleJoinRoom} />;
+    return (
+      <RoomSelection 
+        user={user} 
+        onJoinRoom={handleJoinRoom}
+        onOpenProfile={handleOpenProfile}
+        onLogout={handleLogout}
+      />
+    );
   };
 
   const renderChatRoom = () => {
@@ -563,8 +592,6 @@ const App = () => {
   };
 
   const renderHeader = () => {
-    console.log('Current view:', currentView); // Debug log
-    
     if (currentView === 'auth' || currentView === 'room-selection') {
       return null;
     }
@@ -588,7 +615,7 @@ const App = () => {
         
         <HeaderActions>
           {/* User Profile Button - Discord style */}
-          <ProfileButton onClick={handleOpenProfile}>
+          <ProfileButton onClick={handleOpenProfile} title="Profil Ayarları">
             <UserAvatar $avatarUrl={user?.avatar}>
               {user?.displayName?.charAt(0)?.toUpperCase() || user?.username?.charAt(0)?.toUpperCase() || 'U'}
             </UserAvatar>
@@ -655,7 +682,7 @@ const App = () => {
       {/* Mobile Floating Menu */}
       {(currentView === 'chat' || currentView === 'voice') && (
         <MobileFloatingMenu data-mobile-menu>
-          <FloatingMenuButton onClick={() => setShowMobileMenu(!showMobileMenu)}>
+          <FloatingMenuButton onClick={() => setShowMobileMenu(!showMobileMenu)} title="Menü">
             <Settings size={24} />
           </FloatingMenuButton>
           
@@ -664,7 +691,7 @@ const App = () => {
               <UserAvatar $avatarUrl={user?.avatar}>
                 {user?.displayName?.charAt(0)?.toUpperCase() || user?.username?.charAt(0)?.toUpperCase() || 'U'}
               </UserAvatar>
-              <span>Profil</span>
+              <span>Profil Ayarları</span>
             </FloatingMenuItem>
             
             <FloatingMenuItem onClick={handleLogout}>
