@@ -82,29 +82,34 @@ app.post('/api/upload-avatar', upload.single('avatar'), async (req, res) => {
 
 // MONGODB BAĞLANTISI VE USER MODELİ
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/tk-chat-app';
-console.log('MongoDB URI ayarlandı mı:', !!process.env.MONGO_URI);
-console.log('MongoDB URI uzunluğu:', MONGO_URI ? MONGO_URI.length : 0);
+console.log('🔧 MongoDB URI ayarlandı mı:', !!process.env.MONGO_URI);
+console.log('📏 MongoDB URI uzunluğu:', MONGO_URI ? MONGO_URI.length : 0);
 
 // MongoDB bağlantı seçenekleri
 const mongooseOptions = {
   maxPoolSize: 10,
-  serverSelectionTimeoutMS: 5000,
+  serverSelectionTimeoutMS: 10000, // 10 saniye
   socketTimeoutMS: 45000,
   bufferMaxEntries: 0,
-  bufferCommands: false
+  bufferCommands: false,
+  retryWrites: true,
+  w: 'majority'
 };
 
+console.log('🔄 MongoDB bağlantısı kuruluyor...');
 mongoose.connect(MONGO_URI, mongooseOptions)
   .then(() => {
-    console.log('✅ MongoDB bağlantısı başarılı');
+    console.log('✅ MongoDB bağlantısı başarılı!');
     console.log('📊 Bağlantı durumu:', mongoose.connection.readyState);
     console.log('🌐 Host:', mongoose.connection.host);
     console.log('📁 Database:', mongoose.connection.name);
+    console.log('🔗 URI:', MONGO_URI.substring(0, 50) + '...');
   })
   .catch((err) => {
     console.error('❌ MongoDB bağlantı hatası:', err);
     console.error('🔍 Hata detayı:', err.message);
     console.error('📋 Hata kodu:', err.code);
+    console.error('🔗 URI (ilk 50 karakter):', MONGO_URI.substring(0, 50) + '...');
     
     // Eğer MongoDB bağlantısı başarısız olursa, uygulama çalışmaya devam etsin
     console.log('⚠️ MongoDB olmadan devam ediliyor...');
