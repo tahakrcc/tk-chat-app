@@ -608,11 +608,13 @@ const App = () => {
     setSelectedUser(targetUser);
     setShowPrivateChat(true);
     setShowUserProfileModal(false);
+    setCurrentView('private-chat'); // Ana sayfada özel sohbet görünümüne geç
   };
 
   // Özel sohbetten geri dön
   const handleBackFromPrivateChat = () => {
     setShowPrivateChat(false);
+    setCurrentView('room-selection');
   };
 
   // Profil kaydet/güncelle
@@ -728,6 +730,17 @@ const App = () => {
     );
   };
 
+  const renderPrivateChat = () => {
+    return (
+      <PrivateChat
+        currentUser={user}
+        socket={socket}
+        onBack={handleBackToRoomSelection}
+        onSendPrivateMessage={handleSendPrivateMessage}
+      />
+    );
+  };
+
   const renderHeader = () => {
     if (currentView === 'auth' || currentView === 'room-selection') {
       return null;
@@ -831,6 +844,7 @@ const App = () => {
         {currentView === 'room-selection' && renderRoomSelection()}
         {currentView === 'chat' && renderChatRoom()}
         {currentView === 'voice' && renderVoiceRoom()}
+        {currentView === 'private-chat' && renderPrivateChat()}
         
         {renderActiveUsers()}
       </ContentArea>

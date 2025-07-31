@@ -159,8 +159,8 @@ const StatusDot = styled.div`
       case 'online': return '#43b581';
       case 'idle': return '#faa61a';
       case 'dnd': return '#f04747';
-      case 'offline': return '#747f8d';
-      default: return '#43b581';
+      case 'offline': return '#ed4245';
+      default: return props.$isOnline ? '#43b581' : '#ed4245';
     }
   }};
 `;
@@ -1104,11 +1104,24 @@ const RoomSelection = ({ user, socket, onJoinRoom, onOpenProfile, onLogout, onUs
   }, [user]);
 
   useEffect(() => {
-    fetchRoomStats();
-    fetchOnlineUsers();
-    fetchFollowRequests();
-    fetchFriends();
-    fetchDirectMessages();
+    const loadData = async () => {
+      setIsLoading(true);
+      try {
+        await Promise.all([
+          fetchRoomStats(),
+          fetchOnlineUsers(),
+          fetchFollowRequests(),
+          fetchFriends(),
+          fetchDirectMessages()
+        ]);
+      } catch (error) {
+        console.error('Veri yükleme hatası:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
     
     // Her 30 saniyede bir güncelle
     const interval = setInterval(() => {
@@ -1367,8 +1380,8 @@ const RoomSelection = ({ user, socket, onJoinRoom, onOpenProfile, onLogout, onUs
                     {friend.gender === 'female' ? ' 👩' : ' 👨'}
                   </FriendName>
                   <FriendStatus>
-                    <StatusDot $status={friend.status || 'online'} />
-                    {friend.status === 'online' ? 'Çevrimiçi' : 'Çevrimdışı'}
+                    <StatusDot $status={friend.status || 'online'} $isOnline={friend.isOnline} />
+                    {friend.isOnline ? 'Çevrimiçi' : 'Çevrimdışı'}
                   </FriendStatus>
                 </FriendInfo>
                 <FriendChatButton 
@@ -1448,8 +1461,8 @@ const RoomSelection = ({ user, socket, onJoinRoom, onOpenProfile, onLogout, onUs
                       {onlineUser.displayName || onlineUser.username}
                     </OnlineUserName>
                     <OnlineUserStatus>
-                      <StatusDot $status={onlineUser.status || 'online'} />
-                      Çevrimiçi
+                      <StatusDot $status={onlineUser.status || 'online'} $isOnline={onlineUser.isOnline} />
+                      {onlineUser.isOnline ? 'Çevrimiçi' : 'Çevrimdışı'}
                     </OnlineUserStatus>
                   </OnlineUserInfo>
                   <FriendChatButton 
