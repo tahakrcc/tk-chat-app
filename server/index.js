@@ -91,7 +91,7 @@ const mongooseOptions = {
   serverSelectionTimeoutMS: 10000, // 10 saniye
   socketTimeoutMS: 45000,
   bufferMaxEntries: 0,
-  bufferCommands: false,
+  bufferCommands: true, // true yapıyoruz
   retryWrites: true,
   w: 'majority'
 };
