@@ -366,6 +366,7 @@ const FollowRequestName = styled.div`
 const FollowRequestActions = styled.div`
   display: flex;
   gap: 4px;
+  align-items: center;
 `;
 
 const FollowRequestButton = styled.button`
@@ -420,7 +421,6 @@ const FriendItem = styled.div`
   background: #40444b;
   border-radius: 6px;
   margin-bottom: 8px;
-  cursor: pointer;
   transition: all 0.2s ease;
   
   &:hover {
@@ -445,6 +445,7 @@ const FriendAvatar = styled.div`
 const FriendInfo = styled.div`
   flex: 1;
   min-width: 0;
+  cursor: pointer;
 `;
 
 const FriendName = styled.div`
@@ -462,6 +463,24 @@ const FriendStatus = styled.div`
   display: flex;
   align-items: center;
   gap: 4px;
+`;
+
+const FriendChatButton = styled.button`
+  background: #7289da;
+  border: none;
+  color: white;
+  padding: 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  &:hover {
+    background: #5865f2;
+    transform: translateY(-1px);
+  }
 `;
 
 const DirectMessagesSection = styled.div`
@@ -588,7 +607,6 @@ const OnlineUserItem = styled.div`
   padding: 8px 12px;
   background: #40444b;
   border-radius: 6px;
-  cursor: pointer;
   transition: all 0.2s ease;
   
   &:hover {
@@ -613,6 +631,7 @@ const OnlineUserAvatar = styled.div`
 const OnlineUserInfo = styled.div`
   flex: 1;
   min-width: 0;
+  cursor: pointer;
 `;
 
 const OnlineUserName = styled.div`
@@ -1315,6 +1334,12 @@ const RoomSelection = ({ user, socket, onJoinRoom, onOpenProfile, onLogout, onUs
                   >
                     Red
                   </FollowRequestButton>
+                  <FriendChatButton 
+                    onClick={() => onSendPrivateMessage && onSendPrivateMessage(request)}
+                    title="Sohbet başlat"
+                  >
+                    <MessageSquare size={12} />
+                  </FriendChatButton>
                 </FollowRequestActions>
               </FollowRequestItem>
             ))}
@@ -1332,11 +1357,11 @@ const RoomSelection = ({ user, socket, onJoinRoom, onOpenProfile, onLogout, onUs
           </FriendsHeader>
           {friends.length > 0 ? (
             friends.map((friend) => (
-              <FriendItem key={friend.username} onClick={() => onUserClick && onUserClick(friend)}>
+              <FriendItem key={friend.username}>
                 <FriendAvatar $avatarUrl={friend.avatar}>
                   {!friend.avatar && (friend.displayName?.charAt(0) || friend.username?.charAt(0) || 'U').toUpperCase()}
                 </FriendAvatar>
-                <FriendInfo>
+                <FriendInfo onClick={() => onUserClick && onUserClick(friend)}>
                   <FriendName>
                     {friend.displayName || friend.username}
                     {friend.gender === 'female' ? ' 👩' : ' 👨'}
@@ -1346,6 +1371,12 @@ const RoomSelection = ({ user, socket, onJoinRoom, onOpenProfile, onLogout, onUs
                     {friend.status === 'online' ? 'Çevrimiçi' : 'Çevrimdışı'}
                   </FriendStatus>
                 </FriendInfo>
+                <FriendChatButton 
+                  onClick={() => onSendPrivateMessage && onSendPrivateMessage(friend)}
+                  title="Sohbet başlat"
+                >
+                  <MessageSquare size={14} />
+                </FriendChatButton>
               </FriendItem>
             ))
           ) : (
@@ -1412,7 +1443,7 @@ const RoomSelection = ({ user, socket, onJoinRoom, onOpenProfile, onLogout, onUs
                   <OnlineUserAvatar $avatarUrl={onlineUser.avatar}>
                     {onlineUser.displayName?.charAt(0)?.toUpperCase() || onlineUser.username?.charAt(0)?.toUpperCase() || 'U'}
                   </OnlineUserAvatar>
-                  <OnlineUserInfo>
+                  <OnlineUserInfo onClick={() => onUserClick && onUserClick(onlineUser)}>
                     <OnlineUserName onClick={() => onUserClick && onUserClick(onlineUser)}>
                       {onlineUser.displayName || onlineUser.username}
                     </OnlineUserName>
@@ -1421,6 +1452,12 @@ const RoomSelection = ({ user, socket, onJoinRoom, onOpenProfile, onLogout, onUs
                       Çevrimiçi
                     </OnlineUserStatus>
                   </OnlineUserInfo>
+                  <FriendChatButton 
+                    onClick={() => onSendPrivateMessage && onSendPrivateMessage(onlineUser)}
+                    title="Sohbet başlat"
+                  >
+                    <MessageSquare size={14} />
+                  </FriendChatButton>
                 </OnlineUserItem>
               ))
             ) : (
