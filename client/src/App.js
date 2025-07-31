@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import io from 'socket.io-client';
-import SimpleLogin from './components/SimpleLogin';
+import AuthScreen from './components/AuthScreen';
 import RoomSelection from './components/RoomSelection';
 import ChatRoom from './components/ChatRoom';
 import VoiceRoom from './components/VoiceRoom';
@@ -26,27 +26,11 @@ const shimmer = keyframes`
 
 const AppContainer = styled.div`
   min-height: 100vh;
-  background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 25%, #16213e 50%, #0f3460 75%, #533483 100%);
+  background: #36393f;
   display: flex;
   flex-direction: column;
   animation: ${fadeIn} 0.6s ease-out;
   position: relative;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: 
-      radial-gradient(circle at 20% 80%, rgba(138, 43, 226, 0.15) 0%, transparent 50%),
-      radial-gradient(circle at 80% 20%, rgba(64, 224, 208, 0.1) 0%, transparent 50%),
-      radial-gradient(circle at 40% 40%, rgba(255, 105, 180, 0.08) 0%, transparent 50%),
-      radial-gradient(circle at 90% 90%, rgba(255, 215, 0, 0.05) 0%, transparent 50%);
-    pointer-events: none;
-    z-index: 0;
-  }
   
   @media (max-width: 768px) {
     height: 100vh;
@@ -55,10 +39,9 @@ const AppContainer = styled.div`
 `;
 
 const ChatHeader = styled.div`
-  background: rgba(15, 15, 35, 0.95);
-  backdrop-filter: blur(25px);
+  background: #292b2f;
   padding: 20px;
-  border-bottom: 2px solid rgba(138, 43, 226, 0.3);
+  border-bottom: 1px solid #202225;
   display: flex;
   align-items: center;
   gap: 16px;
@@ -66,7 +49,6 @@ const ChatHeader = styled.div`
   font-weight: 700;
   position: relative;
   z-index: 1;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   
   @media (max-width: 768px) {
     padding: 16px;
@@ -75,413 +57,425 @@ const ChatHeader = styled.div`
 `;
 
 const BackButton = styled.button`
-  background: linear-gradient(135deg, #8a2be2, #9370db);
-  backdrop-filter: blur(15px);
-  border: 2px solid rgba(255, 255, 255, 0.1);
-  color: #ffffff;
-  padding: 12px 18px;
-  border-radius: 16px;
+  background: #40444b;
+  border: none;
+  color: #dcddde;
+  padding: 8px 12px;
+  border-radius: 6px;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   font-size: 14px;
-  font-weight: 700;
-  transition: all 0.3s ease;
-  box-shadow: 0 6px 20px rgba(138, 43, 226, 0.3);
-  position: relative;
-  overflow: hidden;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    transition: left 0.5s;
-  }
-  
-  &:hover::before {
-    left: 100%;
-  }
+  font-weight: 600;
+  transition: all 0.2s ease;
   
   &:hover {
-    background: linear-gradient(135deg, #9370db, #8a2be2);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(138, 43, 226, 0.4);
-  }
-  
-  &:active {
-    transform: translateY(0);
-  }
-  
-  @media (max-width: 768px) {
-    padding: 10px 14px;
-    font-size: 13px;
-    gap: 6px;
+    background: #4f545c;
+    color: #fff;
   }
 `;
 
-const ChatTypeIcon = styled.div`
+const RoomInfo = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
   flex: 1;
-  font-size: 16px;
-  
-  @media (max-width: 768px) {
-    font-size: 14px;
-    gap: 6px;
-  }
 `;
 
-const UserInfo = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-left: auto;
-  
-  @media (max-width: 768px) {
-    gap: 8px;
-  }
-`;
-
-const UserAvatar = styled.div`
-  width: 40px;
-  height: 40px;
-  background: linear-gradient(135deg, #8a2be2, #40e0d0);
-  border-radius: 50%;
+const RoomIcon = styled.div`
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #7289da, #5865f2);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
+  color: white;
   font-size: 16px;
-  color: #ffffff;
-  box-shadow: 0 4px 15px rgba(138, 43, 226, 0.3);
-  animation: ${pulse} 2s infinite;
-  
-  @media (max-width: 768px) {
-    width: 36px;
-    height: 36px;
-    font-size: 14px;
-  }
 `;
 
-const ProfileButton = styled.button`
-  background: linear-gradient(135deg, #7289da, #5865f2);
+const RoomDetails = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
+
+const RoomName = styled.div`
+  color: #fff;
+  font-weight: 600;
+  font-size: 16px;
+`;
+
+const RoomDescription = styled.div`
+  color: #96989d;
+  font-size: 12px;
+`;
+
+const HeaderActions = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+const ActionButton = styled.button`
+  background: #40444b;
   border: none;
-  color: #ffffff;
-  padding: 8px 12px;
-  border-radius: 12px;
+  color: #dcddde;
+  padding: 8px;
+  border-radius: 6px;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  font-weight: 700;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(114, 137, 218, 0.3);
+  justify-content: center;
+  transition: all 0.2s ease;
   
   &:hover {
-    background: linear-gradient(135deg, #5865f2, #7289da);
-    transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(114, 137, 218, 0.4);
-  }
-  
-  &:active {
-    transform: translateY(0);
-  }
-  
-  @media (max-width: 768px) {
-    padding: 6px 10px;
-    font-size: 11px;
-    gap: 4px;
+    background: #4f545c;
+    color: #fff;
   }
 `;
 
 const LogoutButton = styled.button`
-  background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+  background: #ed4245;
   border: none;
-  color: #ffffff;
-  padding: 8px 12px;
-  border-radius: 12px;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 6px;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
-  font-weight: 700;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s ease;
   
   &:hover {
-    background: linear-gradient(135deg, #ee5a24, #ff6b6b);
-    transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+    background: #c03537;
   }
+`;
+
+const MobileFloatingMenu = styled.div`
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
+  display: none;
   
-  &:active {
-    transform: translateY(0);
+  @media (max-width: 768px) {
+    display: block;
+  }
+`;
+
+const FloatingMenuButton = styled.button`
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #7289da;
+  border: none;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: #5865f2;
+    transform: scale(1.05);
+  }
+`;
+
+const FloatingMenu = styled.div`
+  position: absolute;
+  bottom: 70px;
+  right: 0;
+  background: #2f3136;
+  border-radius: 8px;
+  padding: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  display: ${props => props.$isOpen ? 'block' : 'none'};
+  min-width: 200px;
+`;
+
+const FloatingMenuItem = styled.button`
+  width: 100%;
+  background: none;
+  border: none;
+  color: #dcddde;
+  padding: 12px 16px;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: #40444b;
+    color: #fff;
+  }
+`;
+
+const ProfileButton = styled.button`
+  background: #40444b;
+  border: none;
+  color: #dcddde;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: #4f545c;
+    color: #fff;
   }
   
   @media (max-width: 768px) {
     padding: 6px 10px;
-    font-size: 11px;
-    gap: 4px;
+    font-size: 12px;
+    gap: 6px;
+    
+    span {
+      display: none;
+    }
+  }
+`;
+
+const ContentArea = styled.div`
+  flex: 1;
+  display: flex;
+  position: relative;
+  z-index: 1;
+`;
+
+const UserAvatar = styled.div`
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: ${props => props.$avatarUrl ? `url(${props.$avatarUrl}) center/cover` : 'linear-gradient(135deg, #7289da, #5865f2)'};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  
+  &:hover {
+    transform: scale(1.05);
   }
 `;
 
 const ActiveUsersBar = styled.div`
-  background: rgba(15, 15, 35, 0.8);
-  backdrop-filter: blur(20px);
-  padding: 12px 20px;
-  border-bottom: 1px solid rgba(138, 43, 226, 0.2);
+  background: #2f3136;
+  border-left: 1px solid #202225;
+  width: 240px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  
+  @media (max-width: 768px) {
+    display: none;
+  }
+`;
+
+const ActiveUsersTitle = styled.h3`
+  color: #dcddde;
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 16px 0;
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #b8b8b8;
-  font-size: 14px;
-  font-weight: 600;
-  position: relative;
-  z-index: 1;
+`;
+
+const UserList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
+
+const UserItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
   
-  span {
-    color: #40e0d0;
-    font-weight: 700;
+  &:hover {
+    background: #40444b;
   }
-  
-  @media (max-width: 768px) {
-    padding: 10px 16px;
-    font-size: 13px;
-    gap: 6px;
-  }
+`;
+
+const UserItemAvatar = styled.div`
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: ${props => props.$avatarUrl ? `url(${props.$avatarUrl}) center/cover` : 'linear-gradient(135deg, #7289da, #5865f2)'};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 10px;
+`;
+
+const UserItemInfo = styled.div`
+  flex: 1;
+`;
+
+const UserItemName = styled.div`
+  color: #dcddde;
+  font-size: 13px;
+  font-weight: 500;
+`;
+
+const UserItemStatus = styled.div`
+  color: #96989d;
+  font-size: 11px;
+`;
+
+const StatusIndicator = styled.div`
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: ${props => {
+    switch (props.$status) {
+      case 'online': return '#43b581';
+      case 'idle': return '#faa61a';
+      case 'dnd': return '#f04747';
+      case 'offline': return '#747f8d';
+      default: return '#43b581';
+    }
+  }};
 `;
 
 const App = () => {
   const [socket, setSocket] = useState(null);
-  const [user, setUser] = useState(() => {
-    // localStorage'dan kullanıcı bilgisini al
-    const savedUser = localStorage.getItem('chatUser');
-    return savedUser ? JSON.parse(savedUser) : null;
-  });
-  const [showRoomSelection, setShowRoomSelection] = useState(() => {
-    // Eğer kullanıcı varsa ama chatType yoksa oda seçimi göster
-    const savedUser = localStorage.getItem('chatUser');
-    if (savedUser) {
-      const userData = JSON.parse(savedUser);
-      return !userData.chatType;
-    }
-    return false;
-  });
+  const [isConnected, setIsConnected] = useState(false);
+  const [currentView, setCurrentView] = useState('auth'); // 'auth', 'room-selection', 'chat', 'voice'
+  const [user, setUser] = useState(null);
+  const [selectedRoom, setSelectedRoom] = useState(null);
   const [activeUsers, setActiveUsers] = useState([]);
-  const [messages, setMessages] = useState([]);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
 
+  // Socket bağlantısı
   useEffect(() => {
-    const socketUrl = process.env.NODE_ENV === 'production' 
-      ? (window.ENV?.REACT_APP_BACKEND_URL || 'https://tk-chat-app.onrender.com')
-      : 'http://localhost:5001';
-    
-    console.log('Socket URL:', socketUrl);
-    
-    // Eğer zaten bir socket bağlantısı varsa, önce onu kapat
-    if (socket) {
-      console.log('🔌 Mevcut socket bağlantısı kapatılıyor');
-      socket.disconnect();
-    }
-    
-    const newSocket = io(socketUrl, {
-      transports: ['websocket', 'polling'],
-      upgrade: true,
-      timeout: 20000,
-      forceNew: true,
-      reconnection: true,
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000
+    const newSocket = io('http://localhost:5001', {
+      transports: ['websocket', 'polling']
     });
-    setSocket(newSocket);
 
     newSocket.on('connect', () => {
-      console.log('✅ Sunucuya bağlandı, Socket ID:', newSocket.id);
+      console.log('Socket bağlandı');
+      setIsConnected(true);
     });
 
-    newSocket.on('connect_error', (error) => {
-      console.error('❌ Bağlantı hatası:', error);
+    newSocket.on('disconnect', () => {
+      console.log('Socket bağlantısı kesildi');
+      setIsConnected(false);
     });
 
-    newSocket.on('disconnect', (reason) => {
-      console.log('❌ Sunucu bağlantısı kesildi:', reason);
-    });
-
-    newSocket.on('reconnect', (attemptNumber) => {
-      console.log('🔄 Yeniden bağlandı, deneme:', attemptNumber);
-    });
-
-    // Aktif kullanıcıları al
     newSocket.on('active_users', (users) => {
-      console.log('👥 Aktif kullanıcılar alındı:', users);
       setActiveUsers(users);
     });
 
-    // Yeni mesaj geldiğinde
-    newSocket.on('new_message', (message) => {
-      console.log('💬 Yeni mesaj alındı:', message);
-      setMessages(prev => [...prev, message]);
-    });
-
-    // Kullanıcı katıldı mesajı
     newSocket.on('user_joined', (data) => {
-      console.log('👋 Kullanıcı katıldı:', data);
-      setMessages(prev => [...prev, {
-        id: Date.now(),
-        type: 'system',
-        content: `${data?.user?.username || data?.username || 'Bir kullanıcı'} sohbete katıldı`,
-        timestamp: new Date().toISOString()
-      }]);
+      console.log('Yeni kullanıcı katıldı:', data);
     });
 
-    // Kullanıcı ayrıldı mesajı
     newSocket.on('user_left', (data) => {
-      console.log('👋 Kullanıcı ayrıldı:', data);
-      setMessages(prev => [...prev, {
-        id: Date.now(),
-        type: 'system',
-        content: `${data?.user?.username || 'Bir kullanıcı'} sohbetten ayrıldı`,
-        timestamp: new Date().toISOString()
-      }]);
+      console.log('Kullanıcı ayrıldı:', data);
     });
+
+    newSocket.on('auth_error', (data) => {
+      console.error('Auth hatası:', data);
+      // Kullanıcıyı tekrar auth ekranına yönlendir
+      setCurrentView('auth');
+      setUser(null);
+    });
+
+    setSocket(newSocket);
 
     return () => {
-      console.log('🔌 Socket bağlantısı kapatılıyor');
-      if (newSocket) {
-        newSocket.disconnect();
-      }
+      newSocket.close();
     };
   }, []);
 
-  // Kullanıcı varsa socket'e bağlan
-  useEffect(() => {
-    if (user && socket && socket.connected && user.chatType) {
-      console.log('✅ Kullanıcı zaten giriş yapmış, socket\'e bağlanıyor:', user);
-      socket.emit('user_join', { ...user, room: 'general' });
-    }
-  }, [user, socket]);
-
+  // Kullanıcı giriş yaptığında
   const handleLogin = (userData) => {
-    console.log('🔐 Kullanıcı giriş yapıyor:', userData);
+    console.log('Kullanıcı giriş yaptı:', userData);
     setUser(userData);
-    setShowRoomSelection(true);
     
-    // Kullanıcı bilgisini localStorage'a kaydet (chatType olmadan)
-    localStorage.setItem('chatUser', JSON.stringify(userData));
+    // Kullanıcı bilgilerini localStorage'a kaydet
+    localStorage.setItem('user', JSON.stringify(userData));
+    
+    // Oda seçimi ekranına yönlendir
+    setCurrentView('room-selection');
   };
 
-  const handleRoomSelect = (userWithChatType) => {
-    console.log('🏠 Oda seçildi:', userWithChatType);
+  // Oda seçildiğinde
+  const handleJoinRoom = (room) => {
+    console.log('Oda seçildi:', room);
+    setSelectedRoom(room);
     
-    // Önce mevcut odadan çık
-    if (socket && socket.connected && user && user.chatType) {
-      console.log('🚪 Mevcut odadan çıkılıyor');
-      if (user.chatType === 'voice') {
-        socket.emit('leave_voice_room', { room: 'voice' });
-      } else {
-        socket.emit('user_leave', { ...user, room: 'general' });
-      }
-    }
-    
-    const updatedUser = { ...user, ...userWithChatType };
-    setUser(updatedUser);
-    setShowRoomSelection(false);
-    
-    // Kullanıcı bilgisini localStorage'a kaydet (chatType ile)
-    localStorage.setItem('chatUser', JSON.stringify(updatedUser));
-    
-    // Yeni odaya katıl
-    if (socket && socket.connected) {
-      console.log('🚪 Yeni odaya katılıyor:', updatedUser.chatType);
-      if (updatedUser.chatType === 'voice') {
-        // Sesli oda için özel işlem yok, VoiceRoom component'i kendi hallediyor
-      } else {
-        socket.emit('user_join', { ...updatedUser, room: 'general' });
-      }
-    }
-  };
-
-  const handleBackToLogin = () => {
-    console.log('🔙 Giriş sayfasına dönülüyor');
-    setUser(null);
-    setShowRoomSelection(false);
-    setMessages([]);
-    setActiveUsers([]);
-    localStorage.removeItem('chatUser');
-  };
-
-  const handleBackToRoomSelection = () => {
-    console.log('🔙 Oda seçimi sayfasına dönülüyor');
-    
-    // Önce mevcut odadan çık
-    if (socket && socket.connected && user && user.chatType) {
-      console.log('🚪 Mevcut odadan çıkılıyor');
-      if (user.chatType === 'voice') {
-        socket.emit('leave_voice_room', { room: 'voice' });
-      } else {
-        socket.emit('user_leave', { ...user, room: 'general' });
-      }
-    }
-    
-    // Kullanıcı bilgisini güncelle (chatType'ı kaldır)
-    const userWithoutChatType = { username: user.username, password: user.password };
-    setUser(userWithoutChatType);
-    setShowRoomSelection(true);
-    setMessages([]);
-    setActiveUsers([]);
-    localStorage.setItem('chatUser', JSON.stringify(userWithoutChatType));
-  };
-
-  const handleLogout = () => {
-    console.log('🚪 Çıkış yapılıyor');
-    
-    // Önce mevcut odadan çık
-    if (socket && socket.connected && user && user.chatType) {
-      console.log('🚪 Mevcut odadan çıkılıyor');
-      if (user.chatType === 'voice') {
-        socket.emit('leave_voice_room', { room: 'voice' });
-      } else {
-        socket.emit('user_leave', { ...user, room: 'general' });
-      }
-    }
-    
-    setUser(null);
-    setShowRoomSelection(false);
-    setMessages([]);
-    setActiveUsers([]);
-    localStorage.removeItem('chatUser');
-  };
-
-  const handleSendMessage = (messageContent) => {
-    console.log('App.js handleSendMessage çağrıldı:', messageContent);
-    console.log('Socket durumu:', socket);
-    
-    if (socket && messageContent.trim()) {
-      const messageData = {
-        content: messageContent.trim(),
-        room: 'general'
-      };
-      console.log('Socket.emit çağrılıyor:', messageData);
-      socket.emit('send_message', messageData);
-    } else {
-      console.log('Mesaj gönderilemedi:', {
-        hasSocket: !!socket,
-        messageContent: messageContent,
-        messageTrimmed: messageContent.trim()
+    if (socket && user) {
+      // Socket'e kullanıcı bilgilerini gönder
+      socket.emit('user_join', {
+        username: user.username,
+        room: room.id
       });
+      
+      // Oda tipine göre view'ı ayarla
+      if (room.type === 'voice') {
+        setCurrentView('voice');
+      } else {
+        setCurrentView('chat');
+      }
     }
   };
 
+  // Geri dön butonları
+  const handleBackToRoomSelection = () => {
+    setCurrentView('room-selection');
+    setSelectedRoom(null);
+  };
+
+  const handleBackToAuth = () => {
+    setCurrentView('auth');
+    setUser(null);
+    setSelectedRoom(null);
+    localStorage.removeItem('user');
+  };
+
+  // Çıkış yap
+  const handleLogout = () => {
+    if (socket) {
+      socket.disconnect();
+    }
+    setUser(null);
+    setSelectedRoom(null);
+    setActiveUsers([]);
+    setCurrentView('auth');
+    setShowMobileMenu(false); // Close mobile menu when logging out
+    localStorage.removeItem('user');
+  };
+
+  // Profil modal işlemleri
   const handleOpenProfile = () => {
     setShowProfileModal(true);
+    setShowMobileMenu(false); // Close mobile menu when opening profile
   };
 
   const handleCloseProfile = () => {
@@ -492,126 +486,195 @@ const App = () => {
     try {
       // Kullanıcı bilgilerini güncelle
       setUser(updatedUser);
-      localStorage.setItem('chatUser', JSON.stringify(updatedUser));
+      localStorage.setItem('user', JSON.stringify(updatedUser));
       
-      // Socket üzerinden profil güncellemesini gönder
-      if (socket && socket.connected) {
+      // Socket'e profil güncellemesini gönder
+      if (socket) {
         socket.emit('update_profile', updatedUser);
       }
       
-      console.log('Profil başarıyla güncellendi:', updatedUser);
+      setShowProfileModal(false);
     } catch (error) {
       console.error('Profil güncellenirken hata:', error);
     }
   };
 
-  // Login sayfası
-  if (!user) {
-    return <SimpleLogin onLogin={handleLogin} />;
-  }
+  // Sayfa yüklendiğinde localStorage'dan kullanıcı bilgilerini kontrol et
+  useEffect(() => {
+    const savedUser = localStorage.getItem('user');
+    if (savedUser) {
+      try {
+        const userData = JSON.parse(savedUser);
+        setUser(userData);
+        setCurrentView('room-selection');
+      } catch (error) {
+        console.error('Kullanıcı bilgileri yüklenirken hata:', error);
+        localStorage.removeItem('user');
+      }
+    }
+  }, []);
 
-  // Oda seçimi sayfası
-  if (showRoomSelection) {
+  // Mobile menu click outside handler
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showMobileMenu) {
+        const mobileMenu = document.querySelector('[data-mobile-menu]');
+        if (mobileMenu && !mobileMenu.contains(event.target)) {
+          setShowMobileMenu(false);
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showMobileMenu]);
+
+  // Render fonksiyonları
+  const renderAuthScreen = () => {
+    return <AuthScreen onLogin={handleLogin} isConnected={isConnected} />;
+  };
+
+  const renderRoomSelection = () => {
+    return <RoomSelection user={user} onJoinRoom={handleJoinRoom} />;
+  };
+
+  const renderChatRoom = () => {
     return (
-      <RoomSelection 
-        user={user} 
-        onRoomSelect={handleRoomSelect}
-        onBackToLogin={handleBackToLogin}
+      <ChatRoom
+        socket={socket}
+        user={user}
+        room={selectedRoom}
+        onBack={handleBackToRoomSelection}
       />
     );
-  }
+  };
 
-  // Chat odası
-  return (
-    <AppContainer>
+  const renderVoiceRoom = () => {
+    return (
+      <VoiceRoom
+        socket={socket}
+        user={user}
+        room={selectedRoom}
+        onBack={handleBackToRoomSelection}
+      />
+    );
+  };
+
+  const renderHeader = () => {
+    console.log('Current view:', currentView); // Debug log
+    
+    if (currentView === 'auth' || currentView === 'room-selection') {
+      return null;
+    }
+
+    return (
       <ChatHeader>
         <BackButton onClick={handleBackToRoomSelection}>
           <ArrowLeft size={16} />
-          <span className="hide-on-mobile">Oda Seçimi</span>
+          Geri
         </BackButton>
         
-        <ChatTypeIcon>
-          <span style={{ 
-            fontWeight: 'bold', 
-            background: 'linear-gradient(135deg, #8a2be2, #40e0d0)',
-            backgroundClip: 'text',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            fontSize: '18px'
-          }}>
-            TK Chat
-          </span>
-          {user.chatType === 'text' ? (
-            <>
-              <Hash size={20} style={{ color: '#40e0d0' }} />
-              <span className="hide-on-mobile">Yazılı Sohbet</span>
-            </>
-          ) : (
-            <>
-              <Mic size={20} style={{ color: '#40e0d0' }} />
-              <span className="hide-on-mobile">Sesli Sohbet</span>
-            </>
-          )}
-        </ChatTypeIcon>
+        <RoomInfo>
+          <RoomIcon>
+            {selectedRoom?.type === 'voice' ? <Mic size={16} /> : <Hash size={16} />}
+          </RoomIcon>
+          <RoomDetails>
+            <RoomName>{selectedRoom?.name}</RoomName>
+            <RoomDescription>{selectedRoom?.description}</RoomDescription>
+          </RoomDetails>
+        </RoomInfo>
         
-        <UserInfo>
-          <UserAvatar onClick={handleOpenProfile} style={{ cursor: 'pointer' }}>
-            {user.avatar ? (
-              <img 
-                src={user.avatar} 
-                alt={user.username} 
-                style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
-              />
-            ) : (
-              user.username.charAt(0).toUpperCase()
-            )}
-          </UserAvatar>
-          <span className="hide-on-mobile">{user.displayName || user.username}</span>
+        <HeaderActions>
+          {/* User Profile Button - Discord style */}
           <ProfileButton onClick={handleOpenProfile}>
-            <Settings size={12} />
-            <span className="hide-on-mobile">Profil</span>
+            <UserAvatar $avatarUrl={user?.avatar}>
+              {user?.displayName?.charAt(0)?.toUpperCase() || user?.username?.charAt(0)?.toUpperCase() || 'U'}
+            </UserAvatar>
+            <span>{user?.displayName || user?.username}</span>
           </ProfileButton>
-          <LogoutButton onClick={handleLogout}>
-            <LogOut size={12} />
-            <span className="hide-on-mobile">Çıkış</span>
+          
+          {/* Settings Button */}
+          <ActionButton onClick={handleOpenProfile} title="Profil Ayarları">
+            <Settings size={16} />
+          </ActionButton>
+          
+          {/* Logout Button */}
+          <LogoutButton onClick={handleLogout} title="Çıkış Yap">
+            <LogOut size={16} />
+            <span>Çıkış</span>
           </LogoutButton>
-        </UserInfo>
+        </HeaderActions>
       </ChatHeader>
+    );
+  };
 
+  const renderActiveUsers = () => {
+    if (currentView === 'auth' || currentView === 'room-selection') {
+      return null;
+    }
+
+    return (
       <ActiveUsersBar>
-        <Users size={14} style={{ color: '#40e0d0' }} />
-        <span>Çevrimiçi: {activeUsers.length} kullanıcı</span>
-        {activeUsers.length > 0 && (
-          <>
-            <span>•</span>
-            <span className="hide-on-mobile">
-              {activeUsers.slice(0, 3).map((activeUser, index) => (
-                <span key={activeUser.id} style={{ color: '#ffffff' }}>
-                  {activeUser.username}
-                  {index < Math.min(2, activeUsers.length - 1) && ', '}
-                </span>
-              ))}
-              {activeUsers.length > 3 && ` ve ${activeUsers.length - 3} kişi daha`}
-            </span>
-          </>
-        )}
+        <ActiveUsersTitle>
+          <Users size={16} />
+          Aktif Kullanıcılar ({activeUsers.length})
+        </ActiveUsersTitle>
+        <UserList>
+          {activeUsers.map((activeUser) => (
+            <UserItem key={activeUser.id}>
+              <UserItemAvatar $avatarUrl={activeUser.avatar}>
+                {activeUser.displayName?.charAt(0)?.toUpperCase() || activeUser.username?.charAt(0)?.toUpperCase() || 'U'}
+              </UserItemAvatar>
+              <UserItemInfo>
+                <UserItemName>{activeUser.displayName || activeUser.username}</UserItemName>
+                <UserItemStatus>{activeUser.status || 'online'}</UserItemStatus>
+              </UserItemInfo>
+              <StatusIndicator $status={activeUser.status || 'online'} />
+            </UserItem>
+          ))}
+        </UserList>
       </ActiveUsersBar>
+    );
+  };
 
-      {user.chatType === 'text' ? (
-        <ChatRoom 
-          socket={socket} 
-          user={user} 
-          messages={messages}
-          onSendMessage={handleSendMessage}
-        />
-      ) : (
-        <VoiceRoom 
-          socket={socket} 
-          user={user} 
-          activeUsers={activeUsers}
-        />
+  return (
+    <AppContainer>
+      {renderHeader()}
+      
+      <ContentArea>
+        {currentView === 'auth' && renderAuthScreen()}
+        {currentView === 'room-selection' && renderRoomSelection()}
+        {currentView === 'chat' && renderChatRoom()}
+        {currentView === 'voice' && renderVoiceRoom()}
+        
+        {renderActiveUsers()}
+      </ContentArea>
+      
+      {/* Mobile Floating Menu */}
+      {(currentView === 'chat' || currentView === 'voice') && (
+        <MobileFloatingMenu data-mobile-menu>
+          <FloatingMenuButton onClick={() => setShowMobileMenu(!showMobileMenu)}>
+            <Settings size={24} />
+          </FloatingMenuButton>
+          
+          <FloatingMenu $isOpen={showMobileMenu}>
+            <FloatingMenuItem onClick={handleOpenProfile}>
+              <UserAvatar $avatarUrl={user?.avatar}>
+                {user?.displayName?.charAt(0)?.toUpperCase() || user?.username?.charAt(0)?.toUpperCase() || 'U'}
+              </UserAvatar>
+              <span>Profil</span>
+            </FloatingMenuItem>
+            
+            <FloatingMenuItem onClick={handleLogout}>
+              <LogOut size={16} />
+              <span>Çıkış Yap</span>
+            </FloatingMenuItem>
+          </FloatingMenu>
+        </MobileFloatingMenu>
       )}
-
+      
       {showProfileModal && (
         <ProfileModalComponent
           user={user}

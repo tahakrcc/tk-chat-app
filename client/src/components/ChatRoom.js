@@ -12,27 +12,12 @@ const fadeIn = keyframes`
 
 const ChatContainer = styled.div`
   flex: 1;
-  background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 25%, #16213e 50%, #0f3460 75%, #533483 100%);
+  background: #36393f;
   display: flex;
   flex-direction: column;
   height: 100vh;
   animation: ${fadeIn} 0.6s ease-out;
   position: relative;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: 
-      radial-gradient(circle at 20% 80%, rgba(138, 43, 226, 0.1) 0%, transparent 50%),
-      radial-gradient(circle at 80% 20%, rgba(64, 224, 208, 0.08) 0%, transparent 50%),
-      radial-gradient(circle at 40% 40%, rgba(255, 105, 180, 0.06) 0%, transparent 50%);
-    pointer-events: none;
-    z-index: 0;
-  }
   
   @media (max-width: 768px) {
     height: calc(100vh - 120px);
@@ -56,13 +41,11 @@ const MessagesArea = styled.div`
 `;
 
 const MessageInputContainer = styled.div`
-  background: rgba(15, 15, 35, 0.95);
-  backdrop-filter: blur(30px);
-  border-top: 2px solid rgba(138, 43, 226, 0.3);
+  background: #292b2f;
+  border-top: 1px solid #202225;
   padding: 20px;
   position: relative;
   z-index: 1;
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
   
   @media (max-width: 768px) {
     padding: 16px;
@@ -73,19 +56,17 @@ const InputWrapper = styled.div`
   display: flex;
   gap: 12px;
   align-items: flex-end;
-  background: rgba(15, 15, 35, 0.8);
-  backdrop-filter: blur(20px);
-  border-radius: 20px;
-  border: 2px solid rgba(138, 43, 226, 0.3);
+  background: #40444b;
+  border-radius: 8px;
+  border: 1px solid #202225;
   padding: 16px;
   transition: all 0.3s ease;
   position: relative;
   z-index: 1000;
   
   &:focus-within {
-    border-color: rgba(64, 224, 208, 0.8);
-    box-shadow: 0 0 0 4px rgba(64, 224, 208, 0.2);
-    background: rgba(15, 15, 35, 0.9);
+    border-color: #7289da;
+    box-shadow: 0 0 0 2px rgba(114, 137, 218, 0.2);
   }
   
   @media (max-width: 768px) {
@@ -101,47 +82,52 @@ const InputWrapper = styled.div`
 
 const MessageInput = styled.textarea`
   flex: 1;
-  border: none;
   background: transparent;
-  color: #ffffff;
+  border: none;
+  color: #dcddde;
   font-size: 16px;
-  font-weight: 600;
+  font-family: inherit;
   resize: none;
   outline: none;
   min-height: 20px;
   max-height: 120px;
-  font-family: inherit;
+  line-height: 1.4;
   
   &::placeholder {
-    color: rgba(255, 255, 255, 0.6);
-    font-weight: 500;
+    color: #72767d;
   }
   
   @media (max-width: 768px) {
     font-size: 16px;
-    -webkit-appearance: none;
-    -webkit-border-radius: 0;
-    border-radius: 0;
-    -webkit-transform: translateZ(0);
-    transform: translateZ(0);
+    min-height: 18px;
   }
 `;
 
-const EmojiButton = styled.button`
+const ActionButtons = styled.div`
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  
+  @media (max-width: 768px) {
+    gap: 6px;
+  }
+`;
+
+const ActionButton = styled.button`
   background: transparent;
   border: none;
-  color: #ffffff;
-  cursor: pointer;
+  color: #72767d;
   padding: 8px;
-  border-radius: 12px;
-  transition: all 0.3s ease;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
   
   &:hover {
-    background: rgba(138, 43, 226, 0.2);
-    transform: scale(1.1);
+    background: #4f545c;
+    color: #dcddde;
   }
   
   &:active {
@@ -149,86 +135,27 @@ const EmojiButton = styled.button`
   }
   
   @media (max-width: 768px) {
-    padding: 10px;
-    min-width: 44px;
-    min-height: 44px;
-  }
-  
-  @media (max-width: 480px) {
-    padding: 12px;
-    min-width: 48px;
-    min-height: 48px;
-  }
-`;
-
-const GifButton = styled.button`
-  background: transparent;
-  border: none;
-  color: #ffffff;
-  cursor: pointer;
-  padding: 8px;
-  border-radius: 12px;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  
-  &:hover {
-    background: rgba(64, 224, 208, 0.2);
-    transform: scale(1.1);
-  }
-  
-  &:active {
-    transform: scale(0.95);
-  }
-  
-  @media (max-width: 768px) {
-    padding: 10px;
-    min-width: 44px;
-    min-height: 44px;
-  }
-  
-  @media (max-width: 480px) {
-    padding: 12px;
-    min-width: 48px;
-    min-height: 48px;
+    padding: 6px;
   }
 `;
 
 const SendButton = styled.button`
-  background: linear-gradient(135deg, #8a2be2, #40e0d0);
-  color: white;
+  background: linear-gradient(135deg, #7289da, #5865f2);
   border: none;
-  border-radius: 16px;
-  padding: 12px 16px;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 6px 20px rgba(138, 43, 226, 0.3);
-  position: relative;
-  overflow: hidden;
-  min-width: 48px;
-  min-height: 48px;
-  font-weight: 700;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-    transition: left 0.5s;
-  }
-  
-  &:hover::before {
-    left: 100%;
-  }
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
   
   &:hover {
-    background: linear-gradient(135deg, #40e0d0, #8a2be2);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(138, 43, 226, 0.4);
+    background: linear-gradient(135deg, #5865f2, #7289da);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(114, 137, 218, 0.3);
   }
   
   &:active {
@@ -236,44 +163,88 @@ const SendButton = styled.button`
   }
   
   &:disabled {
-    opacity: 0.6;
+    background: #40444b;
+    color: #72767d;
     cursor: not-allowed;
     transform: none;
+    box-shadow: none;
   }
   
   @media (max-width: 768px) {
-    min-width: 44px;
-    min-height: 44px;
-    padding: 10px 12px;
+    padding: 6px 10px;
+  }
+`;
+
+const PickerContainer = styled.div`
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  margin-bottom: 8px;
+  z-index: 1001;
+  
+  @media (max-width: 768px) {
+    position: fixed;
+    bottom: 80px;
+    right: 16px;
+    left: 16px;
+    margin-bottom: 0;
   }
 `;
 
 const TypingIndicator = styled.div`
-  color: #40e0d0;
+  color: #96989d;
   font-size: 14px;
-  font-weight: 700;
-  padding: 12px 20px;
-  background: rgba(15, 15, 35, 0.95);
-  backdrop-filter: blur(20px);
-  border-top: 2px solid rgba(138, 43, 226, 0.2);
-  position: relative;
-  z-index: 1;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  font-style: italic;
+  padding: 8px 20px;
+  animation: ${fadeIn} 0.3s ease-out;
   
   @media (max-width: 768px) {
-    padding: 10px 16px;
+    padding: 6px 16px;
     font-size: 13px;
   }
 `;
 
-const ChatRoom = ({ socket, user, messages = [], onSendMessage }) => {
+const WelcomeMessage = styled.div`
+  text-align: center;
+  padding: 40px 20px;
+  color: #96989d;
+  
+  @media (max-width: 768px) {
+    padding: 30px 16px;
+  }
+`;
+
+const WelcomeTitle = styled.h2`
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0 0 12px 0;
+  
+  @media (max-width: 768px) {
+    font-size: 20px;
+  }
+`;
+
+const WelcomeSubtitle = styled.p`
+  color: #96989d;
+  font-size: 16px;
+  margin: 0;
+  line-height: 1.5;
+  
+  @media (max-width: 768px) {
+    font-size: 14px;
+  }
+`;
+
+const ChatRoom = ({ socket, user, room, onBack }) => {
+  const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
-  const [typingUsers, setTypingUsers] = useState(new Set());
   const [isTyping, setIsTyping] = useState(false);
+  const [typingUsers, setTypingUsers] = useState(new Set());
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showGifPicker, setShowGifPicker] = useState(false);
-  const inputRef = useRef(null);
   const messagesEndRef = useRef(null);
+  const typingTimeoutRef = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -286,22 +257,26 @@ const ChatRoom = ({ socket, user, messages = [], onSendMessage }) => {
   useEffect(() => {
     if (!socket) return;
 
+    // Mesaj alma
+    socket.on('new_message', (message) => {
+      setMessages(prev => [...prev, message]);
+    });
+
+    // Kullanıcı yazıyor
     socket.on('user_typing', (data) => {
-      if (data.userId !== user?.id) {
-        setTypingUsers(prev => new Set([...prev, data.username]));
-      }
+      setTypingUsers(prev => new Set(prev).add(data.username));
     });
 
+    // Kullanıcı yazmayı durdurdu
     socket.on('user_stop_typing', (data) => {
-      if (data.userId !== user?.id) {
-        setTypingUsers(prev => {
-          const newSet = new Set(prev);
-          newSet.delete(data.username);
-          return newSet;
-        });
-      }
+      setTypingUsers(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(data.username);
+        return newSet;
+      });
     });
 
+    // Profil güncellemesi
     socket.on('profile_updated', (data) => {
       console.log('ChatRoom: Profil güncellendi:', data);
       // Profil güncellemesi sonrası UI'ı yenile
@@ -309,40 +284,29 @@ const ChatRoom = ({ socket, user, messages = [], onSendMessage }) => {
     });
 
     return () => {
+      socket.off('new_message');
       socket.off('user_typing');
       socket.off('user_stop_typing');
       socket.off('profile_updated');
     };
-  }, [socket, user]);
+  }, [socket]);
 
   const handleSendMessage = () => {
-    console.log('handleSendMessage çağrıldı, mesaj:', newMessage);
-    console.log('onSendMessage fonksiyonu:', onSendMessage);
-    
-    if (newMessage.trim() && onSendMessage) {
-      console.log('Mesaj gönderiliyor:', newMessage.trim());
-      onSendMessage(newMessage.trim());
-      setNewMessage('');
-      
-      // Yazıyor durumunu durdur
-      if (socket) {
-        socket.emit('stop_typing', { 
-          userId: user.id, 
-          username: user.username,
-          room: 'general'
-        });
-      }
-      
-      // Input'u sıfırla
-      if (inputRef.current) {
-        inputRef.current.style.height = 'auto';
-      }
-    } else {
-      console.log('Mesaj gönderilemedi:', {
-        messageTrimmed: newMessage.trim(),
-        hasOnSendMessage: !!onSendMessage
-      });
-    }
+    if (!newMessage.trim() || !socket) return;
+
+    const messageData = {
+      content: newMessage.trim(),
+      room: room?.id || 'general'
+    };
+
+    socket.emit('send_message', messageData);
+    setNewMessage('');
+    setShowEmojiPicker(false);
+    setShowGifPicker(false);
+
+    // Yazıyor durumunu durdur
+    socket.emit('stop_typing', { room: room?.id || 'general' });
+    setIsTyping(false);
   };
 
   const handleKeyPress = (e) => {
@@ -354,55 +318,38 @@ const ChatRoom = ({ socket, user, messages = [], onSendMessage }) => {
 
   const handleTyping = (e) => {
     setNewMessage(e.target.value);
-    
-    // Auto-resize textarea
-    if (inputRef.current) {
-      inputRef.current.style.height = 'auto';
-      inputRef.current.style.height = Math.min(inputRef.current.scrollHeight, 120) + 'px';
-    }
-    
-    // Yazıyor göstergesi
-    if (socket && !isTyping) {
+
+    if (!isTyping) {
       setIsTyping(true);
-      socket.emit('typing', { 
-        userId: user.id, 
-        username: user.username,
-        room: 'general'
-      });
-      
-      // 3 saniye sonra typing'i durdur
-      setTimeout(() => {
-        setIsTyping(false);
-        if (socket) {
-          socket.emit('stop_typing', { 
-            userId: user.id, 
-            username: user.username,
-            room: 'general'
-          });
-        }
-      }, 3000);
+      socket?.emit('typing', { room: room?.id || 'general' });
     }
+
+    // Yazıyor durumunu sıfırla
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    typingTimeoutRef.current = setTimeout(() => {
+      setIsTyping(false);
+      socket?.emit('stop_typing', { room: room?.id || 'general' });
+    }, 2000);
   };
 
   const getTypingText = () => {
     const users = Array.from(typingUsers);
     if (users.length === 0) return '';
-    if (users.length === 1) return `✏️ ${users[0]} mesaj yazıyor...`;
-    if (users.length === 2) return `✏️ ${users[0]} ve ${users[1]} mesaj yazıyor...`;
-    return `✏️ ${users[0]} ve ${users.length - 1} kişi daha mesaj yazıyor...`;
+    if (users.length === 1) return `${users[0]} yazıyor...`;
+    if (users.length === 2) return `${users[0]} ve ${users[1]} yazıyor...`;
+    return `${users[0]} ve ${users.length - 1} kişi daha yazıyor...`;
   };
 
   const handleEmojiClick = (emojiObject) => {
-    const emoji = emojiObject.emoji;
-    setNewMessage(prev => prev + emoji);
+    setNewMessage(prev => prev + emojiObject.emoji);
     setShowEmojiPicker(false);
-    if (inputRef.current) {
-      inputRef.current.focus();
-    }
   };
 
   const handleGifSelect = (gifUrl) => {
-    onSendMessage(gifUrl);
+    setNewMessage(prev => prev + ` ${gifUrl} `);
     setShowGifPicker(false);
   };
 
@@ -419,52 +366,66 @@ const ChatRoom = ({ socket, user, messages = [], onSendMessage }) => {
   return (
     <ChatContainer>
       <MessagesArea>
-        <MessageList messages={messages} currentUser={user} />
+        {messages.length === 0 ? (
+          <WelcomeMessage>
+            <WelcomeTitle>👋 {room?.name} Odasına Hoş Geldiniz!</WelcomeTitle>
+            <WelcomeSubtitle>
+              İlk mesajınızı göndererek sohbete başlayın. 
+              Emoji ve GIF'ler kullanarak mesajlarınızı daha eğlenceli hale getirebilirsiniz.
+            </WelcomeSubtitle>
+          </WelcomeMessage>
+        ) : (
+          <MessageList messages={messages} currentUser={user} />
+        )}
+        
+        {getTypingText() && (
+          <TypingIndicator>
+            {getTypingText()}
+          </TypingIndicator>
+        )}
+        
         <div ref={messagesEndRef} />
       </MessagesArea>
-      
-      {getTypingText() && (
-        <TypingIndicator>
-          {getTypingText()}
-        </TypingIndicator>
-      )}
-      
-      <EmojiPicker
-        onEmojiClick={handleEmojiClick}
-        isOpen={showEmojiPicker}
-        onToggle={toggleEmojiPicker}
-      />
-      
-      <GifPicker
-        onGifSelect={handleGifSelect}
-        isOpen={showGifPicker}
-        onToggle={toggleGifPicker}
-      />
-      
+
       <MessageInputContainer>
         <InputWrapper>
-          <EmojiButton onClick={toggleEmojiPicker} title="Emoji Ekle">
-            <Smile size={20} />
-          </EmojiButton>
-          <GifButton onClick={toggleGifPicker} title="GIF Ekle">
-            <Image size={20} />
-          </GifButton>
           <MessageInput
-            ref={inputRef}
             value={newMessage}
             onChange={handleTyping}
             onKeyPress={handleKeyPress}
-            placeholder="Mesajınızı yazın..."
+            placeholder={`#${room?.name || 'genel'} kanalına mesaj gönder...`}
             rows={1}
           />
-          <SendButton 
-            onClick={handleSendMessage}
-            disabled={!newMessage.trim()}
-            title="Mesaj Gönder (Enter)"
-          >
-            <Send size={18} />
-          </SendButton>
+          
+          <ActionButtons>
+            <ActionButton onClick={toggleEmojiPicker} title="Emoji">
+              <Smile size={20} />
+            </ActionButton>
+            
+            <ActionButton onClick={toggleGifPicker} title="GIF">
+              <Image size={20} />
+            </ActionButton>
+            
+            <SendButton 
+              onClick={handleSendMessage}
+              disabled={!newMessage.trim()}
+              title="Gönder"
+            >
+              <Send size={16} />
+            </SendButton>
+          </ActionButtons>
         </InputWrapper>
+
+        {(showEmojiPicker || showGifPicker) && (
+          <PickerContainer>
+            {showEmojiPicker && (
+              <EmojiPicker onEmojiClick={handleEmojiClick} />
+            )}
+            {showGifPicker && (
+              <GifPicker onGifSelect={handleGifSelect} />
+            )}
+          </PickerContainer>
+        )}
       </MessageInputContainer>
     </ChatContainer>
   );
