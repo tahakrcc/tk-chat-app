@@ -82,6 +82,13 @@ const Username = styled.span`
   display: flex;
   align-items: center;
   gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    color: #7289da;
+    text-decoration: underline;
+  }
   
   @media (max-width: 768px) {
     font-size: 13px;
@@ -202,7 +209,7 @@ const formatTime = (timestamp) => {
   }
 };
 
-const MessageList = ({ messages, currentUser }) => {
+const MessageList = ({ messages, currentUser, onUserClick }) => {
   if (!messages || messages.length === 0) {
     return (
       <div style={{ 
@@ -239,12 +246,12 @@ const MessageList = ({ messages, currentUser }) => {
               </CurrentUserAvatar>
               <CurrentUserContent>
                 <CurrentUserHeader>
-                                  <CurrentUserUsername>
-                  {message.user?.displayName || message.user?.username || 'Bilinmeyen Kullanıcı'}
-                  <GenderIndicator>
-                    {message.user?.gender === 'female' ? '👩' : '👨'}
-                  </GenderIndicator>
-                </CurrentUserUsername>
+                  <CurrentUserUsername onClick={() => onUserClick && onUserClick(message.user)}>
+                    {message.user?.displayName || message.user?.username || 'Bilinmeyen Kullanıcı'}
+                    <GenderIndicator>
+                      {message.user?.gender === 'female' ? '👩' : '👨'}
+                    </GenderIndicator>
+                  </CurrentUserUsername>
                   <Timestamp>
                     {formatTime(message.timestamp)}
                   </Timestamp>
@@ -272,7 +279,7 @@ const MessageList = ({ messages, currentUser }) => {
             </UserAvatar>
             <MessageContent>
               <MessageHeader>
-                <Username>
+                <Username onClick={() => onUserClick && onUserClick(message.user)}>
                   {message.user?.displayName || message.user?.username || 'Bilinmeyen Kullanıcı'}
                   <GenderIndicator>
                     {message.user?.gender === 'female' ? '👩' : '👨'}

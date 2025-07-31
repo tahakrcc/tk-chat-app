@@ -71,7 +71,11 @@ app.post('/api/upload-avatar', upload.single('avatar'), async (req, res) => {
       return res.status(400).json({ error: 'Dosya yüklenmedi' });
     }
     
-    const avatarUrl = `${SERVER_URL}/uploads/${req.file.filename}`;
+    // Production'da doğru URL kullan
+    const avatarUrl = process.env.NODE_ENV === 'production' 
+      ? `https://tk-chat-app.onrender.com/uploads/${req.file.filename}`
+      : `${SERVER_URL}/uploads/${req.file.filename}`;
+    
     res.json({ 
       message: 'Fotoğraf başarıyla yüklendi',
       avatarUrl: avatarUrl 
@@ -123,10 +127,27 @@ const userSchema = new mongoose.Schema({
   status: { type: String, default: 'online' },
   isOnline: { type: Boolean, default: false },
   lastSeen: { type: Date, default: Date.now },
-  createdAt: { type: Date, default: Date.now }
+  createdAt: { type: Date, default: Date.now },
+  // Takip sistemi
+  followers: [{ type: String }], // Takipçiler (username listesi)
+  following: [{ type: String }], // Takip edilenler (username listesi)
+  followRequests: [{ type: String }], // Gelen takip istekleri
+  sentFollowRequests: [{ type: String }], // Gönderilen takip istekleri
+  isPrivate: { type: Boolean, default: false } // Özel profil mi?
 });
 
 const User = mongoose.model('User', userSchema);
+
+// Özel mesaj şeması
+const privateMessageSchema = new mongoose.Schema({
+  from: { type: String, required: true }, // Gönderen username
+  to: { type: String, required: true }, // Alıcı username
+  content: { type: String, required: true },
+  timestamp: { type: Date, default: Date.now },
+  isRead: { type: Boolean, default: false }
+});
+
+const PrivateMessage = mongoose.model('PrivateMessage', privateMessageSchema);
 
 // Kullanıcı veritabanı (artık MongoDB kullanıyoruz)
 // const registeredUsers = new Map(); // Bu satırı kaldır
@@ -502,6 +523,382 @@ app.get('/api/user/:username', async (req, res) => {
   }
 });
 
+// TAKİP SİSTEMİ ENDPOINT'LERİ
+// Takip isteği gönder
+app.post('/api/follow/request', async (req, res) => {
+  try {
+    const { fromUsername, toUsername } = req.body;
+    
+    if (!fromUsername || !toUsername) {
+      return res.status(400).json({ error: 'Kullanıcı adları gerekli' });
+    }
+    
+    if (fromUsername === toUsername) {
+      return res.status(400).json({ error: 'Kendinizi takip edemezsiniz' });
+    }
+    
+    const fromUser = await User.findOne({ username: fromUsername });
+    const toUser = await User.findOne({ username: toUsername });
+    
+    if (!fromUser || !toUser) {
+      return res.status(404).json({ error: 'Kullanıcı bulunamadı' });
+    }
+    
+    // Zaten takip ediliyor mu kontrol et
+    if (fromUser.following.includes(toUsername)) {
+      return res.status(400).json({ error: 'Zaten takip ediyorsunuz' });
+    }
+    
+    // Zaten istek gönderilmiş mi kontrol et
+    if (fromUser.sentFollowRequests.includes(toUsername)) {
+      return res.status(400).json({ error: 'Zaten takip isteği gönderilmiş' });
+    }
+    
+    // Takip isteği gönder
+    fromUser.sentFollowRequests.push(toUsername);
+    toUser.followRequests.push(fromUsername);
+    
+    await fromUser.save();
+    await toUser.save();
+    
+    res.json({ message: 'Takip isteği gönderildi' });
+  } catch (error) {
+    console.error('Takip isteği hatası:', error);
+    res.status(500).json({ error: 'Sunucu hatası' });
+  }
+});
+
+// Takip isteğini kabul et
+app.post('/api/follow/accept', async (req, res) => {
+  try {
+    const { fromUsername, toUsername } = req.body;
+    
+    const fromUser = await User.findOne({ username: fromUsername });
+    const toUser = await User.findOne({ username: toUsername });
+    
+    if (!fromUser || !toUser) {
+      return res.status(404).json({ error: 'Kullanıcı bulunamadı' });
+    }
+    
+    // İstekleri temizle
+    fromUser.sentFollowRequests = fromUser.sentFollowRequests.filter(u => u !== toUsername);
+    toUser.followRequests = toUser.followRequests.filter(u => u !== fromUsername);
+    
+    // Takip ilişkisini kur
+    fromUser.following.push(toUsername);
+    toUser.followers.push(fromUsername);
+    
+    await fromUser.save();
+    await toUser.save();
+    
+    res.json({ message: 'Takip isteği kabul edildi' });
+  } catch (error) {
+    console.error('Takip kabul hatası:', error);
+    res.status(500).json({ error: 'Sunucu hatası' });
+  }
+});
+
+// Takip isteğini reddet
+app.post('/api/follow/reject', async (req, res) => {
+  try {
+    const { fromUsername, toUsername } = req.body;
+    
+    const fromUser = await User.findOne({ username: fromUsername });
+    const toUser = await User.findOne({ username: toUsername });
+    
+    if (!fromUser || !toUser) {
+      return res.status(404).json({ error: 'Kullanıcı bulunamadı' });
+    }
+    
+    // İstekleri temizle
+    fromUser.sentFollowRequests = fromUser.sentFollowRequests.filter(u => u !== toUsername);
+    toUser.followRequests = toUser.followRequests.filter(u => u !== fromUsername);
+    
+    await fromUser.save();
+    await toUser.save();
+    
+    res.json({ message: 'Takip isteği reddedildi' });
+  } catch (error) {
+    console.error('Takip red hatası:', error);
+    res.status(500).json({ error: 'Sunucu hatası' });
+  }
+});
+
+// Takibi bırak
+app.post('/api/follow/unfollow', async (req, res) => {
+  try {
+    const { fromUsername, toUsername } = req.body;
+    
+    const fromUser = await User.findOne({ username: fromUsername });
+    const toUser = await User.findOne({ username: toUsername });
+    
+    if (!fromUser || !toUser) {
+      return res.status(404).json({ error: 'Kullanıcı bulunamadı' });
+    }
+    
+    // Takip ilişkisini kaldır
+    fromUser.following = fromUser.following.filter(u => u !== toUsername);
+    toUser.followers = toUser.followers.filter(u => u !== fromUsername);
+    
+    await fromUser.save();
+    await toUser.save();
+    
+    res.json({ message: 'Takip bırakıldı' });
+  } catch (error) {
+    console.error('Takip bırakma hatası:', error);
+    res.status(500).json({ error: 'Sunucu hatası' });
+  }
+});
+
+// Kullanıcı takip durumunu getir
+app.get('/api/follow/status/:fromUsername/:toUsername', async (req, res) => {
+  try {
+    const { fromUsername, toUsername } = req.params;
+    
+    const fromUser = await User.findOne({ username: fromUsername });
+    const toUser = await User.findOne({ username: toUsername });
+    
+    if (!fromUser || !toUser) {
+      return res.status(404).json({ error: 'Kullanıcı bulunamadı' });
+    }
+    
+    const isFollowing = fromUser.following.includes(toUsername);
+    const hasRequestSent = fromUser.sentFollowRequests.includes(toUsername);
+    const hasRequestReceived = toUser.followRequests.includes(fromUsername);
+    
+    res.json({
+      isFollowing,
+      hasRequestSent,
+      hasRequestReceived,
+      isPrivate: toUser.isPrivate
+    });
+  } catch (error) {
+    console.error('Takip durumu hatası:', error);
+    res.status(500).json({ error: 'Sunucu hatası' });
+  }
+});
+
+// Kullanıcının takipçilerini getir
+app.get('/api/follow/followers/:username', async (req, res) => {
+  try {
+    const { username } = req.params;
+    const user = await User.findOne({ username });
+    
+    if (!user) {
+      return res.status(404).json({ error: 'Kullanıcı bulunamadı' });
+    }
+    
+    const followers = await User.find({ username: { $in: user.followers } })
+      .select('username displayName avatar gender isOnline');
+    
+    res.json({ followers });
+  } catch (error) {
+    console.error('Takipçi listesi hatası:', error);
+    res.status(500).json({ error: 'Sunucu hatası' });
+  }
+});
+
+// Kullanıcının takip ettiklerini getir
+app.get('/api/follow/following/:username', async (req, res) => {
+  try {
+    const { username } = req.params;
+    const user = await User.findOne({ username });
+    
+    if (!user) {
+      return res.status(404).json({ error: 'Kullanıcı bulunamadı' });
+    }
+    
+    const following = await User.find({ username: { $in: user.following } })
+      .select('username displayName avatar gender isOnline');
+    
+    res.json({ following });
+  } catch (error) {
+    console.error('Takip edilenler listesi hatası:', error);
+    res.status(500).json({ error: 'Sunucu hatası' });
+  }
+});
+
+// Gelen takip isteklerini getir
+app.get('/api/follow/requests/:username', async (req, res) => {
+  try {
+    const { username } = req.params;
+    const user = await User.findOne({ username });
+    
+    if (!user) {
+      return res.status(404).json({ error: 'Kullanıcı bulunamadı' });
+    }
+    
+    const requests = await User.find({ username: { $in: user.followRequests } })
+      .select('username displayName avatar gender');
+    
+    res.json({ requests });
+  } catch (error) {
+    console.error('Takip istekleri hatası:', error);
+    res.status(500).json({ error: 'Sunucu hatası' });
+  }
+});
+
+// ÖZEL SOHBET ENDPOINT'LERİ
+// Özel mesaj gönder
+app.post('/api/private-message/send', async (req, res) => {
+  try {
+    const { fromUsername, toUsername, content } = req.body;
+    
+    if (!fromUsername || !toUsername || !content) {
+      return res.status(400).json({ error: 'Tüm alanlar gerekli' });
+    }
+    
+    // Kullanıcıları kontrol et
+    const fromUser = await User.findOne({ username: fromUsername });
+    const toUser = await User.findOne({ username: toUsername });
+    
+    if (!fromUser || !toUser) {
+      return res.status(404).json({ error: 'Kullanıcı bulunamadı' });
+    }
+    
+    // Takip ilişkisi kontrol et (özel profil için)
+    if (toUser.isPrivate && !fromUser.following.includes(toUsername)) {
+      return res.status(403).json({ error: 'Bu kullanıcıya mesaj gönderemezsiniz' });
+    }
+    
+    // Mesajı kaydet
+    const message = new PrivateMessage({
+      from: fromUsername,
+      to: toUsername,
+      content: content
+    });
+    
+    await message.save();
+    
+    res.json({ 
+      message: 'Mesaj gönderildi',
+      privateMessage: message
+    });
+  } catch (error) {
+    console.error('Özel mesaj gönderme hatası:', error);
+    res.status(500).json({ error: 'Sunucu hatası' });
+  }
+});
+
+// Özel mesajları getir
+app.get('/api/private-message/:username1/:username2', async (req, res) => {
+  try {
+    const { username1, username2 } = req.params;
+    
+    const messages = await PrivateMessage.find({
+      $or: [
+        { from: username1, to: username2 },
+        { from: username2, to: username1 }
+      ]
+    }).sort({ timestamp: 1 });
+    
+    res.json({ messages });
+  } catch (error) {
+    console.error('Özel mesaj getirme hatası:', error);
+    res.status(500).json({ error: 'Sunucu hatası' });
+  }
+});
+
+// Okunmamış mesajları getir
+app.get('/api/private-message/unread/:username', async (req, res) => {
+  try {
+    const { username } = req.params;
+    
+    const unreadMessages = await PrivateMessage.find({
+      to: username,
+      isRead: false
+    }).sort({ timestamp: -1 });
+    
+    res.json({ unreadMessages });
+  } catch (error) {
+    console.error('Okunmamış mesaj getirme hatası:', error);
+    res.status(500).json({ error: 'Sunucu hatası' });
+  }
+});
+
+// Mesajları okundu olarak işaretle
+app.post('/api/private-message/mark-read', async (req, res) => {
+  try {
+    const { fromUsername, toUsername } = req.body;
+    
+    await PrivateMessage.updateMany(
+      { from: fromUsername, to: toUsername, isRead: false },
+      { isRead: true }
+    );
+    
+    res.json({ message: 'Mesajlar okundu olarak işaretlendi' });
+  } catch (error) {
+    console.error('Mesaj okundu işaretleme hatası:', error);
+    res.status(500).json({ error: 'Sunucu hatası' });
+  }
+});
+
+// Sohbet listesini getir (son mesajla birlikte)
+app.get('/api/private-message/conversations/:username', async (req, res) => {
+  try {
+    const { username } = req.params;
+    
+    // Kullanıcının katıldığı tüm sohbetleri bul
+    const conversations = await PrivateMessage.aggregate([
+      {
+        $match: {
+          $or: [
+            { from: username },
+            { to: username }
+          ]
+        }
+      },
+      {
+        $sort: { timestamp: -1 }
+      },
+      {
+        $group: {
+          _id: {
+            $cond: [
+              { $eq: ['$from', username] },
+              '$to',
+              '$from'
+            ]
+          },
+          lastMessage: { $first: '$$ROOT' },
+          unreadCount: {
+            $sum: {
+              $cond: [
+                { $and: [
+                  { $eq: ['$to', username] },
+                  { $eq: ['$isRead', false] }
+                ]},
+                1,
+                0
+              ]
+            }
+          }
+        }
+      },
+      {
+        $sort: { 'lastMessage.timestamp': -1 }
+      }
+    ]);
+    
+    // Kullanıcı bilgilerini ekle
+    const conversationsWithUsers = await Promise.all(
+      conversations.map(async (conv) => {
+        const user = await User.findOne({ username: conv._id })
+          .select('username displayName avatar gender isOnline');
+        return {
+          ...conv,
+          user: user || { username: conv._id, displayName: 'Bilinmeyen Kullanıcı' }
+        };
+      })
+    );
+    
+    res.json({ conversations: conversationsWithUsers });
+  } catch (error) {
+    console.error('Sohbet listesi hatası:', error);
+    res.status(500).json({ error: 'Sunucu hatası' });
+  }
+});
+
 io.on('connection', (socket) => {
   console.log('Yeni kullanıcı bağlandı:', socket.id);
 
@@ -748,6 +1145,105 @@ io.on('connection', (socket) => {
         isSpeaking: data.isSpeaking,
         voiceLevel: data.voiceLevel || 0
       });
+    }
+  });
+
+  // Takip sistemi socket event'leri
+  socket.on('follow_request', async (data) => {
+    try {
+      const { fromUsername, toUsername } = data;
+      
+      // Takip isteği gönder
+      const fromUser = await User.findOne({ username: fromUsername });
+      const toUser = await User.findOne({ username: toUsername });
+      
+      if (!fromUser || !toUser) {
+        socket.emit('follow_error', { message: 'Kullanıcı bulunamadı' });
+        return;
+      }
+      
+      // Zaten takip ediliyor mu kontrol et
+      if (fromUser.following.includes(toUsername)) {
+        socket.emit('follow_error', { message: 'Zaten takip ediyorsunuz' });
+        return;
+      }
+      
+      // Zaten istek gönderilmiş mi kontrol et
+      if (fromUser.sentFollowRequests.includes(toUsername)) {
+        socket.emit('follow_error', { message: 'Zaten takip isteği gönderilmiş' });
+        return;
+      }
+      
+      // Takip isteği gönder
+      fromUser.sentFollowRequests.push(toUsername);
+      toUser.followRequests.push(fromUsername);
+      
+      await fromUser.save();
+      await toUser.save();
+      
+      // Alıcıya bildirim gönder
+      socket.broadcast.emit('follow_request_received', {
+        fromUsername,
+        fromDisplayName: fromUser.displayName || fromUser.username,
+        fromAvatar: fromUser.avatar
+      });
+      
+      socket.emit('follow_request_sent', { message: 'Takip isteği gönderildi' });
+      
+    } catch (error) {
+      console.error('Takip isteği hatası:', error);
+      socket.emit('follow_error', { message: 'Takip isteği gönderilirken hata oluştu' });
+    }
+  });
+
+  // Özel mesaj gönderme
+  socket.on('private_message', async (data) => {
+    try {
+      const { fromUsername, toUsername, content } = data;
+      
+      // Kullanıcıları kontrol et
+      const fromUser = await User.findOne({ username: fromUsername });
+      const toUser = await User.findOne({ username: toUsername });
+      
+      if (!fromUser || !toUser) {
+        socket.emit('private_message_error', { message: 'Kullanıcı bulunamadı' });
+        return;
+      }
+      
+      // Takip ilişkisi kontrol et (özel profil için)
+      if (toUser.isPrivate && !fromUser.following.includes(toUsername)) {
+        socket.emit('private_message_error', { message: 'Bu kullanıcıya mesaj gönderemezsiniz' });
+        return;
+      }
+      
+      // Mesajı kaydet
+      const message = new PrivateMessage({
+        from: fromUsername,
+        to: toUsername,
+        content: content
+      });
+      
+      await message.save();
+      
+      const messageWithUser = {
+        ...message.toObject(),
+        user: {
+          username: fromUser.username,
+          displayName: fromUser.displayName || fromUser.username,
+          avatar: fromUser.avatar,
+          gender: fromUser.gender
+        }
+      };
+      
+      // Alıcıya mesajı gönder
+      socket.broadcast.emit('private_message_received', messageWithUser);
+      
+      // Gönderene onay gönder
+      socket.emit('private_message_sent', messageWithUser);
+      
+    } catch (error) {
+      console.error('Özel mesaj hatası:', error);
+      socket.emit('private_message_error', { message: 'Mesaj gönderilirken hata oluştu' });
     }
   });
 

@@ -237,7 +237,7 @@ const WelcomeSubtitle = styled.p`
   }
 `;
 
-const ChatRoom = ({ socket, user, room, onBack }) => {
+const ChatRoom = ({ socket, user, room, onBack, onUserClick }) => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -394,7 +394,7 @@ const ChatRoom = ({ socket, user, room, onBack }) => {
             </WelcomeSubtitle>
           </WelcomeMessage>
         ) : (
-          <MessageList messages={messages} currentUser={user} />
+          <MessageList messages={messages} currentUser={user} onUserClick={onUserClick} />
         )}
         
         {getTypingText() && (

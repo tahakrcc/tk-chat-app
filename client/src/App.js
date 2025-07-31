@@ -6,6 +6,8 @@ import RoomSelection from './components/RoomSelection';
 import ChatRoom from './components/ChatRoom';
 import VoiceRoom from './components/VoiceRoom';
 import ProfileModalComponent from './components/ProfileModal';
+import UserProfileModal from './components/UserProfileModal';
+import PrivateChat from './components/PrivateChat';
 import { ArrowLeft, Users, Hash, Mic, LogOut, Settings } from 'lucide-react';
 import SERVER_URL from './config';
 
@@ -427,6 +429,9 @@ const App = () => {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [activeUsers, setActiveUsers] = useState([]);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showUserProfileModal, setShowUserProfileModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [showPrivateChat, setShowPrivateChat] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [notifications, setNotifications] = useState([]);
 
@@ -586,6 +591,30 @@ const App = () => {
     setShowProfileModal(false);
   };
 
+  // Kullanıcı profiline tıklama
+  const handleUserClick = (user) => {
+    setSelectedUser(user);
+    setShowUserProfileModal(true);
+  };
+
+  // Kullanıcı profil modal'ını kapat
+  const handleCloseUserProfile = () => {
+    setShowUserProfileModal(false);
+    setSelectedUser(null);
+  };
+
+  // Özel mesaj gönderme
+  const handleSendPrivateMessage = (targetUser) => {
+    setSelectedUser(targetUser);
+    setShowPrivateChat(true);
+    setShowUserProfileModal(false);
+  };
+
+  // Özel sohbetten geri dön
+  const handleBackFromPrivateChat = () => {
+    setShowPrivateChat(false);
+  };
+
   // Profil kaydet/güncelle
   const handleSaveProfile = async (updatedUser) => {
     try {
@@ -674,13 +703,14 @@ const App = () => {
     );
   };
 
-  const renderChatRoom = () => {
+    const renderChatRoom = () => {
     return (
-      <ChatRoom
-        socket={socket}
-        user={user}
-        room={selectedRoom}
+      <ChatRoom 
+        socket={socket} 
+        user={user} 
+        room={selectedRoom} 
         onBack={handleBackToRoomSelection}
+        onUserClick={handleUserClick}
       />
     );
   };
@@ -833,6 +863,26 @@ const App = () => {
           user={user}
           onClose={handleCloseProfile}
           onSave={handleSaveProfile}
+        />
+      )}
+
+      {showUserProfileModal && selectedUser && (
+        <UserProfileModal
+          isOpen={showUserProfileModal}
+          onClose={handleCloseUserProfile}
+          targetUser={selectedUser}
+          currentUser={user}
+          socket={socket}
+          onSendPrivateMessage={handleSendPrivateMessage}
+        />
+      )}
+
+      {showPrivateChat && (
+        <PrivateChat
+          currentUser={user}
+          socket={socket}
+          onBack={handleBackFromPrivateChat}
+          onSendPrivateMessage={handleSendPrivateMessage}
         />
       )}
     </AppContainer>
