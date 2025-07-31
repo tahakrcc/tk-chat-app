@@ -448,6 +448,94 @@ const StatusDot = styled.div`
   background: ${props => props.$isOnline ? '#43b581' : '#ed4245'};
 `;
 
+const TypingIndicator = styled.div`
+  color: #96989d;
+  font-size: 12px;
+  font-style: italic;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+const ActiveUsersBar = styled.div`
+  background: #2f3136;
+  border-left: 1px solid #202225;
+  width: 240px;
+  display: flex;
+  flex-direction: column;
+  
+  @media (max-width: 768px) {
+    display: none;
+  }
+`;
+
+const ActiveUsersTitle = styled.h3`
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0;
+  padding: 16px 20px;
+  border-bottom: 1px solid #202225;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+const UserList = styled.div`
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+`;
+
+const UserItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 20px;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: #40444b;
+  }
+`;
+
+const UserItemAvatar = styled.div`
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: ${props => props.$avatarUrl ? `url(${props.$avatarUrl}) center/cover` : 'linear-gradient(135deg, #7289da, #5865f2)'};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+`;
+
+const UserItemInfo = styled.div`
+  flex: 1;
+  min-width: 0;
+`;
+
+const UserItemName = styled.div`
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+const UserItemStatus = styled.div`
+  color: #96989d;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+`;
+
 const PrivateChat = ({ 
   currentUser, 
   socket, 
@@ -460,6 +548,9 @@ const PrivateChat = ({
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [showChat, setShowChat] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
+  const [typingUsers, setTypingUsers] = useState([]);
+  const [activeUsers, setActiveUsers] = useState([]);
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
@@ -493,14 +584,54 @@ const PrivateChat = ({
       console.log('Takip isteği alındı:', data);
     };
 
+    const handleUserTyping = (data) => {
+      if (data.room === `private_${currentUser.username}_${selectedConversation?.user.username}` ||
+          data.room === `private_${selectedConversation?.user.username}_${currentUser.username}`) {
+        setTypingUsers(prev => {
+          const filtered = prev.filter(user => user.username !== data.username);
+          return [...filtered, { username: data.username, timestamp: Date.now() }];
+        });
+      }
+    };
+
+    const handleUserStopTyping = (data) => {
+      if (data.room === `private_${currentUser.username}_${selectedConversation?.user.username}` ||
+          data.room === `private_${selectedConversation?.user.username}_${currentUser.username}`) {
+        setTypingUsers(prev => prev.filter(user => user.username !== data.username));
+      }
+    };
+
+    const handleUserJoined = (data) => {
+      if (data.room === 'private') {
+        setActiveUsers(prev => {
+          const filtered = prev.filter(user => user.username !== data.user.username);
+          return [...filtered, data.user];
+        });
+      }
+    };
+
+    const handleUserLeft = (data) => {
+      if (data.room === 'private') {
+        setActiveUsers(prev => prev.filter(user => user.username !== data.username));
+      }
+    };
+
     socket.on('private_message_received', handlePrivateMessageReceived);
     socket.on('follow_request_received', handleFollowRequestReceived);
+    socket.on('user_typing', handleUserTyping);
+    socket.on('user_stop_typing', handleUserStopTyping);
+    socket.on('user_joined', handleUserJoined);
+    socket.on('user_left', handleUserLeft);
 
     return () => {
       socket.off('private_message_received', handlePrivateMessageReceived);
       socket.off('follow_request_received', handleFollowRequestReceived);
+      socket.off('user_typing', handleUserTyping);
+      socket.off('user_stop_typing', handleUserStopTyping);
+      socket.off('user_joined', handleUserJoined);
+      socket.off('user_left', handleUserLeft);
     };
-  }, [socket]);
+  }, [socket, currentUser, selectedConversation]);
 
   const fetchConversations = async () => {
     try {
@@ -565,12 +696,43 @@ const PrivateChat = ({
 
     socket.emit('private_message', messageData);
     setNewMessage('');
+    
+    // Yazıyor durumunu durdur
+    if (isTyping) {
+      setIsTyping(false);
+      socket.emit('stop_typing', {
+        room: `private_${currentUser.username}_${selectedConversation.user.username}`,
+        username: currentUser.username
+      });
+    }
   };
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
+    }
+  };
+
+  const handleInputChange = (e) => {
+    setNewMessage(e.target.value);
+    
+    if (!isTyping) {
+      setIsTyping(true);
+      socket.emit('typing', {
+        room: `private_${currentUser.username}_${selectedConversation?.user.username}`,
+        username: currentUser.username
+      });
+    }
+  };
+
+  const handleInputBlur = () => {
+    if (isTyping) {
+      setIsTyping(false);
+      socket.emit('stop_typing', {
+        room: `private_${currentUser.username}_${selectedConversation?.user.username}`,
+        username: currentUser.username
+      });
     }
   };
 
@@ -709,64 +871,109 @@ const PrivateChat = ({
           </FriendsSection>
         </ConversationsList>
 
-        <ChatArea $showChat={showChat}>
-          {selectedConversation ? (
-            <>
-              <MessagesArea>
-                {messages.length > 0 ? (
-                  messages.map((message, index) => (
-                    <MessageContainer 
-                      key={index} 
-                      $isOwn={message.from === currentUser.username}
-                    >
-                      <MessageBubble $isOwn={message.from === currentUser.username}>
-                        {message.content}
-                        <MessageTime $isOwn={message.from === currentUser.username}>
-                          {formatTime(message.timestamp)}
-                        </MessageTime>
-                      </MessageBubble>
-                    </MessageContainer>
-                  ))
-                ) : (
-                  <EmptyState>
-                    <EmptyIcon>💬</EmptyIcon>
-                    <EmptyTitle>Henüz mesaj yok</EmptyTitle>
-                    <EmptySubtitle>
-                      İlk mesajınızı göndererek sohbete başlayın
-                    </EmptySubtitle>
-                  </EmptyState>
-                )}
-                <div ref={messagesEndRef} />
-              </MessagesArea>
+                 <ChatArea $showChat={showChat}>
+           {selectedConversation ? (
+             <>
+               <MessagesArea>
+                 {messages.length > 0 ? (
+                   messages.map((message, index) => (
+                     <MessageContainer 
+                       key={index} 
+                       $isOwn={message.from === currentUser.username}
+                     >
+                       <MessageBubble $isOwn={message.from === currentUser.username}>
+                         {message.content}
+                         <MessageTime $isOwn={message.from === currentUser.username}>
+                           {formatTime(message.timestamp)}
+                         </MessageTime>
+                       </MessageBubble>
+                     </MessageContainer>
+                   ))
+                 ) : (
+                   <EmptyState>
+                     <EmptyIcon>💬</EmptyIcon>
+                     <EmptyTitle>Henüz mesaj yok</EmptyTitle>
+                     <EmptySubtitle>
+                       İlk mesajınızı göndererek sohbete başlayın
+                     </EmptySubtitle>
+                   </EmptyState>
+                 )}
+                 
+                 {/* Yazıyor durumu */}
+                 {typingUsers.length > 0 && (
+                   <TypingIndicator>
+                     <div>✏️</div>
+                     <div>
+                       {typingUsers.map(user => user.username).join(', ')} yazıyor...
+                     </div>
+                   </TypingIndicator>
+                 )}
+                 
+                 <div ref={messagesEndRef} />
+               </MessagesArea>
 
-              <MessageInputContainer>
-                <InputWrapper>
-                  <MessageInput
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    placeholder={`${selectedConversation.user.displayName || selectedConversation.user.username} kullanıcısına mesaj gönder...`}
-                    rows={1}
-                  />
-                  <SendButton 
-                    onClick={handleSendMessage}
-                    disabled={!newMessage.trim()}
-                  >
-                    <Send size={16} />
-                  </SendButton>
-                </InputWrapper>
-              </MessageInputContainer>
-            </>
-          ) : (
-            <EmptyState>
-              <EmptyIcon>👥</EmptyIcon>
-              <EmptyTitle>Sohbet seçin</EmptyTitle>
-              <EmptySubtitle>
-                Sol taraftan bir sohbet seçerek mesajlaşmaya başlayın
-              </EmptySubtitle>
-            </EmptyState>
-          )}
-        </ChatArea>
+               <MessageInputContainer>
+                 <InputWrapper>
+                   <MessageInput
+                     value={newMessage}
+                     onChange={handleInputChange}
+                     onKeyPress={handleKeyPress}
+                     onBlur={handleInputBlur}
+                     placeholder={`${selectedConversation.user.displayName || selectedConversation.user.username} kullanıcısına mesaj gönder...`}
+                     rows={1}
+                   />
+                   <SendButton 
+                     onClick={handleSendMessage}
+                     disabled={!newMessage.trim()}
+                   >
+                     <Send size={16} />
+                   </SendButton>
+                 </InputWrapper>
+               </MessageInputContainer>
+             </>
+           ) : (
+             <EmptyState>
+               <EmptyIcon>👥</EmptyIcon>
+               <EmptyTitle>Sohbet seçin</EmptyTitle>
+               <EmptySubtitle>
+                 Sol taraftan bir sohbet seçerek mesajlaşmaya başlayın
+               </EmptySubtitle>
+             </EmptyState>
+           )}
+         </ChatArea>
+
+         {/* Aktif Kullanıcılar Bölümü */}
+         <ActiveUsersBar>
+           <ActiveUsersTitle>
+             <Users size={16} />
+             Aktif Kullanıcılar ({activeUsers.length})
+           </ActiveUsersTitle>
+           <UserList>
+             {activeUsers.length > 0 ? (
+               activeUsers.map((user) => (
+                 <UserItem key={user.username}>
+                   <UserItemAvatar $avatarUrl={user.avatar}>
+                     {!user.avatar && (user.displayName?.charAt(0) || user.username?.charAt(0) || 'U').toUpperCase()}
+                   </UserItemAvatar>
+                   <UserItemInfo>
+                     <UserItemName>
+                       {user.displayName || user.username}
+                       {user.gender === 'female' ? ' 👩' : ' 👨'}
+                     </UserItemName>
+                     <UserItemStatus>
+                       <StatusDot $isOnline={user.isOnline} />
+                       {user.isOnline ? 'Çevrimiçi' : 'Çevrimdışı'}
+                     </UserItemStatus>
+                   </UserItemInfo>
+                 </UserItem>
+               ))
+             ) : (
+               <div style={{ color: '#72767d', fontSize: '12px', textAlign: 'center', padding: '20px' }}>
+                 Henüz aktif kullanıcı yok
+               </div>
+             )}
+           </UserList>
+         </ActiveUsersBar>
       </Content>
     </PrivateChatContainer>
   );
