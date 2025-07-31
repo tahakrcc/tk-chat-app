@@ -96,24 +96,25 @@ const mongooseOptions = {
   w: 'majority'
 };
 
-console.log('🔄 MongoDB bağlantısı kuruluyor...');
-mongoose.connect(MONGO_URI, mongooseOptions)
-  .then(() => {
+// MongoDB bağlantı fonksiyonu
+async function connectToMongoDB() {
+  try {
+    console.log('🔄 MongoDB bağlantısı kuruluyor...');
+    await mongoose.connect(MONGO_URI, mongooseOptions);
     console.log('✅ MongoDB bağlantısı başarılı!');
     console.log('📊 Bağlantı durumu:', mongoose.connection.readyState);
     console.log('🌐 Host:', mongoose.connection.host);
     console.log('📁 Database:', mongoose.connection.name);
     console.log('🔗 URI:', MONGO_URI.substring(0, 50) + '...');
-  })
-  .catch((err) => {
+    return true;
+  } catch (err) {
     console.error('❌ MongoDB bağlantı hatası:', err);
     console.error('🔍 Hata detayı:', err.message);
     console.error('📋 Hata kodu:', err.code);
     console.error('🔗 URI (ilk 50 karakter):', MONGO_URI.substring(0, 50) + '...');
-    
-    // Eğer MongoDB bağlantısı başarısız olursa, uygulama çalışmaya devam etsin
-    console.log('⚠️ MongoDB olmadan devam ediliyor...');
-  });
+    return false;
+  }
+}
 
 const userSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
@@ -733,7 +734,26 @@ io.on('connection', (socket) => {
 
 const PORT = process.env.PORT || 5001;
 
-server.listen(PORT, () => {
-  console.log(`Server ${PORT} portunda çalışıyor`);
-  console.log(`CORS origins: https://tk-chat-app.netlify.app, https://tk-chat-app.onrender.com, http://localhost:3000`);
-}); 
+// Server'ı MongoDB bağlantısından sonra başlat
+async function startServer() {
+  try {
+    // MongoDB'ye bağlan
+    const mongoConnected = await connectToMongoDB();
+    
+    if (!mongoConnected) {
+      console.log('⚠️ MongoDB bağlantısı başarısız, uygulama çalışmaya devam ediyor...');
+    }
+    
+    // Server'ı başlat
+    server.listen(PORT, () => {
+      console.log(`Server ${PORT} portunda çalışıyor`);
+      console.log(`CORS origins: https://tk-chat-app.netlify.app, https://tk-chat-app.onrender.com, http://localhost:3000`);
+    });
+  } catch (error) {
+    console.error('❌ Server başlatma hatası:', error);
+    process.exit(1);
+  }
+}
+
+// Server'ı başlat
+startServer(); 
