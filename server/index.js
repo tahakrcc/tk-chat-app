@@ -4,9 +4,46 @@ const socketIo = require('socket.io');
 const cors = require('cors');
 const helmet = require('helmet');
 const bcrypt = require('bcryptjs');
+const mongoose = require('mongoose');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
+// Uploads klasörünü oluştur
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+// Multer konfigürasyonu
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadsDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ 
+  storage: storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Sadece resim dosyaları kabul edilir'));
+    }
+  }
+});
 
 const app = express();
 const server = http.createServer(app);
+
+// SERVER_URL tanımı
+const SERVER_URL = process.env.SERVER_URL || 'http://localhost:5001';
+
 const io = socketIo(server, {
   cors: {
     origin: true, // Tüm origin'lere izin ver
@@ -23,26 +60,89 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Kullanıcı veritabanı (gerçek uygulamada MongoDB veya PostgreSQL kullanılır)
-const users = new Map();
-const registeredUsers = new Map(); // Kayıtlı kullanıcılar
-const voiceRoomUsers = new Set();
+// FOTOĞRAF UPLOAD ENDPOINTİ
+app.post('/api/upload-avatar', upload.single('avatar'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'Dosya yüklenmedi' });
+    }
+    
+    const avatarUrl = `${SERVER_URL}/uploads/${req.file.filename}`;
+    res.json({ 
+      message: 'Fotoğraf başarıyla yüklendi',
+      avatarUrl: avatarUrl 
+    });
+  } catch (error) {
+    console.error('Fotoğraf upload hatası:', error);
+    res.status(500).json({ error: 'Sunucu hatası' });
+  }
+});
+
+// MONGODB BAĞLANTISI VE USER MODELİ
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/tk-chat-app';
+mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log('MongoDB bağlantısı başarılı'))
+  .catch((err) => console.error('MongoDB bağlantı hatası:', err));
+
+const userSchema = new mongoose.Schema({
+  username: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  displayName: { type: String },
+  avatar: { type: String },
+  status: { type: String, default: 'online' },
+  isOnline: { type: Boolean, default: false },
+  lastSeen: { type: Date, default: Date.now },
+  createdAt: { type: Date, default: Date.now }
+});
+
+const User = mongoose.model('User', userSchema);
+
+// Kullanıcı veritabanı (artık MongoDB kullanıyoruz)
+// const registeredUsers = new Map(); // Bu satırı kaldır
+
+// Oda veritabanı
+const rooms = [
+  {
+    id: 'general',
+    name: 'Genel',
+    description: 'Genel sohbet odası',
+    type: 'public',
+    icon: '💬'
+  },
+  {
+    id: 'gaming',
+    name: 'Oyun',
+    description: 'Oyun sohbet odası',
+    type: 'public',
+    icon: '🎮'
+  },
+  {
+    id: 'music',
+    name: 'Müzik',
+    description: 'Müzik sohbet odası',
+    type: 'public',
+    icon: '🎵'
+  },
+  {
+    id: 'voice-general',
+    name: 'Sesli Genel',
+    description: 'Sesli genel sohbet',
+    type: 'voice',
+    icon: '🎤'
+  }
+];
 
 // Oda istatistikleri
 const roomStats = new Map();
 const roomMessages = new Map();
 
-// Oda verilerini başlat
+// Çevrimiçi kullanıcılar
+const users = new Map();
+
+// Oda başlatma
 const initializeRooms = () => {
-  const rooms = [
-    { id: 'general', name: 'Genel', description: 'Genel sohbet odası - herkes için açık' },
-    { id: 'gaming', name: 'Oyun', description: 'Oyun severler için özel oda' },
-    { id: 'music', name: 'Müzik', description: 'Müzik ve sanat hakkında sohbet' },
-    { id: 'tech', name: 'Teknoloji', description: 'Teknoloji ve programlama' },
-    { id: 'voice', name: 'Sesli Oda', description: 'Sesli sohbet odası' }
-  ];
-  
   rooms.forEach(room => {
     roomStats.set(room.id, {
       users: 0, // Gerçek kullanıcı sayısı
@@ -51,15 +151,15 @@ const initializeRooms = () => {
     });
     roomMessages.set(room.id, []);
   });
+  console.log('Odalar başlatıldı');
+};
+
+// Kullanıcı başlatma (artık MongoDB kullanıyoruz)
+const initializeUsers = () => {
+  console.log('Kullanıcı sistemi başlatıldı - MongoDB kullanılıyor');
 };
 
 initializeRooms();
-
-// Kullanıcı başlatma (artık test kullanıcıları yok)
-const initializeUsers = () => {
-  // Gerçek kullanıcılar kayıt oldukça eklenecek
-  console.log('Kullanıcı sistemi başlatıldı - test kullanıcıları kaldırıldı');
-};
 
 initializeUsers();
 
@@ -75,7 +175,7 @@ app.get('/api/health', (req, res) => {
     message: 'Server is healthy', 
     timestamp: new Date().toISOString(),
     cors: 'enabled',
-    users: registeredUsers.size,
+    users: users.size,
     rooms: roomStats.size
   });
 });
@@ -110,50 +210,40 @@ app.get('/api/rooms/:roomId/messages', (req, res) => {
 app.post('/api/register', async (req, res) => {
   try {
     const { username, email, password, displayName } = req.body;
-    
+
     // Validasyon
     if (!username || !email || !password) {
       return res.status(400).json({ error: 'Tüm alanlar gerekli' });
     }
-    
     if (password.length < 6) {
       return res.status(400).json({ error: 'Şifre en az 6 karakter olmalı' });
     }
-    
-    // Kullanıcı adı kontrolü
-    if (registeredUsers.has(username)) {
-      return res.status(400).json({ error: 'Bu kullanıcı adı zaten kullanılıyor' });
-    }
-    
-    // E-posta kontrolü
-    const existingUser = Array.from(registeredUsers.values()).find(user => user.email === email);
+
+    // Kullanıcı adı ve e-posta kontrolü
+    const existingUser = await User.findOne({ $or: [ { username }, { email } ] });
     if (existingUser) {
-      return res.status(400).json({ error: 'Bu e-posta adresi zaten kullanılıyor' });
+      return res.status(400).json({ error: 'Bu kullanıcı adı veya e-posta zaten kullanılıyor' });
     }
-    
+
     // Yeni kullanıcı oluştur
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = {
-      id: Date.now().toString(),
+    const newUser = new User({
       username,
-      email,
       password: hashedPassword,
       displayName: displayName || username,
-      bio: '',
       avatar: null,
       status: 'online',
-      createdAt: new Date().toISOString()
-    };
-    
-    registeredUsers.set(username, newUser);
-    
-    // Şifreyi çıkar ve kullanıcıyı döndür
-    const { password: _, ...userWithoutPassword } = newUser;
-    res.status(201).json({ 
-      message: 'Kullanıcı başarıyla oluşturuldu',
-      user: userWithoutPassword 
+      email
     });
-    
+    await newUser.save();
+
+    // Şifreyi çıkar ve kullanıcıyı döndür
+    const userObj = newUser.toObject();
+    delete userObj.password;
+    res.status(201).json({
+      message: 'Kullanıcı başarıyla oluşturuldu',
+      user: userObj
+    });
   } catch (error) {
     console.error('Kayıt hatası:', error);
     res.status(500).json({ error: 'Sunucu hatası' });
@@ -164,31 +254,32 @@ app.post('/api/register', async (req, res) => {
 app.post('/api/login', async (req, res) => {
   try {
     const { username, password } = req.body;
-    
-    // Validasyon
     if (!username || !password) {
       return res.status(400).json({ error: 'Kullanıcı adı ve şifre gerekli' });
     }
-    
     // Kullanıcıyı bul
-    const user = registeredUsers.get(username);
+    const user = await User.findOne({ username });
     if (!user) {
       return res.status(401).json({ error: 'Kullanıcı adı veya şifre hatalı' });
     }
-    
     // Şifreyi kontrol et
     const isValidPassword = await bcrypt.compare(password, user.password);
     if (!isValidPassword) {
       return res.status(401).json({ error: 'Kullanıcı adı veya şifre hatalı' });
     }
     
-    // Şifreyi çıkar ve kullanıcıyı döndür
-    const { password: _, ...userWithoutPassword } = user;
-    res.json({ 
-      message: 'Giriş başarılı',
-      user: userWithoutPassword 
-    });
+    // Kullanıcıyı çevrimiçi yap
+    user.isOnline = true;
+    user.lastSeen = new Date();
+    await user.save();
     
+    // Şifreyi çıkar ve kullanıcıyı döndür
+    const userObj = user.toObject();
+    delete userObj.password;
+    res.json({
+      message: 'Giriş başarılı',
+      user: userObj
+    });
   } catch (error) {
     console.error('Giriş hatası:', error);
     res.status(500).json({ error: 'Sunucu hatası' });
@@ -196,17 +287,10 @@ app.post('/api/login', async (req, res) => {
 });
 
 // Çevrimiçi kullanıcılar API'si
-app.get('/api/users', (req, res) => {
+app.get('/api/users', async (req, res) => {
   try {
-    // Sadece çevrimiçi kullanıcıları döndür
-    const onlineUsers = Array.from(users.values()).map(user => ({
-      id: user.id,
-      username: user.username,
-      displayName: user.displayName,
-      avatar: user.avatar,
-      status: 'online',
-      room: user.room
-    }));
+    // MongoDB'den çevrimiçi kullanıcıları çek
+    const onlineUsers = await User.find({ isOnline: true }).select('-password');
     res.json(onlineUsers);
   } catch (error) {
     console.error('Çevrimiçi kullanıcılar hatası:', error);
@@ -218,16 +302,71 @@ app.get('/api/users', (req, res) => {
 app.get('/api/users/:username', (req, res) => {
   try {
     const { username } = req.params;
-    const user = registeredUsers.get(username);
+    User.findOne({ username })
+      .then(user => {
+        if (!user) {
+          return res.status(404).json({ error: 'Kullanıcı bulunamadı' });
+        }
+        const { password, ...userWithoutPassword } = user.toObject();
+        res.json(userWithoutPassword);
+      })
+      .catch(err => {
+        console.error('Kullanıcı profili hatası:', err);
+        res.status(500).json({ error: 'Sunucu hatası' });
+      });
+  } catch (error) {
+    console.error('Kullanıcı profili hatası:', error);
+    res.status(500).json({ error: 'Sunucu hatası' });
+  }
+});
+
+// PROFİL GÜNCELLEME ENDPOINTİ (GELİŞTİRİLMİŞ)
+app.post('/api/profile/update', async (req, res) => {
+  try {
+    const { username, displayName, avatar } = req.body;
+    if (!username) {
+      return res.status(400).json({ error: 'Kullanıcı adı gerekli' });
+    }
     
+    const user = await User.findOne({ username });
     if (!user) {
       return res.status(404).json({ error: 'Kullanıcı bulunamadı' });
     }
     
-    const { password, ...userWithoutPassword } = user;
-    res.json(userWithoutPassword);
+    if (displayName) user.displayName = displayName;
+    if (avatar) user.avatar = avatar;
+    
+    await user.save();
+    
+    const userObj = user.toObject();
+    delete userObj.password;
+    
+    // Socket ile herkese yayınla
+    io.emit('profile_updated', userObj);
+    
+    res.json({ 
+      message: 'Profil güncellendi', 
+      user: userObj 
+    });
   } catch (error) {
-    console.error('Kullanıcı profili hatası:', error);
+    console.error('Profil güncelleme hatası:', error);
+    res.status(500).json({ error: 'Sunucu hatası' });
+  }
+});
+
+// KULLANICI PROFİLİ ÇEKME ENDPOINTİ
+app.get('/api/user/:username', async (req, res) => {
+  try {
+    const { username } = req.params;
+    const user = await User.findOne({ username });
+    if (!user) {
+      return res.status(404).json({ error: 'Kullanıcı bulunamadı' });
+    }
+    const userObj = user.toObject();
+    delete userObj.password;
+    res.json({ user: userObj });
+  } catch (error) {
+    console.error('Kullanıcı profili çekme hatası:', error);
     res.status(500).json({ error: 'Sunucu hatası' });
   }
 });
@@ -236,52 +375,62 @@ io.on('connection', (socket) => {
   console.log('Yeni kullanıcı bağlandı:', socket.id);
 
   // Kullanıcı giriş yaptığında
-  socket.on('user_join', (userData) => {
+  socket.on('user_join', async (userData) => {
     console.log('Kullanıcı giriş yaptı:', userData);
     
-    // Kayıtlı kullanıcıyı bul
-    const registeredUser = registeredUsers.get(userData.username);
-    if (!registeredUser) {
-      socket.emit('auth_error', { message: 'Kullanıcı bulunamadı' });
-      return;
-    }
-    
-    users.set(socket.id, {
-      id: socket.id,
-      username: userData.username,
-      room: userData.room || 'general',
-      displayName: registeredUser.displayName,
-      avatar: registeredUser.avatar,
-      status: registeredUser.status
-    });
-    
-    socket.join(userData.room || 'general');
-    
-    // Oda istatistiklerini güncelle
-    const roomId = userData.room || 'general';
-    const stats = roomStats.get(roomId);
-    if (stats) {
-      stats.users = Array.from(users.values()).filter(u => u.room === roomId).length;
-      stats.lastActivity = new Date().toISOString();
-    }
-    
-    // Diğer kullanıcılara yeni kullanıcı katıldığını bildir
-    socket.to(roomId).emit('user_joined', {
-      user: {
+    try {
+      // Kullanıcıyı bul ve çevrimiçi yap
+      const registeredUser = await User.findOne({ username: userData.username });
+      if (!registeredUser) {
+        socket.emit('auth_error', { message: 'Kullanıcı bulunamadı' });
+        return;
+      }
+      
+      // Kullanıcıyı çevrimiçi yap
+      registeredUser.isOnline = true;
+      registeredUser.lastSeen = new Date();
+      await registeredUser.save();
+      
+      users.set(socket.id, {
         id: socket.id,
         username: userData.username,
+        room: userData.room || 'general',
         displayName: registeredUser.displayName,
         avatar: registeredUser.avatar,
         status: registeredUser.status
+      });
+      
+      socket.join(userData.room || 'general');
+      
+      // Oda istatistiklerini güncelle
+      const roomId = userData.room || 'general';
+      const stats = roomStats.get(roomId);
+      if (stats) {
+        stats.users = Array.from(users.values()).filter(u => u.room === roomId).length;
+        stats.lastActivity = new Date().toISOString();
       }
-    });
-    
-    // Aktif kullanıcıları gönder
-    const roomUsers = Array.from(users.values()).filter(user => user.room === roomId);
-    io.to(roomId).emit('active_users', roomUsers);
-    
-    // Oda istatistiklerini gönder
-    io.to(roomId).emit('room_stats_updated', roomStats.get(roomId));
+      
+      // Diğer kullanıcılara yeni kullanıcı katıldığını bildir
+      socket.to(roomId).emit('user_joined', {
+        user: {
+          id: socket.id,
+          username: userData.username,
+          displayName: registeredUser.displayName,
+          avatar: registeredUser.avatar,
+          status: registeredUser.status
+        }
+      });
+      
+      // Aktif kullanıcıları gönder
+      const roomUsers = Array.from(users.values()).filter(user => user.room === roomId);
+      io.to(roomId).emit('active_users', roomUsers);
+      
+      // Oda istatistiklerini gönder
+      io.to(roomId).emit('room_stats_updated', roomStats.get(roomId));
+    } catch (error) {
+      console.error('Kullanıcı girişi hatası:', error);
+      socket.emit('auth_error', { message: 'Sunucu hatası' });
+    }
   });
 
   // Mesaj gönderme
@@ -365,6 +514,23 @@ io.on('connection', (socket) => {
     }
   });
 
+  // SOCKET.IO PROFİL GÜNCELLEME
+  socket.on('update_profile', async (data) => {
+    try {
+      const { username, displayName, avatar } = data;
+      const user = await User.findOne({ username });
+      if (!user) return;
+      if (displayName) user.displayName = displayName;
+      if (avatar) user.avatar = avatar;
+      await user.save();
+      const userObj = user.toObject();
+      delete userObj.password;
+      io.emit('profile_updated', userObj);
+    } catch (error) {
+      console.error('Socket profil güncelleme hatası:', error);
+    }
+  });
+
   // Sesli oda katılımı
   socket.on('join_voice_room', (data) => {
     console.log('Sesli odaya katılım:', socket.id, data);
@@ -384,13 +550,8 @@ io.on('connection', (socket) => {
       users.set(socket.id, existingUser);
     }
     
-    voiceRoomUsers.add(socket.id);
-    
     // Sesli odadaki kullanıcıları gönder
-    const voiceUsers = Array.from(voiceRoomUsers).map(userId => {
-      const user = users.get(userId);
-      return user ? { id: userId, username: user.username } : null;
-    }).filter(Boolean);
+    const voiceUsers = Array.from(users.values()).filter(user => user.room === 'voice');
     
     io.emit('voice_room_users', { users: voiceUsers });
     
@@ -403,13 +564,9 @@ io.on('connection', (socket) => {
   // Sesli odadan ayrılma
   socket.on('leave_voice_room', (data) => {
     console.log('Sesli odadan ayrılma:', socket.id, data);
-    voiceRoomUsers.delete(socket.id);
     
     // Sesli odadaki kullanıcıları güncelle
-    const voiceUsers = Array.from(voiceRoomUsers).map(userId => {
-      const user = users.get(userId);
-      return user ? { id: userId, username: user.username } : null;
-    }).filter(Boolean);
+    const voiceUsers = Array.from(users.values()).filter(user => user.room === 'voice');
     
     io.emit('voice_room_users', { users: voiceUsers });
     
@@ -458,11 +615,24 @@ io.on('connection', (socket) => {
   });
 
   // Bağlantı koptuğunda
-  socket.on('disconnect', () => {
+  socket.on('disconnect', async () => {
     console.log('Kullanıcı ayrıldı:', socket.id);
     const user = users.get(socket.id);
     
     if (user) {
+      // MongoDB'de kullanıcıyı çevrimdışı yap
+      try {
+        await User.findOneAndUpdate(
+          { username: user.username },
+          { 
+            isOnline: false, 
+            lastSeen: new Date() 
+          }
+        );
+      } catch (error) {
+        console.error('Kullanıcı çevrimdışı yapma hatası:', error);
+      }
+      
       // Diğer kullanıcılara kullanıcı ayrıldığını bildir
       socket.to(user.room).emit('user_left', {
         user: {
@@ -490,12 +660,9 @@ io.on('connection', (socket) => {
     }
     
     // Sesli odadan da çıkar
-    if (voiceRoomUsers.has(socket.id)) {
-      voiceRoomUsers.delete(socket.id);
-      const voiceUsers = Array.from(voiceRoomUsers).map(userId => {
-        const user = users.get(userId);
-        return user ? { id: userId, username: user.username } : null;
-      }).filter(Boolean);
+    if (users.has(socket.id) && users.get(socket.id).room === 'voice') {
+      users.delete(socket.id);
+      const voiceUsers = Array.from(users.values()).filter(user => user.room === 'voice');
       
       io.emit('voice_room_users', { users: voiceUsers });
       socket.broadcast.emit('user_left_voice', socket.id);

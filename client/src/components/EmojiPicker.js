@@ -38,36 +38,35 @@ const EmojiButton = styled.button`
 `;
 
 const EmojiPickerContainer = styled.div`
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: rgba(0, 0, 0, 0.95);
-  backdrop-filter: blur(20px);
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  border-radius: 20px;
-  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.9);
-  z-index: 10000;
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  background: #2f3136;
+  border: 1px solid #202225;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
+  z-index: 1000;
   overflow: hidden;
-  width: 90vw;
-  max-width: 450px;
-  max-height: 70vh;
+  width: 350px;
+  max-height: 400px;
+  margin-bottom: 8px;
+  margin-right: 8px;
   
   .EmojiPickerReact {
-    --epr-emoji-size: 28px;
-    --epr-category-icon-size: 22px;
-    --epr-horizontal-padding: 16px;
-    --epr-vertical-padding: 12px;
-    --epr-search-input-border-color: rgba(255, 255, 255, 0.3);
-    --epr-search-input-bg-color: rgba(255, 255, 255, 0.1);
-    --epr-search-input-text-color: #ffffff;
-    --epr-search-input-placeholder-color: rgba(255, 255, 255, 0.7);
-    --epr-category-label-bg-color: rgba(255, 255, 255, 0.1);
-    --epr-category-label-text-color: #ffffff;
-    --epr-skin-tone-picker-menu-bg-color: rgba(0, 0, 0, 0.9);
-    --epr-skin-tone-picker-menu-border-color: rgba(255, 255, 255, 0.2);
-    --epr-bg-color: transparent;
-    --epr-category-label-color: #ffffff;
+    --epr-emoji-size: 24px;
+    --epr-category-icon-size: 18px;
+    --epr-horizontal-padding: 12px;
+    --epr-vertical-padding: 8px;
+    --epr-search-input-border-color: #40444b;
+    --epr-search-input-bg-color: #40444b;
+    --epr-search-input-text-color: #dcddde;
+    --epr-search-input-placeholder-color: #72767d;
+    --epr-category-label-bg-color: #36393f;
+    --epr-category-label-text-color: #72767d;
+    --epr-skin-tone-picker-menu-bg-color: #2f3136;
+    --epr-skin-tone-picker-menu-border-color: #40444b;
+    --epr-bg-color: #2f3136;
+    --epr-category-label-color: #72767d;
   }
   
   .EmojiPickerReact .epr-emoji {
@@ -87,28 +86,28 @@ const EmojiPickerContainer = styled.div`
   }
   
   @media (max-width: 768px) {
-    width: 95vw;
-    max-width: 400px;
-    max-height: 65vh;
+    width: 320px;
+    max-height: 350px;
+    right: -8px;
     
     .EmojiPickerReact {
-      --epr-emoji-size: 26px;
-      --epr-category-icon-size: 20px;
-      --epr-horizontal-padding: 12px;
-      --epr-vertical-padding: 8px;
+      --epr-emoji-size: 22px;
+      --epr-category-icon-size: 16px;
+      --epr-horizontal-padding: 8px;
+      --epr-vertical-padding: 6px;
     }
   }
   
   @media (max-width: 480px) {
-    width: 98vw;
-    max-width: 350px;
-    max-height: 60vh;
+    width: 280px;
+    max-height: 300px;
+    right: -4px;
     
     .EmojiPickerReact {
-      --epr-emoji-size: 24px;
-      --epr-category-icon-size: 18px;
-      --epr-horizontal-padding: 8px;
-      --epr-vertical-padding: 6px;
+      --epr-emoji-size: 20px;
+      --epr-category-icon-size: 14px;
+      --epr-horizontal-padding: 6px;
+      --epr-vertical-padding: 4px;
     }
   }
 `;
@@ -124,54 +123,18 @@ const Overlay = styled.div`
   cursor: pointer;
 `;
 
-const EmojiPicker = ({ onEmojiClick, isOpen, onToggle }) => {
-  const handleToggle = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    onToggle();
-  };
-
-  const handleOverlayClick = (e) => {
-    if (e.target === e.currentTarget) {
-      onToggle();
-    }
-  };
-
-  // Prevent body scroll when picker is open
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-      document.body.style.position = 'fixed';
-      document.body.style.width = '100%';
-    } else {
-      document.body.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.width = '';
-    }
-
-    return () => {
-      document.body.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.width = '';
-    };
-  }, [isOpen]);
-
-  if (!isOpen) return null;
-
+const EmojiPicker = ({ onEmojiClick }) => {
   return (
-    <>
-      <Overlay onClick={handleOverlayClick} />
-      <EmojiPickerContainer>
-        <EmojiPickerReact
-          onEmojiClick={onEmojiClick}
-          autoFocusSearch={false}
-          searchPlaceholder="Emoji ara..."
-          width="100%"
-          height={window.innerWidth <= 768 ? 400 : 450}
-          lazyLoadEmojis={true}
-        />
-      </EmojiPickerContainer>
-    </>
+    <EmojiPickerContainer>
+      <EmojiPickerReact
+        onEmojiClick={onEmojiClick}
+        autoFocusSearch={false}
+        searchPlaceholder="Emoji ara..."
+        width="100%"
+        height={300}
+        lazyLoadEmojis={true}
+      />
+    </EmojiPickerContainer>
   );
 };
 

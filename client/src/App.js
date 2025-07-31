@@ -431,20 +431,31 @@ const App = () => {
     setSocket(newSocket);
 
     return () => {
+      newSocket.off('profile_updated');
       newSocket.close();
     };
   }, []);
 
   // Kullanıcı giriş yaptığında
-  const handleLogin = (userData) => {
-    console.log('Kullanıcı giriş yaptı:', userData);
-    setUser(userData);
-    
-    // Kullanıcı bilgilerini localStorage'a kaydet
-    localStorage.setItem('user', JSON.stringify(userData));
-    
-    // Oda seçimi ekranına yönlendir
-    setCurrentView('room-selection');
+  const handleLogin = async (userData) => {
+    try {
+      // Giriş başarılı, en güncel kullanıcıyı API'dan çek
+      const response = await fetch(`${SERVER_URL}/api/user/${userData.username}`);
+      const data = await response.json();
+      if (data.user) {
+        setUser(data.user);
+        localStorage.setItem('username', data.user.username);
+        setCurrentView('room-selection');
+      } else {
+        setUser(userData);
+        localStorage.setItem('username', userData.username);
+        setCurrentView('room-selection');
+      }
+    } catch (error) {
+      setUser(userData);
+      localStorage.setItem('username', userData.username);
+      setCurrentView('room-selection');
+    }
   };
 
   // Oda seçildiğinde
@@ -491,7 +502,7 @@ const App = () => {
     setActiveUsers([]);
     setCurrentView('auth');
     setShowMobileMenu(false); // Close mobile menu when logging out
-    localStorage.removeItem('user');
+    localStorage.removeItem('username');
   };
 
   // Profil modal işlemleri
@@ -504,35 +515,57 @@ const App = () => {
     setShowProfileModal(false);
   };
 
+  // Profil kaydet/güncelle
   const handleSaveProfile = async (updatedUser) => {
     try {
-      // Kullanıcı bilgilerini güncelle
-      setUser(updatedUser);
-      localStorage.setItem('user', JSON.stringify(updatedUser));
-      
-      // Socket'e profil güncellemesini gönder
-      if (socket) {
-        socket.emit('update_profile', updatedUser);
+      // Profil güncelleme API çağrısı
+      const response = await fetch(`${SERVER_URL}/api/profile/update`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedUser)
+      });
+      const data = await response.json();
+      if (data.user) {
+        setUser(data.user);
+        localStorage.setItem('username', data.user.username);
       }
-      
       setShowProfileModal(false);
     } catch (error) {
       console.error('Profil güncellenirken hata:', error);
     }
   };
 
-  // Sayfa yüklendiğinde localStorage'dan kullanıcı bilgilerini kontrol et
+  // Profil güncellemesi socket eventinde
   useEffect(() => {
-    const savedUser = localStorage.getItem('user');
-    if (savedUser) {
-      try {
-        const userData = JSON.parse(savedUser);
-        setUser(userData);
-        setCurrentView('room-selection');
-      } catch (error) {
-        console.error('Kullanıcı bilgileri yüklenirken hata:', error);
-        localStorage.removeItem('user');
+    if (!socket) return;
+    const onProfileUpdated = (updatedUser) => {
+      // Eğer güncellenen kullanıcı mevcut kullanıcı ise güncelle
+      if (user && updatedUser.username === user.username) {
+        setUser(updatedUser);
+        localStorage.setItem('username', updatedUser.username);
       }
+      // Aktif kullanıcılar listesini güncelle (aktifUsers state'i varsa)
+      setActiveUsers((prev) => prev.map(u => u.username === updatedUser.username ? { ...u, ...updatedUser } : u));
+    };
+    socket.on('profile_updated', onProfileUpdated);
+    return () => socket.off('profile_updated', onProfileUpdated);
+  }, [socket, user]);
+
+  // Sayfa yüklendiğinde localStorage'dan sadece username kontrol et, kullanıcıyı API'dan çek
+  useEffect(() => {
+    const savedUsername = localStorage.getItem('username');
+    if (savedUsername) {
+      fetch(`${SERVER_URL}/api/user/${savedUsername}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.user) {
+            setUser(data.user);
+            setCurrentView('room-selection');
+          }
+        })
+        .catch(() => {
+          localStorage.removeItem('username');
+        });
     }
   }, []);
 
@@ -562,6 +595,7 @@ const App = () => {
     return (
       <RoomSelection 
         user={user} 
+        socket={socket}
         onJoinRoom={handleJoinRoom}
         onOpenProfile={handleOpenProfile}
         onLogout={handleLogout}

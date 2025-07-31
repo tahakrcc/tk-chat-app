@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
 import { MessageCircle, Users, Hash, ArrowRight, Menu, X, Settings, LogOut } from 'lucide-react';
 import SERVER_URL from '../config';
@@ -589,7 +589,7 @@ const JoinButton = styled.button`
   }
 `;
 
-const RoomSelection = ({ user, onJoinRoom, onOpenProfile, onLogout }) => {
+const RoomSelection = ({ user, socket, onJoinRoom, onOpenProfile, onLogout }) => {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [roomStats, setRoomStats] = useState({});
@@ -634,52 +634,80 @@ const RoomSelection = ({ user, onJoinRoom, onOpenProfile, onLogout }) => {
     }
   ];
 
-  // Oda istatistiklerini ve çevrimiçi kullanıcıları yükle
+  const fetchRoomStats = async () => {
+    try {
+      const response = await fetch(`${SERVER_URL}/api/rooms/stats`);
+      if (response.ok) {
+        const stats = await response.json();
+        setRoomStats(stats);
+      }
+    } catch (error) {
+      console.error('Oda istatistikleri yüklenirken hata:', error);
+    }
+  };
+
+  const fetchOnlineUsers = useCallback(async () => {
+    try {
+      const response = await fetch(`${SERVER_URL}/api/users`);
+      if (response.ok) {
+        const online = await response.json();
+        console.log('Çevrimiçi kullanıcılar:', online);
+        
+        // Mevcut kullanıcıyı da listeye ekle (eğer yoksa)
+        const currentUserInList = online.find(u => u.username === user?.username);
+        if (!currentUserInList && user) {
+          online.push({
+            id: 'current',
+            username: user.username,
+            displayName: user.displayName,
+            avatar: user.avatar,
+            status: 'online',
+            isOnline: true
+          });
+        }
+        
+        setOnlineUsers(online);
+      }
+    } catch (error) {
+      console.error('Çevrimiçi kullanıcılar yüklenirken hata:', error);
+    }
+  }, [user]);
+
   useEffect(() => {
-    const fetchRoomStats = async () => {
-      try {
-        const response = await fetch(`${SERVER_URL}/api/rooms/stats`);
-        if (response.ok) {
-          const stats = await response.json();
-          setRoomStats(stats);
-        }
-      } catch (error) {
-        console.error('Oda istatistikleri yüklenirken hata:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    const fetchOnlineUsers = async () => {
-      try {
-        const response = await fetch(`${SERVER_URL}/api/users`);
-        if (response.ok) {
-          const users = await response.json();
-          // Sadece online kullanıcıları filtrele ve kendini de ekle
-          const online = users.filter(user => user.status === 'online');
-          
-          // Eğer mevcut kullanıcı listede yoksa ekle
-          const currentUserInList = online.find(u => u.username === user?.username);
-          if (!currentUserInList && user) {
-            online.push({
-              id: 'current',
-              username: user.username,
-              displayName: user.displayName,
-              avatar: user.avatar,
-              status: 'online'
-            });
-          }
-          
-          setOnlineUsers(online);
-        }
-      } catch (error) {
-        console.error('Çevrimiçi kullanıcılar yüklenirken hata:', error);
-      }
-    };
-
     fetchRoomStats();
     fetchOnlineUsers();
-  }, []);
+    
+    // Her 30 saniyede bir güncelle
+    const interval = setInterval(() => {
+      fetchRoomStats();
+      fetchOnlineUsers();
+    }, 30000);
+    
+    return () => clearInterval(interval);
+  }, [fetchOnlineUsers]);
+
+  // Çevrimiçi kullanıcılar anlık güncelleme
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleUserJoined = () => {
+      console.log('Yeni kullanıcı katıldı, çevrimiçi listesi güncelleniyor...');
+      fetchOnlineUsers();
+    };
+
+    const handleUserLeft = () => {
+      console.log('Kullanıcı ayrıldı, çevrimiçi listesi güncelleniyor...');
+      fetchOnlineUsers();
+    };
+
+    socket.on('user_joined', handleUserJoined);
+    socket.on('user_left', handleUserLeft);
+
+    return () => {
+      socket.off('user_joined', handleUserJoined);
+      socket.off('user_left', handleUserLeft);
+    };
+  }, [socket, fetchOnlineUsers]);
 
   const handleRoomSelect = (room) => {
     setSelectedRoom(room);

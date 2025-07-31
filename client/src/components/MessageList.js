@@ -239,7 +239,7 @@ const MessageList = ({ messages, currentUser }) => {
                   </Timestamp>
                 </CurrentUserHeader>
                 <CurrentUserText>
-                  {message.content && message.content.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
+                  {message.content && (message.content.match(/\.(jpg|jpeg|png|gif|webp)$/i) || message.content.includes('tenor.com') || message.content.includes('media.tenor.com')) ? (
                     <MessageImage 
                       src={message.content} 
                       alt="Gönderilen resim"
@@ -269,7 +269,7 @@ const MessageList = ({ messages, currentUser }) => {
                 </Timestamp>
               </MessageHeader>
               <MessageText>
-                {message.content && message.content.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
+                {message.content && (message.content.match(/\.(jpg|jpeg|png|gif|webp)$/i) || message.content.includes('tenor.com') || message.content.includes('media.tenor.com')) ? (
                   <MessageImage 
                     src={message.content} 
                     alt="Gönderilen resim"

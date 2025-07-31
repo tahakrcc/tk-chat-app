@@ -63,6 +63,7 @@ const InputWrapper = styled.div`
   transition: all 0.3s ease;
   position: relative;
   z-index: 1000;
+  flex-wrap: wrap;
   
   &:focus-within {
     border-color: #7289da;
@@ -356,7 +357,14 @@ const ChatRoom = ({ socket, user, room, onBack }) => {
   };
 
   const handleGifSelect = (gifUrl) => {
-    setNewMessage(prev => prev + ` ${gifUrl} `);
+    // GIF URL'sini doğrudan mesaj olarak gönder
+    const messageData = {
+      content: gifUrl,
+      room: room?.id || 'general'
+    };
+
+    console.log('GIF gönderiliyor:', messageData);
+    socket.emit('send_message', messageData);
     setShowGifPicker(false);
   };
 
@@ -421,18 +429,15 @@ const ChatRoom = ({ socket, user, room, onBack }) => {
               <Send size={16} />
             </SendButton>
           </ActionButtons>
+          
+          {showEmojiPicker && (
+            <EmojiPicker onEmojiClick={handleEmojiClick} />
+          )}
+          
+          {showGifPicker && (
+            <GifPicker onGifSelect={handleGifSelect} />
+          )}
         </InputWrapper>
-
-        {(showEmojiPicker || showGifPicker) && (
-          <PickerContainer>
-            {showEmojiPicker && (
-              <EmojiPicker onEmojiClick={handleEmojiClick} />
-            )}
-            {showGifPicker && (
-              <GifPicker onGifSelect={handleGifSelect} />
-            )}
-          </PickerContainer>
-        )}
       </MessageInputContainer>
     </ChatContainer>
   );

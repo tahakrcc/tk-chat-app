@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import styled from 'styled-components';
+import SERVER_URL from '../config';
 
 const ModalOverlay = styled.div`
   position: fixed;
@@ -304,15 +305,12 @@ const ProfileModalComponent = ({ user, onClose, onSave }) => {
   const [formData, setFormData] = useState({
     username: user?.username || '',
     displayName: user?.displayName || '',
-    bio: user?.bio || '',
-    status: user?.status || 'online',
-    avatar: user?.avatar || ''
+    avatar: user?.avatar || null
   });
-  
   const [avatarFile, setAvatarFile] = useState(null);
-  const [avatarPreview, setAvatarPreview] = useState(user?.avatar || '');
+  const [avatarPreview, setAvatarPreview] = useState(user?.avatar || null);
   const [isLoading, setIsLoading] = useState(false);
-  const fileInputRef = useRef(null);
+  const fileInputRef = useRef();
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -344,11 +342,24 @@ const ProfileModalComponent = ({ user, onClose, onSave }) => {
     setIsLoading(true);
     
     try {
-      // Avatar yükleme işlemi (gerçek uygulamada bir API'ye yüklenir)
       let avatarUrl = formData.avatar;
+      
+      // Eğer yeni fotoğraf seçildiyse, önce upload et
       if (avatarFile) {
-        // Burada gerçek bir dosya yükleme API'si kullanılır
-        avatarUrl = avatarPreview;
+        const formDataUpload = new FormData();
+        formDataUpload.append('avatar', avatarFile);
+        
+        const uploadResponse = await fetch(`${SERVER_URL}/api/upload-avatar`, {
+          method: 'POST',
+          body: formDataUpload
+        });
+        
+        if (!uploadResponse.ok) {
+          throw new Error('Fotoğraf yüklenemedi');
+        }
+        
+        const uploadData = await uploadResponse.json();
+        avatarUrl = uploadData.avatarUrl;
       }
 
       const updatedUser = {
@@ -361,6 +372,7 @@ const ProfileModalComponent = ({ user, onClose, onSave }) => {
       onClose();
     } catch (error) {
       console.error('Profil güncellenirken hata:', error);
+      alert('Profil güncellenirken hata oluştu: ' + error.message);
     } finally {
       setIsLoading(false);
     }
@@ -402,6 +414,7 @@ const ProfileModalComponent = ({ user, onClose, onSave }) => {
                 value={formData.username}
                 onChange={handleInputChange}
                 placeholder="Kullanıcı adınızı girin"
+                disabled
               />
             </FormGroup>
 
@@ -417,71 +430,27 @@ const ProfileModalComponent = ({ user, onClose, onSave }) => {
             </FormGroup>
 
             <FormGroup>
-              <Label>Hakkımda</Label>
-              <TextArea
-                name="bio"
-                value={formData.bio}
-                onChange={handleInputChange}
-                placeholder="Kendiniz hakkında kısa bir açıklama yazın..."
-                maxLength={200}
+              <Label>Profil Fotoğrafı</Label>
+              <AvatarUploadButton onClick={handleAvatarClick}>
+                {avatarFile ? 'Fotoğraf Seçildi' : 'Fotoğraf Seç'}
+              </AvatarUploadButton>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                style={{ display: 'none' }}
               />
             </FormGroup>
           </FormSection>
 
-          <FormSection>
-            <SectionTitle>📱 Durum</SectionTitle>
-            
-            <FormGroup>
-              <Label>Çevrimiçi Durumu</Label>
-              <StatusSelect
-                name="status"
-                value={formData.status}
-                onChange={handleInputChange}
-              >
-                <option value="online">🟢 Çevrimiçi</option>
-                <option value="idle">🟡 Boşta</option>
-                <option value="dnd">🔴 Rahatsız Etmeyin</option>
-                <option value="offline">⚫ Çevrimdışı</option>
-              </StatusSelect>
-              
-              <StatusIndicator>
-                <StatusDot $status={formData.status} />
-                <span style={{ color: '#72767d', fontSize: '12px' }}>
-                  {formData.status === 'online' && 'Çevrimiçi'}
-                  {formData.status === 'idle' && 'Boşta'}
-                  {formData.status === 'dnd' && 'Rahatsız Etmeyin'}
-                  {formData.status === 'offline' && 'Çevrimdışı'}
-                </span>
-              </StatusIndicator>
-            </FormGroup>
-          </FormSection>
-
-          <FormSection>
-            <SectionTitle>🖼️ Profil Fotoğrafı</SectionTitle>
-            
-            <AvatarUploadButton onClick={handleAvatarClick}>
-              Fotoğraf Seç
-            </AvatarUploadButton>
-            
-            <FileInput
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleFileChange}
-            />
-            
-            <p style={{ color: '#72767d', fontSize: '12px', marginTop: '8px' }}>
-              PNG, JPG veya GIF formatında, maksimum 5MB
-            </p>
-          </FormSection>
-
           <ButtonGroup>
-            <CancelButton onClick={handleCancel}>
-              İptal
-            </CancelButton>
             <SaveButton onClick={handleSave} disabled={isLoading}>
               {isLoading ? 'Kaydediliyor...' : 'Kaydet'}
             </SaveButton>
+            <CancelButton onClick={handleCancel} disabled={isLoading}>
+              İptal
+            </CancelButton>
           </ButtonGroup>
         </ModalContent>
       </ProfileModal>
