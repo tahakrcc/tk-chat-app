@@ -101,9 +101,7 @@ const mongooseOptions = {
   maxPoolSize: 10,
   serverSelectionTimeoutMS: 30000, // 30 saniye
   socketTimeoutMS: 60000, // 60 saniye
-  connectTimeoutMS: 30000, // 30 saniye
-  bufferCommands: false, // Buffer'ı devre dışı bırak
-  bufferMaxEntries: 0
+  connectTimeoutMS: 30000 // 30 saniye
 };
 
 // MongoDB bağlantı fonksiyonu
@@ -111,7 +109,7 @@ async function connectToMongoDB() {
   try {
     console.log('🔄 MongoDB bağlantısı kuruluyor...');
     
-    // Eğer zaten bağlıysa, bağlantıyı kapat
+    // Eğer zaten bağlıysa, tekrar bağlanma
     if (mongoose.connection.readyState === 1) {
       console.log('✅ MongoDB zaten bağlı');
       return true;
