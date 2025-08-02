@@ -46,6 +46,12 @@ const Title = styled.h2`
   align-items: center;
   justify-content: center;
   gap: 12px;
+  
+  @media (max-width: 768px) {
+    font-size: 24px;
+    margin-bottom: 20px;
+    gap: 8px;
+  }
 `;
 
 const Subtitle = styled.p`
@@ -53,6 +59,11 @@ const Subtitle = styled.p`
   margin-bottom: 32px;
   font-size: 16px;
   line-height: 1.5;
+  
+  @media (max-width: 768px) {
+    font-size: 14px;
+    margin-bottom: 24px;
+  }
 `;
 
 const TabContainer = styled.div`
@@ -95,6 +106,10 @@ const InputGroup = styled.div`
   margin-bottom: 20px;
   text-align: left;
   position: relative;
+  
+  @media (max-width: 768px) {
+    margin-bottom: 16px;
+  }
 `;
 
 const Label = styled.label`
@@ -105,6 +120,11 @@ const Label = styled.label`
   font-size: 13px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  
+  @media (max-width: 768px) {
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
 `;
 
 const GenderContainer = styled.div`
@@ -114,6 +134,7 @@ const GenderContainer = styled.div`
   
   @media (max-width: 768px) {
     gap: 8px;
+    margin-bottom: 16px;
   }
 `;
 
@@ -163,6 +184,11 @@ const Input = styled.input`
   outline: none;
   transition: all 0.3s ease;
   
+  @media (max-width: 768px) {
+    padding: 12px 14px;
+    font-size: 16px;
+  }
+  
   &:focus {
     border-color: #7289da;
     box-shadow: 0 0 0 3px rgba(114, 137, 218, 0.2);
@@ -170,6 +196,14 @@ const Input = styled.input`
   
   &::placeholder {
     color: #72767d;
+  }
+  
+  &.with-icon {
+    padding-left: 48px;
+    
+    @media (max-width: 768px) {
+      padding-left: 44px;
+    }
   }
 `;
 
@@ -179,6 +213,10 @@ const IconWrapper = styled.div`
   color: #72767d;
   display: flex;
   align-items: center;
+  
+  @media (max-width: 768px) {
+    left: 14px;
+  }
 `;
 
 const PasswordToggle = styled.button`
@@ -191,6 +229,10 @@ const PasswordToggle = styled.button`
   padding: 4px;
   border-radius: 4px;
   transition: all 0.2s ease;
+  
+  @media (max-width: 768px) {
+    right: 14px;
+  }
   
   &:hover {
     color: #dcddde;
@@ -206,6 +248,11 @@ const ErrorMessage = styled.div`
   display: flex;
   align-items: center;
   gap: 6px;
+  
+  @media (max-width: 768px) {
+    font-size: 12px;
+    margin-top: 6px;
+  }
 `;
 
 const SuccessMessage = styled.div`
@@ -216,6 +263,11 @@ const SuccessMessage = styled.div`
   display: flex;
   align-items: center;
   gap: 6px;
+  
+  @media (max-width: 768px) {
+    font-size: 12px;
+    margin-top: 6px;
+  }
 `;
 
 const SubmitButton = styled.button`
@@ -233,8 +285,8 @@ const SubmitButton = styled.button`
   
   @media (max-width: 768px) {
     padding: 14px;
-    font-size: 15px;
-    margin-top: 16px;
+    font-size: 16px;
+    margin-top: 12px;
   }
   
   &:hover {
@@ -491,7 +543,7 @@ const AuthScreen = ({ onLogin, isConnected }) => {
                 onChange={handleInputChange}
                 placeholder="Kullanıcı adınızı girin"
                 $hasError={!!errors.username}
-                style={{ paddingLeft: '48px' }}
+                className="with-icon"
               />
             </InputWrapper>
             {errors.username && (
@@ -517,7 +569,7 @@ const AuthScreen = ({ onLogin, isConnected }) => {
                     onChange={handleInputChange}
                     placeholder="E-posta adresinizi girin"
                     $hasError={!!errors.email}
-                    style={{ paddingLeft: '48px' }}
+                    className="with-icon"
                   />
                 </InputWrapper>
                 {errors.email && (
@@ -583,7 +635,7 @@ const AuthScreen = ({ onLogin, isConnected }) => {
                 onChange={handleInputChange}
                 placeholder="Şifrenizi girin"
                 $hasError={!!errors.password}
-                style={{ paddingLeft: '48px' }}
+                className="with-icon"
               />
               <PasswordToggle
                 type="button"
@@ -614,7 +666,7 @@ const AuthScreen = ({ onLogin, isConnected }) => {
                   onChange={handleInputChange}
                   placeholder="Şifrenizi tekrar girin"
                   $hasError={!!errors.confirmPassword}
-                  style={{ paddingLeft: '48px' }}
+                  className="with-icon"
                 />
                 <PasswordToggle
                   type="button"
