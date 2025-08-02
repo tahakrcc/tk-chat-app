@@ -94,14 +94,24 @@ console.log('📏 MongoDB URI uzunluğu:', MONGO_URI ? MONGO_URI.length : 0);
 // MongoDB bağlantı seçenekleri
 const mongooseOptions = {
   maxPoolSize: 10,
-  serverSelectionTimeoutMS: 10000,
-  socketTimeoutMS: 45000
+  serverSelectionTimeoutMS: 30000, // 30 saniye
+  socketTimeoutMS: 60000, // 60 saniye
+  connectTimeoutMS: 30000, // 30 saniye
+  bufferCommands: false, // Buffer'ı devre dışı bırak
+  bufferMaxEntries: 0
 };
 
 // MongoDB bağlantı fonksiyonu
 async function connectToMongoDB() {
   try {
     console.log('🔄 MongoDB bağlantısı kuruluyor...');
+    
+    // Eğer zaten bağlıysa, bağlantıyı kapat
+    if (mongoose.connection.readyState === 1) {
+      console.log('✅ MongoDB zaten bağlı');
+      return true;
+    }
+    
     await mongoose.connect(MONGO_URI, mongooseOptions);
     console.log('✅ MongoDB bağlantısı başarılı!');
     console.log('📊 Bağlantı durumu:', mongoose.connection.readyState);
@@ -114,6 +124,9 @@ async function connectToMongoDB() {
     console.error('🔍 Hata detayı:', err.message);
     console.error('📋 Hata kodu:', err.code);
     console.error('🔗 URI (ilk 50 karakter):', MONGO_URI.substring(0, 50) + '...');
+    
+    // Bağlantı başarısız olursa in-memory moda geç
+    console.log('⚠️ MongoDB bağlantısı başarısız, in-memory veritabanı kullanılıyor');
     return false;
   }
 }
@@ -393,34 +406,65 @@ app.post('/api/login', async (req, res) => {
 // Çevrimiçi kullanıcılar API'si
 app.get('/api/users', async (req, res) => {
   try {
+    // MongoDB bağlantısını kontrol et
+    if (mongoose.connection.readyState !== 1) {
+      console.log('⚠️ MongoDB bağlantısı yok, in-memory veritabanı kullanılıyor');
+      const onlineUsers = Array.from(users.values()).filter(user => user.isOnline);
+      return res.json(onlineUsers);
+    }
+    
     // MongoDB'den çevrimiçi kullanıcıları çek
     const onlineUsers = await User.find({ isOnline: true }).select('-password');
     res.json(onlineUsers);
   } catch (error) {
     console.error('Çevrimiçi kullanıcılar hatası:', error);
-    res.status(500).json({ error: 'Sunucu hatası' });
+    
+    // Hata durumunda in-memory veritabanını kullan
+    try {
+      const onlineUsers = Array.from(users.values()).filter(user => user.isOnline);
+      res.json(onlineUsers);
+    } catch (fallbackError) {
+      res.status(500).json({ error: 'Sunucu hatası' });
+    }
   }
 });
 
 // Kullanıcı profili API'si
-app.get('/api/users/:username', (req, res) => {
+app.get('/api/users/:username', async (req, res) => {
   try {
     const { username } = req.params;
-    User.findOne({ username })
-      .then(user => {
-        if (!user) {
-          return res.status(404).json({ error: 'Kullanıcı bulunamadı' });
-        }
-        const { password, ...userWithoutPassword } = user.toObject();
-        res.json(userWithoutPassword);
-      })
-      .catch(err => {
-        console.error('Kullanıcı profili hatası:', err);
-        res.status(500).json({ error: 'Sunucu hatası' });
-      });
+    
+    // MongoDB bağlantısını kontrol et
+    if (mongoose.connection.readyState !== 1) {
+      console.log('⚠️ MongoDB bağlantısı yok, in-memory veritabanı kullanılıyor');
+      const user = Array.from(users.values()).find(u => u.username === username);
+      if (!user) {
+        return res.status(404).json({ error: 'Kullanıcı bulunamadı' });
+      }
+      const { password, ...userWithoutPassword } = user;
+      return res.json(userWithoutPassword);
+    }
+    
+    const user = await User.findOne({ username });
+    if (!user) {
+      return res.status(404).json({ error: 'Kullanıcı bulunamadı' });
+    }
+    const { password, ...userWithoutPassword } = user.toObject();
+    res.json(userWithoutPassword);
   } catch (error) {
     console.error('Kullanıcı profili hatası:', error);
-    res.status(500).json({ error: 'Sunucu hatası' });
+    
+    // Hata durumunda in-memory veritabanını kullan
+    try {
+      const user = Array.from(users.values()).find(u => u.username === username);
+      if (!user) {
+        return res.status(404).json({ error: 'Kullanıcı bulunamadı' });
+      }
+      const { password, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
+    } catch (fallbackError) {
+      res.status(500).json({ error: 'Sunucu hatası' });
+    }
   }
 });
 
