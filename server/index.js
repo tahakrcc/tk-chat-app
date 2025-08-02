@@ -90,7 +90,12 @@ app.post('/api/upload-avatar', upload.single('avatar'), async (req, res) => {
 });
 
 // MONGODB BAĞLANTISI VE USER MODELİ
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/tk-chat-app';
+let MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/tk-chat-app';
+
+// Eğer MONGO_URI "MONGO_URI=" ile başlıyorsa düzelt
+if (MONGO_URI.startsWith('MONGO_URI=')) {
+  MONGO_URI = MONGO_URI.replace('MONGO_URI=', '');
+}
 console.log('🔧 MongoDB URI ayarlandı mı:', !!process.env.MONGO_URI);
 console.log('📏 MongoDB URI uzunluğu:', MONGO_URI ? MONGO_URI.length : 0);
 console.log('🌍 NODE_ENV:', process.env.NODE_ENV);
