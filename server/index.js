@@ -9,6 +9,9 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
+// Environment variables yükle
+require('dotenv').config({ path: './production.env' });
+
 // Uploads klasörünü oluştur
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) {
@@ -90,6 +93,8 @@ app.post('/api/upload-avatar', upload.single('avatar'), async (req, res) => {
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/tk-chat-app';
 console.log('🔧 MongoDB URI ayarlandı mı:', !!process.env.MONGO_URI);
 console.log('📏 MongoDB URI uzunluğu:', MONGO_URI ? MONGO_URI.length : 0);
+console.log('🌍 NODE_ENV:', process.env.NODE_ENV);
+console.log('🔗 MongoDB URI (ilk 30 karakter):', MONGO_URI ? MONGO_URI.substring(0, 30) + '...' : 'Yok');
 
 // MongoDB bağlantı seçenekleri
 const mongooseOptions = {
@@ -296,8 +301,42 @@ app.post('/api/register', async (req, res) => {
 
     // MongoDB bağlantısını kontrol et
     if (mongoose.connection.readyState !== 1) {
-      console.error('❌ MongoDB bağlantısı yok');
-      return res.status(500).json({ error: 'Veritabanı bağlantısı yok' });
+      console.log('⚠️ MongoDB bağlantısı yok, in-memory veritabanı kullanılıyor');
+      
+      // In-memory kullanıcı kontrolü
+      const existingUser = users.get(username) || Array.from(users.values()).find(u => u.email === email);
+      if (existingUser) {
+        console.log('❌ Kullanıcı zaten var (in-memory):', existingUser.username);
+        return res.status(400).json({ error: 'Bu kullanıcı adı veya e-posta zaten kullanılıyor' });
+      }
+
+      // In-memory kullanıcı oluştur
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const newUser = {
+        _id: Date.now().toString(),
+        username,
+        password: hashedPassword,
+        displayName: displayName || username,
+        avatar: null,
+        gender: gender || 'male',
+        status: 'online',
+        email,
+        isOnline: true,
+        lastSeen: new Date(),
+        createdAt: new Date()
+      };
+      
+      users.set(username, newUser);
+      console.log('✅ Kullanıcı kaydedildi (in-memory):', username);
+
+      // Şifreyi çıkar ve kullanıcıyı döndür
+      const userObj = { ...newUser };
+      delete userObj.password;
+      res.status(201).json({
+        message: 'Kullanıcı başarıyla oluşturuldu',
+        user: userObj
+      });
+      return;
     }
 
     console.log('🔍 Kullanıcı kontrol ediliyor...');
@@ -351,6 +390,42 @@ app.post('/api/login', async (req, res) => {
     }
     
     console.log('Kullanıcı aranıyor:', username);
+    
+    // MongoDB bağlantısını kontrol et
+    if (mongoose.connection.readyState !== 1) {
+      console.log('⚠️ MongoDB bağlantısı yok, in-memory veritabanı kullanılıyor');
+      
+      // In-memory kullanıcıyı bul
+      const user = users.get(username);
+      console.log('Kullanıcı bulundu mu (in-memory):', !!user);
+      
+      if (!user) {
+        return res.status(401).json({ error: 'Kullanıcı adı veya şifre hatalı' });
+      }
+      
+      // Şifreyi kontrol et
+      console.log('Şifre kontrol ediliyor...');
+      const isValidPassword = await bcrypt.compare(password, user.password);
+      console.log('Şifre geçerli mi:', isValidPassword);
+      
+      if (!isValidPassword) {
+        return res.status(401).json({ error: 'Kullanıcı adı veya şifre hatalı' });
+      }
+      
+      // Kullanıcıyı çevrimiçi yap
+      console.log('Kullanıcı çevrimiçi yapılıyor...');
+      user.isOnline = true;
+      user.lastSeen = new Date();
+      users.set(username, user);
+      console.log('Kullanıcı kaydedildi (in-memory)');
+      
+      // Şifreyi çıkar ve kullanıcıyı döndür
+      const userObj = { ...user };
+      delete userObj.password;
+      res.json({ user: userObj });
+      return;
+    }
+    
     // Kullanıcıyı bul
     const user = await User.findOne({ username });
     console.log('Kullanıcı bulundu mu:', !!user);

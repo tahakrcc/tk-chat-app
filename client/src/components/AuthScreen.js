@@ -14,6 +14,8 @@ const AuthContainer = styled.div`
   
   @media (max-width: 768px) {
     padding: 10px;
+    align-items: flex-start;
+    padding-top: 20px;
   }
 `;
 
@@ -28,9 +30,10 @@ const AuthForm = styled.div`
   text-align: center;
   
   @media (max-width: 768px) {
-    padding: 24px 20px;
+    padding: 24px 16px;
     margin: 0;
     max-width: 100%;
+    border-radius: 8px;
   }
 `;
 
@@ -59,6 +62,10 @@ const TabContainer = styled.div`
   background: #40444b;
   padding: 4px;
   border: 1px solid #202225;
+  
+  @media (max-width: 768px) {
+    margin-bottom: 24px;
+  }
 `;
 
 const Tab = styled.button`
@@ -72,6 +79,11 @@ const Tab = styled.button`
   font-size: 14px;
   cursor: pointer;
   transition: all 0.3s ease;
+  
+  @media (max-width: 768px) {
+    padding: 10px 8px;
+    font-size: 13px;
+  }
   
   &:hover {
     background: ${props => props.$active ? '#7289da' : '#4f545c'};
@@ -99,6 +111,10 @@ const GenderContainer = styled.div`
   display: flex;
   gap: 12px;
   margin-bottom: 20px;
+  
+  @media (max-width: 768px) {
+    gap: 8px;
+  }
 `;
 
 const GenderOption = styled.button`
@@ -116,6 +132,12 @@ const GenderOption = styled.button`
   align-items: center;
   justify-content: center;
   gap: 8px;
+  
+  @media (max-width: 768px) {
+    padding: 10px 12px;
+    font-size: 13px;
+    gap: 6px;
+  }
   
   &:hover {
     border-color: #7289da;
@@ -208,6 +230,12 @@ const SubmitButton = styled.button`
   cursor: pointer;
   transition: all 0.3s ease;
   margin-top: 8px;
+  
+  @media (max-width: 768px) {
+    padding: 14px;
+    font-size: 15px;
+    margin-top: 16px;
+  }
   
   &:hover {
     background: linear-gradient(135deg, #5865f2, #7289da);

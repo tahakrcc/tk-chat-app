@@ -434,6 +434,16 @@ const App = () => {
   const [showPrivateChat, setShowPrivateChat] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [notifications, setNotifications] = useState([]);
+  
+  // Collapsible sections state
+  const [onlineUsersOpen, setOnlineUsersOpen] = useState(false);
+  const [chatRoomsOpen, setChatRoomsOpen] = useState(false);
+  const [dmRequestsOpen, setDmRequestsOpen] = useState(false);
+  const [friendsOpen, setFriendsOpen] = useState(false);
+  
+  // Friend requests state
+  const [friendRequests, setFriendRequests] = useState([]);
+  const [unreadFriendRequests, setUnreadFriendRequests] = useState(0);
 
   // Socket bağlantısı
   useEffect(() => {
@@ -459,7 +469,13 @@ const App = () => {
     });
 
     newSocket.on('active_users', (users) => {
-      setActiveUsers(users);
+      // Kullanıcının kendisini listeden çıkar ve en üste ekle
+      const filteredUsers = users.filter(u => u.username !== user?.username);
+      if (user) {
+        setActiveUsers([user, ...filteredUsers]);
+      } else {
+        setActiveUsers(users);
+      }
     });
 
     newSocket.on('user_joined', (data) => {
@@ -703,6 +719,14 @@ const App = () => {
         onLogout={handleLogout}
         onUserClick={handleUserClick}
         onSendPrivateMessage={handleSendPrivateMessage}
+        onlineUsersOpen={onlineUsersOpen}
+        setOnlineUsersOpen={setOnlineUsersOpen}
+        chatRoomsOpen={chatRoomsOpen}
+        setChatRoomsOpen={setChatRoomsOpen}
+        dmRequestsOpen={dmRequestsOpen}
+        setDmRequestsOpen={setDmRequestsOpen}
+        friendsOpen={friendsOpen}
+        setFriendsOpen={setFriendsOpen}
       />
     );
   };

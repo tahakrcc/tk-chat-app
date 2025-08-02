@@ -98,6 +98,37 @@ const ProfileInfo = styled.div`
   flex: 1;
 `;
 
+const StatsSection = styled.div`
+  display: flex;
+  gap: 24px;
+  margin: 16px 0;
+  padding: 16px;
+  background: #2f3136;
+  border-radius: 8px;
+  border: 1px solid #202225;
+`;
+
+const StatItem = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+`;
+
+const StatNumber = styled.div`
+  color: #fff;
+  font-size: 20px;
+  font-weight: 700;
+`;
+
+const StatLabel = styled.div`
+  color: #96989d;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+`;
+
 const DisplayName = styled.h2`
   color: #ffffff;
   font-size: 24px;
