@@ -11,7 +11,7 @@ import {
   LogOut, 
   ChevronDown, 
   ChevronRight,
-  UserPlus,
+  UserPlus, 
   UserCheck,
   Heart,
   MessageSquare,
@@ -717,6 +717,33 @@ const UserProfileActions = styled.div`
   gap: 4px;
 `;
 
+const CollapsibleSection = styled.div`
+  border-bottom: 1px solid #202225;
+`;
+
+const SectionHeader = styled.div`
+  padding: 12px 16px;
+  background: #292b2f;
+  color: #dcddde;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: background-color 0.2s ease;
+  
+  &:hover {
+    background: #40444b;
+  }
+`;
+
+const SectionContent = styled.div`
+  max-height: ${props => props.$isOpen ? '500px' : '0'};
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+`;
+
 const ProfileActionButton = styled.button`
   background: #40444b;
   border: none;
@@ -855,7 +882,7 @@ const WelcomeSubtitle = styled.p`
   line-height: 1.5;
   
   @media (max-width: 768px) {
-    font-size: 14px;
+  font-size: 14px;
   }
 `;
 
@@ -972,7 +999,23 @@ const JoinButton = styled.button`
   }
 `;
 
-const RoomSelection = ({ user, socket, onJoinRoom, onOpenProfile, onLogout, onUserClick, onSendPrivateMessage }) => {
+const RoomSelection = ({ 
+  user, 
+  socket, 
+  onJoinRoom, 
+  onOpenProfile, 
+  onLogout, 
+  onUserClick, 
+  onSendPrivateMessage,
+  onlineUsersOpen,
+  setOnlineUsersOpen,
+  chatRoomsOpen,
+  setChatRoomsOpen,
+  dmRequestsOpen,
+  setDmRequestsOpen,
+  friendsOpen,
+  setFriendsOpen
+}) => {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [textChannelsExpanded, setTextChannelsExpanded] = useState(false);
@@ -1067,7 +1110,7 @@ const RoomSelection = ({ user, socket, onJoinRoom, onOpenProfile, onLogout, onUs
     try {
       const response = await fetch(`${SERVER_URL}/api/follow/requests/${user.username}`);
       if (response.ok) {
-        const data = await response.json();
+      const data = await response.json();
         setFollowRequests(data.requests || []);
       }
     } catch (error) {
@@ -1081,7 +1124,7 @@ const RoomSelection = ({ user, socket, onJoinRoom, onOpenProfile, onLogout, onUs
     try {
       const response = await fetch(`${SERVER_URL}/api/follow/followers/${user.username}`);
       if (response.ok) {
-        const data = await response.json();
+      const data = await response.json();
         setFriends(data.followers || []);
       }
     } catch (error) {
@@ -1095,7 +1138,7 @@ const RoomSelection = ({ user, socket, onJoinRoom, onOpenProfile, onLogout, onUs
     try {
       const response = await fetch(`${SERVER_URL}/api/private-message/conversations/${user.username}`);
       if (response.ok) {
-        const data = await response.json();
+      const data = await response.json();
         setDirectMessages(data.conversations || []);
       }
     } catch (error) {
@@ -1232,7 +1275,7 @@ const RoomSelection = ({ user, socket, onJoinRoom, onOpenProfile, onLogout, onUs
             <X size={16} />
           </MobileMenuButton>
         </Header>
-        
+
         <UserInfo>
           <UserAvatar $avatarUrl={user?.avatar}>
             {user?.displayName?.charAt(0)?.toUpperCase() || user?.username?.charAt(0)?.toUpperCase() || 'U'}
@@ -1240,15 +1283,15 @@ const RoomSelection = ({ user, socket, onJoinRoom, onOpenProfile, onLogout, onUs
           <UserName onClick={() => onUserClick && onUserClick(user)}>
             {user?.displayName || user?.username}
           </UserName>
-          <UserStatus>
+            <UserStatus>
             <StatusDot $status={user?.status || 'online'} />
             {user?.status === 'online' && 'Çevrimiçi'}
             {user?.status === 'idle' && 'Boşta'}
             {user?.status === 'dnd' && 'Rahatsız Etmeyin'}
             {user?.status === 'offline' && 'Çevrimdışı'}
-          </UserStatus>
+            </UserStatus>
         </UserInfo>
-        
+
         <RoomList>
           <CategoryHeader onClick={() => setTextChannelsExpanded(!textChannelsExpanded)}>
             <CategoryTitle>
@@ -1276,7 +1319,7 @@ const RoomSelection = ({ user, socket, onJoinRoom, onOpenProfile, onLogout, onUs
                   <RoomStats>
                     <span>{stats.users} kullanıcı</span>
                   </RoomStats>
-                </RoomItem>
+              </RoomItem>
               );
             })}
           </CategoryContent>
@@ -1307,7 +1350,7 @@ const RoomSelection = ({ user, socket, onJoinRoom, onOpenProfile, onLogout, onUs
                   <RoomStats>
                     <span>{stats.users} kullanıcı</span>
                   </RoomStats>
-                </RoomItem>
+              </RoomItem>
               );
             })}
           </CategoryContent>
@@ -1439,47 +1482,52 @@ const RoomSelection = ({ user, socket, onJoinRoom, onOpenProfile, onLogout, onUs
           ) : (
             <div style={{ color: '#72767d', fontSize: '12px', textAlign: 'center', padding: '8px 0' }}>
               Henüz özel mesaj yok
-            </div>
-          )}
+                  </div>
+                )}
         </DirectMessagesSection>
 
         {/* Çevrimiçi Kullanıcılar Bölümü */}
-        <OnlineUsersSection>
-          <OnlineUsersTitle>
-            <Users size={14} />
-            Çevrimiçi Kullanıcılar ({onlineUsers.length})
-          </OnlineUsersTitle>
-          <OnlineUsersList>
-            {onlineUsers.length > 0 ? (
-              onlineUsers.map((onlineUser, index) => (
-                <OnlineUserItem key={onlineUser.id || index}>
-                  <OnlineUserAvatar $avatarUrl={onlineUser.avatar}>
-                    {onlineUser.displayName?.charAt(0)?.toUpperCase() || onlineUser.username?.charAt(0)?.toUpperCase() || 'U'}
-                  </OnlineUserAvatar>
-                  <OnlineUserInfo onClick={() => onUserClick && onUserClick(onlineUser)}>
-                    <OnlineUserName onClick={() => onUserClick && onUserClick(onlineUser)}>
-                      {onlineUser.displayName || onlineUser.username}
-                    </OnlineUserName>
-                    <OnlineUserStatus>
-                      <StatusDot $status={onlineUser.status || 'online'} $isOnline={onlineUser.isOnline} />
-                      {onlineUser.isOnline ? 'Çevrimiçi' : 'Çevrimdışı'}
-                    </OnlineUserStatus>
-                  </OnlineUserInfo>
-                  <FriendChatButton 
-                    onClick={() => onSendPrivateMessage && onSendPrivateMessage(onlineUser)}
-                    title="Sohbet başlat"
-                  >
-                    <MessageSquare size={14} />
-                  </FriendChatButton>
-                </OnlineUserItem>
-              ))
-            ) : (
-              <div style={{ color: '#72767d', fontSize: '12px', textAlign: 'center', padding: '8px 0' }}>
-                Henüz çevrimiçi kullanıcı yok
-              </div>
-            )}
-          </OnlineUsersList>
-        </OnlineUsersSection>
+        <CollapsibleSection>
+          <SectionHeader onClick={() => setOnlineUsersOpen(!onlineUsersOpen)}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Users size={14} />
+              Çevrimiçi Kullanıcılar ({onlineUsers.length})
+            </div>
+            {onlineUsersOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+          </SectionHeader>
+          <SectionContent $isOpen={onlineUsersOpen}>
+            <OnlineUsersList>
+              {onlineUsers.length > 0 ? (
+                onlineUsers.map((onlineUser, index) => (
+                  <OnlineUserItem key={onlineUser.id || index}>
+                    <OnlineUserAvatar $avatarUrl={onlineUser.avatar}>
+                      {onlineUser.displayName?.charAt(0)?.toUpperCase() || onlineUser.username?.charAt(0)?.toUpperCase() || 'U'}
+                    </OnlineUserAvatar>
+                    <OnlineUserInfo onClick={() => onUserClick && onUserClick(onlineUser)}>
+                      <OnlineUserName onClick={() => onUserClick && onUserClick(onlineUser)}>
+                        {onlineUser.displayName || onlineUser.username}
+                      </OnlineUserName>
+                      <OnlineUserStatus>
+                        <StatusDot $status={onlineUser.status || 'online'} $isOnline={onlineUser.isOnline} />
+                        {onlineUser.isOnline ? 'Çevrimiçi' : 'Çevrimdışı'}
+                      </OnlineUserStatus>
+                    </OnlineUserInfo>
+                    <FriendChatButton 
+                      onClick={() => onSendPrivateMessage && onSendPrivateMessage(onlineUser)}
+                      title="Sohbet başlat"
+                    >
+                      <MessageSquare size={14} />
+                    </FriendChatButton>
+                  </OnlineUserItem>
+                ))
+              ) : (
+                <div style={{ color: '#72767d', fontSize: '12px', textAlign: 'center', padding: '8px 0' }}>
+                  Henüz çevrimiçi kullanıcı yok
+                </div>
+              )}
+            </OnlineUsersList>
+          </SectionContent>
+        </CollapsibleSection>
         
         <UserProfileSection>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px' }}>
@@ -1509,7 +1557,7 @@ const RoomSelection = ({ user, socket, onJoinRoom, onOpenProfile, onLogout, onUs
           </div>
         </UserProfileSection>
       </Sidebar>
-      
+
       <MainContent>
         <MobileHeader>
           <MobileTitle>
@@ -1547,14 +1595,14 @@ const RoomSelection = ({ user, socket, onJoinRoom, onOpenProfile, onLogout, onUs
               Odalar yükleniyor...
             </div>
           ) : (
-            <RoomGrid>
+          <RoomGrid>
               {rooms.map(room => {
                 const stats = getRoomStats(room.id);
                 return (
                   <RoomCard key={room.id} onClick={() => handleRoomSelect(room)}>
                     <RoomCardHeader>
                       <RoomCardIcon>
-                        {room.icon}
+                    {room.icon}
                       </RoomCardIcon>
                       <RoomCardInfo>
                         <RoomCardTitle>{room.name}</RoomCardTitle>
@@ -1564,12 +1612,12 @@ const RoomSelection = ({ user, socket, onJoinRoom, onOpenProfile, onLogout, onUs
                     
                     <RoomCardStats>
                       <Stat>
-                        <Users size={14} />
+                    <Users size={14} />
                         {stats.users} kullanıcı
                       </Stat>
                       {room.type === 'public' && (
                         <Stat>
-                          <MessageCircle size={14} />
+                    <MessageCircle size={14} />
                           {stats.messages} mesaj
                         </Stat>
                       )}
@@ -1578,10 +1626,10 @@ const RoomSelection = ({ user, socket, onJoinRoom, onOpenProfile, onLogout, onUs
                         <ArrowRight size={16} />
                       </JoinButton>
                     </RoomCardStats>
-                  </RoomCard>
+              </RoomCard>
                 );
               })}
-            </RoomGrid>
+          </RoomGrid>
           )}
         </WelcomeSection>
       </MainContent>
